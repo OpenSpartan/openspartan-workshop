@@ -1,4 +1,5 @@
 ﻿using Microsoft.Identity.Client;
+using Microsoft.Identity.Client.Extensions.Msal;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -9,6 +10,7 @@ using Microsoft.UI.Xaml.Navigation;
 using Microsoft.UI.Xaml.Shapes;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -44,6 +46,41 @@ namespace OpenSpartan
         {
             m_window = new MainWindow();
             m_window.Activate();
+
+            InitializePublicClientApplication();
+        }
+
+        private async void InitializePublicClientApplication()
+        {
+            var storageProperties = new StorageCreationPropertiesBuilder(Authentication.Configuration.CacheFileName, Authentication.Configuration.CacheDirectory).Build();
+
+            var pca = PublicClientApplicationBuilder.Create(Authentication.Configuration.ClientID).WithAuthority(AadAuthorityAudience.PersonalMicrosoftAccount).Build();
+
+            // This hooks up the cross-platform cache into MSAL
+            var cacheHelper = await MsalCacheHelper.CreateAsync(storageProperties);
+            cacheHelper.RegisterCache(pca.UserTokenCache);
+
+            IAccount accountToLogin = (await pca.GetAccountsAsync()).FirstOrDefault();
+
+            AuthenticationResult authResult = null;
+
+            try
+            {
+                authResult = await pca.AcquireTokenSilent(Authentication.Configuration.Scopes, accountToLogin)
+                                            .ExecuteAsync();
+            }
+            catch (MsalUiRequiredException)
+            {
+                authResult = await pca.AcquireTokenInteractive(Authentication.Configuration.Scopes)
+                                            .WithAccount(accountToLogin)
+                                            .ExecuteAsync();
+            }
+
+            if (authResult != null)
+            {
+                // Authentication succeeded.
+                Debug.WriteLine("Authenticated.");
+            }
         }
 
         private Window m_window;

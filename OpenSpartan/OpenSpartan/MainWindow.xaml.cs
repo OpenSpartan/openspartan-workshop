@@ -17,31 +17,6 @@ namespace OpenSpartan
         public MainWindow()
         {
             this.InitializeComponent();
-            this.Activated += MainWindow_Activated;
-        }
-
-        private async void MainWindow_Activated(object sender, WindowActivatedEventArgs args)
-        {
-            var pca = PublicClientApplicationBuilder.Create(Authentication.Configuration.ClientID).WithBroker(new BrokerOptions(BrokerOptions.OperatingSystems.Windows)).Build();
-
-            IAccount accountToLogin = (await pca.GetAccountsAsync()).FirstOrDefault();
-            if (accountToLogin == null)
-            {
-                accountToLogin = PublicClientApplication.OperatingSystemAccount;
-            }
-
-            try
-            {
-                var authResult = await pca.AcquireTokenSilent(Authentication.Configuration.Scopes, accountToLogin)
-                                            .ExecuteAsync();
-            }
-            catch (MsalUiRequiredException)
-            {
-                var authResult = await pca.AcquireTokenInteractive(Authentication.Configuration.Scopes)
-                                            .WithAccount(accountToLogin)
-                                            .WithParentActivityOrWindow(WinRT.Interop.WindowNative.GetWindowHandle(this))
-                                            .ExecuteAsync();                          
-            }
         }
 
         private void nvRoot_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
