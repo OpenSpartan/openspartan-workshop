@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "OpenSpartan (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "OpenSpartan (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
