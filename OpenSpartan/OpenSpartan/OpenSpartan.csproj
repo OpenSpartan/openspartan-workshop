@@ -12,6 +12,7 @@
     <EnableMsixTooling>true</EnableMsixTooling>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Controls\HeaderTile.xaml" />
     <None Remove="Views\HomeView.xaml" />
     <None Remove="Views\SettingsView.xaml" />
   </ItemGroup>
@@ -47,6 +48,11 @@
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\SettingsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Controls\HeaderTile.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
