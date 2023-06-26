@@ -38,7 +38,7 @@
             </ResourceDictionary>
         </Grid.Resources>
 
-        <NavigationView Grid.Row="1" Header="OpenSpartan" PaneDisplayMode="Auto" x:Name="nvRoot" ItemInvoked="nvRoot_ItemInvoked">
+        <NavigationView Grid.Row="1" PaneDisplayMode="Auto" x:Name="nvRoot" ItemInvoked="nvRoot_ItemInvoked">
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Home" x:Name="nviHome" Tag="OpenSpartan.Views.HomeView">
                     <NavigationViewItem.Icon>

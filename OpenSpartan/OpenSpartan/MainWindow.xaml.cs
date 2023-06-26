@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System;
+using System.Linq;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -15,6 +16,13 @@ namespace OpenSpartan
         public MainWindow()
         {
             this.InitializeComponent();
+
+            nvRoot.SelectedItem = nvRoot.MenuItems.OfType<NavigationViewItem>().First();
+            ContentFrame.Navigate(
+                       typeof(Views.HomeView),
+                       null,
+                       new Microsoft.UI.Xaml.Media.Animation.EntranceNavigationTransitionInfo()
+                       );
         }
 
         private void nvRoot_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
