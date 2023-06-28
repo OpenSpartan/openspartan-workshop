@@ -28,12 +28,16 @@ namespace OpenSpartan
         /// Invoked when the application is launched.
         /// </summary>
         /// <param name="args">Details about the launch request and process.</param>
-        protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+        protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
             m_window = new MainWindow();
             m_window.Activate();
 
-            AuthenticationManager.InitializePublicClientApplication();
+            var authResult = await UserContextManager.InitializePublicClientApplication();
+            if (authResult != null)
+            {
+                UserContextManager.InitializeHaloClient(authResult);
+            }
         }        
 
         private Window m_window;
