@@ -1,5 +1,8 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using OpenSpartan.Shared;
+using OpenSpartan.ViewModels;
+using System.Threading.Tasks;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -16,31 +19,31 @@ namespace OpenSpartan.Views
             this.InitializeComponent();
         }
 
-        private void scroller_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            UpdateScrollButtonsVisibility();
-        }
+        //private void scroller_SizeChanged(object sender, SizeChangedEventArgs e)
+        //{
+        //    UpdateScrollButtonsVisibility();
+        //}
 
-        private void UpdateScrollButtonsVisibility()
-        {
-            if (scroller.ScrollableWidth > 0)
-            {
-                ScrollForwardBtn.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                ScrollForwardBtn.Visibility = Visibility.Collapsed;
-            }
-        }
+        //private void UpdateScrollButtonsVisibility()
+        //{
+        //    if (scroller.ScrollableWidth > 0)
+        //    {
+        //        ScrollForwardBtn.Visibility = Visibility.Visible;
+        //    }
+        //    else
+        //    {
+        //        ScrollForwardBtn.Visibility = Visibility.Collapsed;
+        //    }
+        //}
 
-        private void ScrollBackBtn_Click(object sender, RoutedEventArgs e)
-        {
-            scroller.ChangeView(scroller.HorizontalOffset - scroller.ViewportWidth, null, null);
-        }
+        //private void ScrollBackBtn_Click(object sender, RoutedEventArgs e)
+        //{
+        //    scroller.ChangeView(scroller.HorizontalOffset - scroller.ViewportWidth, null, null);
+        //}
 
-        private void ScrollForwardBtn_Click(object sender, RoutedEventArgs e)
-        {
-            scroller.ChangeView(scroller.HorizontalOffset + scroller.ViewportWidth, null, null);
-        }
+        //private void ScrollForwardBtn_Click(object sender, RoutedEventArgs e)
+        //{
+        //    scroller.ChangeView(scroller.HorizontalOffset + scroller.ViewportWidth, null, null);
+        //}
     }
 }

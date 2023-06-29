@@ -7,6 +7,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    xmlns:viewmodels="using:OpenSpartan.ViewModels"
+    DataContext="{x:Bind viewmodels:ServiceRecordViewModel.Instance}"
     xmlns:controls="using:OpenSpartan.Controls"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -126,10 +128,52 @@
                 </Style>
             </ResourceDictionary>
         </Grid.Resources>
-        
-        <InfoBar Margin="12" IsOpen="True" Title="Important Note" Message="Customer-facing message can be included here."></InfoBar>
 
-        <ScrollViewer  HorizontalScrollBarVisibility="Hidden" x:Name="scroller"
+        <StackPanel>
+            <InfoBar Margin="12" IsOpen="True" Title="Important Note" Message="Customer-facing message can be included here."></InfoBar>
+            <TextBlock Margin="24,8,0,8" Text="{Binding Gamertag}" Style="{StaticResource DisplayTextBlockStyle}"></TextBlock>
+            <StackPanel Orientation="Vertical">
+                <TextBlock Margin="24,8,0,8" Text="Overview" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Vertical" Margin="24,8,0,8">
+                        <TextBlock Text="Matches Completed" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                        <TextBlock Text="{Binding ServiceRecord.MatchesCompleted}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" Margin="24,8,0,8">
+                        <TextBlock Text="Wins" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                        <TextBlock Text="{Binding ServiceRecord.Wins}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" Margin="24,8,0,8">
+                        <TextBlock Text="Losses" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                        <TextBlock Text="{Binding ServiceRecord.Losses}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" Margin="24,8,0,8">
+                        <TextBlock Text="Time Played" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                        <TextBlock Text="{Binding ServiceRecord.TimePlayed}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+            <StackPanel Orientation="Vertical">
+                <TextBlock Margin="24,8,0,8" Text="Career" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Vertical" Margin="24,8,0,8">
+                        <TextBlock Text="Current Rank" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                        <TextBlock Text="{Binding CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" Margin="24,8,0,8">
+                        <TextBlock Text="Title" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                        <TextBlock Text="{Binding Title}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" Margin="24,8,0,8">
+                        <Image Source="{Binding RankImage}"></Image>
+                        <Image Source="{Binding AdornmentImage}"></Image>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+        
+
+        <!--<ScrollViewer  HorizontalScrollBarVisibility="Hidden" x:Name="scroller"
             HorizontalScrollMode="Enabled"
             SizeChanged="scroller_SizeChanged"
             VerticalScrollMode="Disabled">
@@ -193,9 +237,9 @@
                     </controls:HeaderTile>
                 </StackPanel>
             </Grid>
-        </ScrollViewer>
+        </ScrollViewer>-->
 
-        <Button
+        <!--<Button
             x:Name="ScrollBackBtn"
             Width="16"
             Height="38"
@@ -218,6 +262,6 @@
             Style="{StaticResource ScrollButtonStyle}"
             ToolTipService.ToolTip="Scroll right">
             <FontIcon FontSize="{ThemeResource FlipViewButtonFontSize}" Glyph="&#xEDDA;" />
-        </Button>
+        </Button>-->
     </Grid>
 </Page>

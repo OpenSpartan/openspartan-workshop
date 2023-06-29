@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace OpenSpartan.Authentication
+namespace OpenSpartan.Core
 {
     internal class Configuration
     {

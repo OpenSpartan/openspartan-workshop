@@ -1,27 +1,27 @@
 ﻿using Den.Dev.Orion.Authentication;
 using Den.Dev.Orion.Core;
 using Den.Dev.Orion.Models;
-using Den.Dev.Orion.Util;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
-using OpenSpartan.Authentication;
 using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Security.Policy;
 using System.Threading.Tasks;
+using Windows.Media.Protection.PlayReady;
 
 namespace OpenSpartan.Shared
 {
     internal static class UserContextManager
     {
-        static HaloInfiniteClient HaloClient { get; set; }
+        internal static HaloInfiniteClient HaloClient { get; set; }
+
+        internal static XboxTicket XboxUserContext { get; set; }
 
         internal static async Task<AuthenticationResult> InitializePublicClientApplication()
         {
-            var storageProperties = new StorageCreationPropertiesBuilder(Authentication.Configuration.CacheFileName, Authentication.Configuration.CacheDirectory).Build();
+            var storageProperties = new StorageCreationPropertiesBuilder(Core.Configuration.CacheFileName, Core.Configuration.CacheDirectory).Build();
 
-            var pca = PublicClientApplicationBuilder.Create(Authentication.Configuration.ClientID).WithAuthority(AadAuthorityAudience.PersonalMicrosoftAccount).Build();
+            var pca = PublicClientApplicationBuilder.Create(Core.Configuration.ClientID).WithAuthority(AadAuthorityAudience.PersonalMicrosoftAccount).Build();
 
             // This hooks up the cross-platform cache into MSAL
             var cacheHelper = await MsalCacheHelper.CreateAsync(storageProperties);
@@ -33,12 +33,12 @@ namespace OpenSpartan.Shared
 
             try
             {
-                authResult = await pca.AcquireTokenSilent(Authentication.Configuration.Scopes, accountToLogin)
+                authResult = await pca.AcquireTokenSilent(Core.Configuration.Scopes, accountToLogin)
                                             .ExecuteAsync();
             }
             catch (MsalUiRequiredException)
             {
-                authResult = await pca.AcquireTokenInteractive(Authentication.Configuration.Scopes)
+                authResult = await pca.AcquireTokenInteractive(Core.Configuration.Scopes)
                                             .WithAccount(accountToLogin)
                                             .ExecuteAsync();
             }
@@ -46,7 +46,7 @@ namespace OpenSpartan.Shared
             return authResult;
         }
 
-        internal static void InitializeHaloClient(AuthenticationResult authResult)
+        internal static bool InitializeHaloClient(AuthenticationResult authResult)
         {
             HaloAuthenticationClient haloAuthClient = new();
             XboxAuthenticationClient manager = new();
@@ -82,7 +82,34 @@ namespace OpenSpartan.Shared
                 Debug.WriteLine(haloToken.Token);
             }).GetAwaiter().GetResult();
 
-            HaloClient = new(haloToken.Token, extendedTicket.DisplayClaims.Xui[0].XUID);
+            if (extendedTicket != null)
+            {
+                XboxUserContext = extendedTicket;
+
+                HaloClient = new(haloToken.Token, extendedTicket.DisplayClaims.Xui[0].XUID);
+
+                string localClearance = string.Empty;
+                Task.Run(async () =>
+                {
+                    var clearance = (await HaloClient.SettingsGetClearance("RETAIL", "UNUSED", "245613.23.06.01.1708-0", "1.4")).Result;
+                    if (clearance != null)
+                    {
+                        localClearance = clearance.FlightConfigurationId;
+                        HaloClient.ClearanceToken = localClearance;
+                        Debug.WriteLine($"Your clearance is {localClearance} and it's set in the client.");
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Could not obtain the clearance.");
+                    }
+                }).GetAwaiter().GetResult();
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }
