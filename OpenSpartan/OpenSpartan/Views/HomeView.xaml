@@ -7,6 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    xmlns:media="using:Microsoft.UI.Xaml.Media"
     xmlns:converters="using:OpenSpartan.Converters"
     xmlns:viewmodels="using:OpenSpartan.ViewModels"
     DataContext="{x:Bind viewmodels:ServiceRecordViewModel.Instance}"
@@ -133,18 +134,30 @@
         </Grid.Resources>
 
         <StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <Image Height="200" Source="{Binding AdornmentImage}"></Image>
-                <Grid>
-                    <Image VerticalAlignment="Center" Height="180" Opacity="0.3" Source="{Binding Backdrop}"></Image>
-                    <Image VerticalAlignment="Center" Height="100" Source="{Binding Nameplate}"></Image>
-                    <Image VerticalAlignment="Center" Height="110" Margin="12,0,0,0" HorizontalAlignment="Left" Source="{Binding Emblem}"></Image>
-                    <StackPanel Margin="148,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding Gamertag}" Style="{StaticResource TitleTextBlockStyle}" Foreground="{Binding IDBadgeTextColor}"></TextBlock>
-                        <TextBlock Text="{Binding ServiceTag}" Style="{StaticResource SubtitleTextBlockStyle}" Foreground="{Binding IDBadgeTextColor}"></TextBlock>
-                    </StackPanel>
-                </Grid>
-            </StackPanel>
+            <Grid Height="300">
+                <Image Margin="0,-400,0,0" Stretch="UniformToFill" Source="{Binding SeasonalBackground}"/>
+                <Rectangle>
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                            <GradientStop Color="Transparent" Offset="0.0" />
+                            <GradientStop Color="{StaticResource SolidBackgroundFillColorBase}" Offset="0.9" />
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+
+                <StackPanel VerticalAlignment="Top" Orientation="Horizontal">
+                    <Image Height="200" Source="{Binding AdornmentImage}"></Image>
+                    <Grid>
+                        <Image VerticalAlignment="Center" Height="180" Opacity="0.7" Source="{Binding Backdrop}"></Image>
+                        <Image VerticalAlignment="Center" Height="100" Source="{Binding Nameplate}"></Image>
+                        <Image VerticalAlignment="Center" Height="110" Margin="12,0,0,0" HorizontalAlignment="Left" Source="{Binding Emblem}"></Image>
+                        <StackPanel Margin="148,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Gamertag}" Style="{StaticResource TitleTextBlockStyle}" Foreground="{Binding IDBadgeTextColor}"></TextBlock>
+                            <TextBlock Text="{Binding ServiceTag}" Style="{StaticResource SubtitleTextBlockStyle}" Foreground="{Binding IDBadgeTextColor}"></TextBlock>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Grid>
             <StackPanel Orientation="Vertical">
                 <TextBlock Margin="24,8,0,8" Text="Overview" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
                 <StackPanel Orientation="Horizontal">

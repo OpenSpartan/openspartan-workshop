@@ -26,6 +26,7 @@ namespace OpenSpartan.ViewModels
         private int? _currentRankExperience;
         private int? _requiredRankExperience;
         private int? _maxRank;
+        private string _seasonalBackground;
 
         public string Gamertag
         { 
@@ -234,6 +235,19 @@ namespace OpenSpartan.ViewModels
                 if (_maxRank != value)
                 {
                     _maxRank = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public string? SeasonalBackground
+        {
+            get => _seasonalBackground;
+            set
+            {
+                if (_seasonalBackground != value)
+                {
+                    _seasonalBackground = value;
                     NotifyPropertyChanged();
                 }
             }

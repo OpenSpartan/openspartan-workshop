@@ -204,6 +204,38 @@ namespace OpenSpartan.Shared
             }
         }
 
+        internal static async Task<bool> PopulateDecorationData()
+        {
+            try
+            {
+                string backgroundPath = "progression/Switcher/Season_Switcher_S4_IN.png";
+                // Get initial service record details
+                string qualifiedBackgroundImagePath = Path.Combine(Core.Configuration.CacheDirectory, "imagecache", backgroundPath);
+
+                if (!System.IO.File.Exists(qualifiedBackgroundImagePath))
+                {
+                    var backgroundImageResult = await HaloClient.GameCmsGetImage(backgroundPath);
+
+                    if (backgroundImageResult.Result != null && backgroundImageResult.Response.Code == 200)
+                    {
+                        // Let's make sure that we create the directory if it does not exist.
+                        System.IO.FileInfo file = new System.IO.FileInfo(qualifiedBackgroundImagePath);
+                        file.Directory.Create();
+
+                        System.IO.File.WriteAllBytes(qualifiedBackgroundImagePath, backgroundImageResult.Result);
+                    }
+                }
+
+                ServiceRecordViewModel.Instance.SeasonalBackground = qualifiedBackgroundImagePath;
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         internal static async Task<bool> PopulateCustomizationData()
         {
             try
