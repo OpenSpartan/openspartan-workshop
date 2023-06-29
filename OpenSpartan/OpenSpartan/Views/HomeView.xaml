@@ -7,6 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    xmlns:converters="using:OpenSpartan.Converters"
     xmlns:viewmodels="using:OpenSpartan.ViewModels"
     DataContext="{x:Bind viewmodels:ServiceRecordViewModel.Instance}"
     xmlns:controls="using:OpenSpartan.Controls"
@@ -126,28 +127,40 @@
                         </Setter.Value>
                     </Setter>
                 </Style>
+                <converters:DoubleToPercentageStringConverter x:Key="DoubleToPercentageStringConverter"></converters:DoubleToPercentageStringConverter>
+                <converters:CommaAfterThousandsConverter x:Key="CommaAfterThousandsConverter"></converters:CommaAfterThousandsConverter>
             </ResourceDictionary>
         </Grid.Resources>
 
         <StackPanel>
-            <InfoBar Margin="12" IsOpen="True" Title="Important Note" Message="Customer-facing message can be included here."></InfoBar>
-            <TextBlock Margin="24,8,0,8" Text="{Binding Gamertag}" Style="{StaticResource DisplayTextBlockStyle}"></TextBlock>
+            <StackPanel Orientation="Horizontal">
+                <Image Height="200" Source="{Binding AdornmentImage}"></Image>
+                <Grid>
+                    <Image VerticalAlignment="Center" Height="180" Opacity="0.3" Source="{Binding Backdrop}"></Image>
+                    <Image VerticalAlignment="Center" Height="100" Source="{Binding Nameplate}"></Image>
+                    <Image VerticalAlignment="Center" Height="110" Margin="12,0,0,0" HorizontalAlignment="Left" Source="{Binding Emblem}"></Image>
+                    <StackPanel Margin="148,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Gamertag}" Style="{StaticResource TitleTextBlockStyle}" Foreground="{Binding IDBadgeTextColor}"></TextBlock>
+                        <TextBlock Text="{Binding ServiceTag}" Style="{StaticResource SubtitleTextBlockStyle}" Foreground="{Binding IDBadgeTextColor}"></TextBlock>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
             <StackPanel Orientation="Vertical">
                 <TextBlock Margin="24,8,0,8" Text="Overview" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
                 <StackPanel Orientation="Horizontal">
-                    <StackPanel Orientation="Vertical" Margin="24,8,0,8">
+                    <StackPanel Background="#404040" Width="200" Orientation="Vertical" Margin="24,8,0,8" BorderThickness="2" Padding="12" CornerRadius="4">
                         <TextBlock Text="Matches Completed" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                        <TextBlock Text="{Binding ServiceRecord.MatchesCompleted}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                        <TextBlock Text="{Binding ServiceRecord.MatchesCompleted, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
                     </StackPanel>
-                    <StackPanel Orientation="Vertical" Margin="24,8,0,8">
+                    <StackPanel Background="#404040" Width="200" Orientation="Vertical" Margin="12,8,0,8" BorderThickness="2" Padding="12" CornerRadius="4">
                         <TextBlock Text="Wins" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                        <TextBlock Text="{Binding ServiceRecord.Wins}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                        <TextBlock Text="{Binding ServiceRecord.Wins, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
                     </StackPanel>
-                    <StackPanel Orientation="Vertical" Margin="24,8,0,8">
+                    <StackPanel Background="#404040" Width="200" Orientation="Vertical" Margin="12,8,0,8" BorderThickness="2" Padding="12" CornerRadius="4">
                         <TextBlock Text="Losses" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                        <TextBlock Text="{Binding ServiceRecord.Losses}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                        <TextBlock Text="{Binding ServiceRecord.Losses, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
                     </StackPanel>
-                    <StackPanel Orientation="Vertical" Margin="24,8,0,8">
+                    <StackPanel Background="#404040" Width="200" Orientation="Vertical" Margin="12,8,0,8" BorderThickness="2" Padding="12" CornerRadius="4">
                         <TextBlock Text="Time Played" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
                         <TextBlock Text="{Binding ServiceRecord.TimePlayed}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
                     </StackPanel>
@@ -156,17 +169,31 @@
             <StackPanel Orientation="Vertical">
                 <TextBlock Margin="24,8,0,8" Text="Career" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
                 <StackPanel Orientation="Horizontal">
-                    <StackPanel Orientation="Vertical" Margin="24,8,0,8">
-                        <TextBlock Text="Current Rank" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                        <TextBlock Text="{Binding CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                    <StackPanel Background="#404040" Width="200" Orientation="Vertical" Margin="24,8,0,8" BorderThickness="2" Padding="12" CornerRadius="4">
+                        <Grid>
+                            <ProgressRing Height="160" Width="160" IsIndeterminate="False" Value="{Binding RankProgress}" Maximum="1" Minimum="0"></ProgressRing>
+                            <Image VerticalAlignment="Center" HorizontalAlignment="Center" Height="140" Source="{Binding RankImage}"></Image>
+                        </Grid>
                     </StackPanel>
-                    <StackPanel Orientation="Vertical" Margin="24,8,0,8">
+                    <StackPanel Background="#404040" Width="200"  Orientation="Vertical" Margin="12,8,0,8" BorderThickness="2" Padding="12" CornerRadius="4">
+                        <TextBlock Text="Experience" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                        <TextBlock Text="Earned" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                        <TextBlock Text="{Binding CurrentRankExperience, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                        <TextBlock Text="Required" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                        <TextBlock Text="{Binding RequiredRankExperience, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                        <TextBlock Text="Percentage" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                        <TextBlock Text="{Binding RankProgress, Converter={StaticResource DoubleToPercentageStringConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                    </StackPanel>
+                    <StackPanel Background="#404040" Width="200"  Orientation="Vertical" Margin="12,8,0,8" BorderThickness="2" Padding="12" CornerRadius="4">
+                        <TextBlock Text="Ranks" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                        <TextBlock Text="Current" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                        <TextBlock Text="{Binding CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                        <TextBlock Text="Maximum" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                        <TextBlock Text="{Binding MaxRank}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                    </StackPanel>
+                    <StackPanel Background="#404040" Width="200"  Orientation="Vertical" Margin="12,8,0,8" BorderThickness="2" Padding="12" CornerRadius="4">
                         <TextBlock Text="Title" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
                         <TextBlock Text="{Binding Title}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
-                    </StackPanel>
-                    <StackPanel Orientation="Vertical" Margin="24,8,0,8">
-                        <Image Source="{Binding RankImage}"></Image>
-                        <Image Source="{Binding AdornmentImage}"></Image>
                     </StackPanel>
                 </StackPanel>
             </StackPanel>

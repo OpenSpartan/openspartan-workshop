@@ -1,5 +1,6 @@
 ﻿using Den.Dev.Orion.Models.HaloInfinite;
 using OpenSpartan.Shared;
+using System;
 using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.ViewModels
@@ -17,6 +18,14 @@ namespace OpenSpartan.ViewModels
         private string _title;
         private string _rankImage;
         private string _adornmentImage;
+        private string _serviceTag;
+        private string _nameplate;
+        private string _emblem;
+        private string _backdrop;
+        private string _idBadgeTextColor;
+        private int? _currentRankExperience;
+        private int? _requiredRankExperience;
+        private int? _maxRank;
 
         public string Gamertag
         { 
@@ -104,6 +113,127 @@ namespace OpenSpartan.ViewModels
                 if (_adornmentImage != value)
                 {
                     _adornmentImage = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public string ServiceTag
+        {
+            get => _serviceTag;
+            set
+            {
+                if (_serviceTag != value)
+                {
+                    _serviceTag = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public string Nameplate
+        {
+            get => _nameplate;
+            set
+            {
+                if (_nameplate != value)
+                {
+                    _nameplate = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public string Emblem
+        {
+            get => _emblem;
+            set
+            {
+                if (_emblem != value)
+                {
+                    _emblem = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public string Backdrop
+        {
+            get => _backdrop;
+            set
+            {
+                if (_backdrop != value)
+                {
+                    _backdrop = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public string IDBadgeTextColor
+        {
+            get => _idBadgeTextColor;
+            set
+            {
+                if (_idBadgeTextColor != value)
+                {
+                    _idBadgeTextColor = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public int? CurrentRankExperience
+        {
+            get => _currentRankExperience;
+            set
+            {
+                if (_currentRankExperience != value)
+                {
+                    _currentRankExperience = value;
+                    NotifyPropertyChanged();
+                    NotifyPropertyChanged(nameof(RankProgress));
+                }
+            }
+        }
+
+        public int? RequiredRankExperience
+        {
+            get => _requiredRankExperience;
+            set
+            {
+                if (_requiredRankExperience != value)
+                {
+                    _requiredRankExperience = value;
+                    NotifyPropertyChanged();
+                    NotifyPropertyChanged(nameof(RankProgress));
+                }
+            }
+        }
+
+        public double? RankProgress
+        {
+            get 
+            {
+                if (CurrentRankExperience != null && RequiredRankExperience != null)
+                {
+                    return Convert.ToDouble(CurrentRankExperience) / Convert.ToDouble(RequiredRankExperience);
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
+
+        public int? MaxRank
+        {
+            get => _maxRank;
+            set
+            {
+                if (_maxRank != value)
+                {
+                    _maxRank = value;
                     NotifyPropertyChanged();
                 }
             }

@@ -17,6 +17,7 @@ namespace OpenSpartan
         public MainWindow()
         {
             this.InitializeComponent();
+            this.ExtendsContentIntoTitleBar = true;
 
             nvRoot.SelectedItem = nvRoot.MenuItems.OfType<NavigationViewItem>().First();
             ContentFrame.Navigate(

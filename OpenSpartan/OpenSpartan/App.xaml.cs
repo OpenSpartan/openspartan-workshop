@@ -24,6 +24,7 @@ namespace OpenSpartan
         public App()
         {
             this.InitializeComponent();
+            App.Current.RequestedTheme = ApplicationTheme.Dark;
         }
 
         /// <summary>
@@ -43,66 +44,11 @@ namespace OpenSpartan
 
                 if (instantiationResult)
                 {
-                    ServiceRecordViewModel.Instance.Gamertag = UserContextManager.XboxUserContext.DisplayClaims.Xui[0].Gamertag;
-                    ServiceRecordViewModel.Instance.Xuid = UserContextManager.XboxUserContext.DisplayClaims.Xui[0].XUID;
-                    HaloApiResultContainer<PlayerServiceRecord, RawResponseContainer> serviceRecordResult = null;
-                    HaloApiResultContainer<RewardTrackResultContainer, RawResponseContainer> careerTrackResult = null;
-                    HaloApiResultContainer<CareerTrackContainer, RawResponseContainer> careerTrackContainerResult = null;
+                    var serviceRecordOutcome = UserContextManager.PopulateServiceRecordData();
 
-                    serviceRecordResult = await UserContextManager.HaloClient.StatsGetPlayerServiceRecord(ServiceRecordViewModel.Instance.Gamertag, Den.Dev.Orion.Models.HaloInfinite.LifecycleMode.Matchmade);
+                    var careerOutcome = UserContextManager.PopulateCareerData();
 
-                    if (serviceRecordResult != null && serviceRecordResult.Response.Code == 200)
-                    {
-                        ServiceRecordViewModel.Instance.ServiceRecord = serviceRecordResult.Result;
-                    }
-
-                    careerTrackResult = await UserContextManager.HaloClient.EconomyGetPlayerCareerRank(new List<string>() { $"xuid({ServiceRecordViewModel.Instance.Xuid})" }, "careerRank1");
-
-                    if (careerTrackResult != null && careerTrackResult.Response.Code == 200)
-                    {
-                        ServiceRecordViewModel.Instance.CareerSnapshot = careerTrackResult.Result;
-                    }
-
-                    careerTrackContainerResult = await UserContextManager.HaloClient.GameCmsGetCareerRanks("careerRank1");
-
-                    if (careerTrackContainerResult != null && careerTrackContainerResult.Response.Code == 200)
-                    {
-                        var currentCareerStage = (from c in careerTrackContainerResult.Result.Ranks where c.Rank == ServiceRecordViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank select c).FirstOrDefault();
-                        if (currentCareerStage != null)
-                        {
-                            ServiceRecordViewModel.Instance.Title = currentCareerStage.RankTitle.Value;
-
-                            string qualifiedRankImagePath = Path.Combine(Core.Configuration.CacheDirectory, "imagecache", currentCareerStage.RankLargeIcon);
-                            string qualifiedAdornmentImagePath = Path.Combine(Core.Configuration.CacheDirectory, "imagecache", currentCareerStage.RankAdornmentIcon);
-
-                            // Let's make sure that we create the directory if it does not exist.
-                            System.IO.FileInfo file = new System.IO.FileInfo(qualifiedRankImagePath);
-                            file.Directory.Create();
-
-                            file = new System.IO.FileInfo(qualifiedAdornmentImagePath);
-                            file.Directory.Create();
-
-                            if (!System.IO.File.Exists(qualifiedRankImagePath))
-                            {
-                                var rankImage = await UserContextManager.HaloClient.GameCmsGetImage(currentCareerStage.RankLargeIcon);
-                                if (rankImage != null && rankImage.Response.Code == 200)
-                                {
-                                    System.IO.File.WriteAllBytes(qualifiedRankImagePath, rankImage.Result);
-                                }
-                            }
-                            ServiceRecordViewModel.Instance.RankImage = qualifiedRankImagePath;
-
-                            if (!System.IO.File.Exists(qualifiedAdornmentImagePath))
-                            {
-                                var adornmentImage = await UserContextManager.HaloClient.GameCmsGetImage(currentCareerStage.RankAdornmentIcon);
-                                if (adornmentImage != null && adornmentImage.Response.Code == 200)
-                                {
-                                    System.IO.File.WriteAllBytes(qualifiedAdornmentImagePath, adornmentImage.Result);
-                                }
-                            }
-                            ServiceRecordViewModel.Instance.AdornmentImage = qualifiedAdornmentImagePath;
-                        }
-                    }
+                    var customizationOutcome = UserContextManager.PopulateCustomizationData();
                 }
             }
         }        
