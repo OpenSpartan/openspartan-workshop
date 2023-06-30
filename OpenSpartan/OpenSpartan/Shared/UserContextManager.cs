@@ -134,7 +134,9 @@ namespace OpenSpartan.Shared
                 {
                     ServiceRecordViewModel.Instance.MaxRank = careerTrackContainerResult.Result.Ranks.Count;
 
-                    var currentCareerStage = (from c in careerTrackContainerResult.Result.Ranks where c.Rank == ServiceRecordViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank select c).FirstOrDefault();
+                    // The rank here is incremented by one because of off-by-one counting when ranks are established. The introductory rank apparently is counted differently in the index
+                    // compared to the full set of ranks in the reward track.
+                    var currentCareerStage = (from c in careerTrackContainerResult.Result.Ranks where c.Rank == ServiceRecordViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank + 1 select c).FirstOrDefault();
                     if (currentCareerStage != null)
                     {
                         ServiceRecordViewModel.Instance.Title = currentCareerStage.RankTitle.Value;
