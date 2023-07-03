@@ -144,6 +144,12 @@ namespace OpenSpartan.Shared
                         ServiceRecordViewModel.Instance.CurrentRankExperience = careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
                         ServiceRecordViewModel.Instance.RequiredRankExperience = currentCareerStage.XpRequiredForRank;
 
+                        // Let's also compute secondary values that can tell us how far the user is from the Hero title.
+                        ServiceRecordViewModel.Instance.ExperienceTotalRequired = careerTrackContainerResult.Result.Ranks.Sum(item => item.XpRequiredForRank);
+
+                        var relevantRanks = (from c in careerTrackContainerResult.Result.Ranks where c.Rank <= ServiceRecordViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank select c);
+                        ServiceRecordViewModel.Instance.ExperienceEarnedToDate = relevantRanks.Sum(rank => rank.XpRequiredForRank) + careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
+
                         string qualifiedRankImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankLargeIcon);
                         string qualifiedAdornmentImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankAdornmentIcon);
 

@@ -27,6 +27,8 @@ namespace OpenSpartan.ViewModels
         private int? _requiredRankExperience;
         private int? _maxRank;
         private string _seasonalBackground;
+        private int? _experienceEarnedToDate;
+        private int? _experienceTotalRequired;
 
         public string Gamertag
         { 
@@ -251,6 +253,42 @@ namespace OpenSpartan.ViewModels
                     NotifyPropertyChanged();
                 }
             }
+        }
+
+        public int? ExperienceEarnedToDate
+        {
+            get => _experienceEarnedToDate;
+            set
+            {
+                if (_experienceEarnedToDate != value)
+                {
+                    _experienceEarnedToDate = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public int? ExperienceTotalRequired
+        {
+            get => _experienceTotalRequired;
+            set
+            {
+                if (_experienceTotalRequired != value)
+                {
+                    _experienceTotalRequired = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public int? ExperienceRemaining
+        {
+            get => ExperienceTotalRequired - ExperienceEarnedToDate;
+        }
+
+        public double? ExperienceProgress
+        {
+            get => Convert.ToDouble(ExperienceEarnedToDate) / Convert.ToDouble(ExperienceTotalRequired);
         }
 
         public void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
