@@ -130,6 +130,7 @@
                 </Style>
                 <converters:DoubleToPercentageStringConverter x:Key="DoubleToPercentageStringConverter"></converters:DoubleToPercentageStringConverter>
                 <converters:CommaAfterThousandsConverter x:Key="CommaAfterThousandsConverter"></converters:CommaAfterThousandsConverter>
+                <converters:DirectValueToPercentageStringConverter x:Key="DirectValueToPercentageStringConverter"></converters:DirectValueToPercentageStringConverter>
             </ResourceDictionary>
         </Grid.Resources>
 
@@ -158,78 +159,449 @@
                     </Grid>
                 </StackPanel>
             </Grid>
+            
+            <!-- Content -->
             <StackPanel Orientation="Vertical">
                 <TextBlock Margin="24,8,0,8" Text="Overview" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
-                <StackPanel Orientation="Horizontal">
+                <VariableSizedWrapGrid ItemWidth="250" Orientation="Horizontal" Margin="24,0,0,0">
                     <!-- Matches completed -->
-                    <Grid Background="#404040" Width="200" Margin="24,8,0,8" BorderThickness="2" CornerRadius="4">
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="36"></RowDefinition>
                             <RowDefinition Height="*"></RowDefinition>
                         </Grid.RowDefinitions>
 
                         <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
-                            <TextBlock Text="Matches Completed" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"></ColumnDefinition>
+                                    <ColumnDefinition Width="64"></ColumnDefinition>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBlock Text="Matches Completed" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                <Grid Grid.Column="1" CornerRadius="4">
+                                    <Border Background="#404040">
+                                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
+                                    </Border>
+                                </Grid>
+                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.MatchesCompleted, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
                         </Grid>
                     </Grid>
 
-                    <Grid Background="#404040" Width="200" Margin="12,8,0,8" BorderThickness="2" CornerRadius="4">
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="36"></RowDefinition>
                             <RowDefinition Height="*"></RowDefinition>
                         </Grid.RowDefinitions>
 
                         <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="64"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
                             <TextBlock Text="Wins" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                            <Grid Grid.Column="1" CornerRadius="4">
+                                <Border Background="#404040">
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
+                                </Border>
+                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.Wins, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
                         </Grid>
                     </Grid>
 
-                    <Grid Background="#404040" Width="200" Margin="12,8,0,8" BorderThickness="2" CornerRadius="4">
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="36"></RowDefinition>
                             <RowDefinition Height="*"></RowDefinition>
                         </Grid.RowDefinitions>
 
                         <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="64"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            
                             <TextBlock Text="Losses" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+
+                            <Grid Grid.Column="1" CornerRadius="4">
+                                <Border Background="#404040">
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
+                                </Border>
+                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.Losses, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
                         </Grid>
                     </Grid>
 
-                    <Grid Background="#404040" Width="200" Margin="12,8,0,8" BorderThickness="2" CornerRadius="4">
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="36"></RowDefinition>
                             <RowDefinition Height="*"></RowDefinition>
                         </Grid.RowDefinitions>
 
                         <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="64"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            
                             <TextBlock Text="Time Played" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+
+                            <Grid Grid.Column="1" CornerRadius="4">
+                                <Border Background="#404040">
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
+                                </Border>
+                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.TimePlayed}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
                         </Grid>
                     </Grid>
-                </StackPanel>
+
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="64"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Accuracy" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+
+                            <Grid Grid.Column="1" CornerRadius="4">
+                                <Border Background="#404040">
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                        <Grid Grid.Row="1" Padding="8">
+                            <TextBlock Text="{Binding ServiceRecord.CoreStats.Accuracy, Converter={StaticResource DirectValueToPercentageStringConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                        </Grid>
+                    </Grid>
+
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="64"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Assists" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+
+                            <Grid Grid.Column="1" CornerRadius="4">
+                                <Border Background="#404040">
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                        <Grid Grid.Row="1" Padding="8">
+                            <TextBlock Text="{Binding ServiceRecord.CoreStats.Assists, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                        </Grid>
+                    </Grid>
+
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="64"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Betrayals" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+
+                            <Grid Grid.Column="1" CornerRadius="4">
+                                <Border Background="#404040">
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                        <Grid Grid.Row="1" Padding="8">
+                            <TextBlock Text="{Binding ServiceRecord.CoreStats.Betrayals, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                        </Grid>
+                    </Grid>
+
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="64"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Callout Assists" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+
+                            <Grid Grid.Column="1" CornerRadius="4">
+                                <Border Background="#404040">
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                        <Grid Grid.Row="1" Padding="8">
+                            <TextBlock Text="{Binding ServiceRecord.CoreStats.CalloutAssists, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                        </Grid>
+                    </Grid>
+
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="64"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Damage Dealt" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+
+                            <Grid Grid.Column="1" CornerRadius="4">
+                                <Border Background="#404040">
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                        <Grid Grid.Row="1" Padding="8">
+                            <TextBlock Text="{Binding ServiceRecord.CoreStats.DamageDealt, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                        </Grid>
+                    </Grid>
+
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="64"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Damage Taken" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+
+                            <Grid Grid.Column="1" CornerRadius="4">
+                                <Border Background="#404040">
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                        <Grid Grid.Row="1" Padding="8">
+                            <TextBlock Text="{Binding ServiceRecord.CoreStats.DamageTaken, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                        </Grid>
+                    </Grid>
+
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="64"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Deaths" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+
+                            <Grid Grid.Column="1" CornerRadius="4">
+                                <Border Background="#404040">
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                        <Grid Grid.Row="1" Padding="8">
+                            <TextBlock Text="{Binding ServiceRecord.CoreStats.Deaths, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                        </Grid>
+                    </Grid>
+
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="64"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Driver Assists" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+
+                            <Grid Grid.Column="1" CornerRadius="4">
+                                <Border Background="#404040">
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                        <Grid Grid.Row="1" Padding="8">
+                            <TextBlock Text="{Binding ServiceRecord.CoreStats.DriverAssists, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                        </Grid>
+                    </Grid>
+
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="64"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="EMP Assists" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+
+                            <Grid Grid.Column="1" CornerRadius="4">
+                                <Border Background="#404040">
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                        <Grid Grid.Row="1" Padding="8">
+                            <TextBlock Text="{Binding ServiceRecord.CoreStats.EmpAssists, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                        </Grid>
+                    </Grid>
+
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="64"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Grenade Kills" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+
+                            <Grid Grid.Column="1" CornerRadius="4">
+                                <Border Background="#404040">
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                        <Grid Grid.Row="1" Padding="8">
+                            <TextBlock Text="{Binding ServiceRecord.CoreStats.GrenadeKills, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                        </Grid>
+                    </Grid>
+
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="64"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Headshot Kills" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+
+                            <Grid Grid.Column="1" CornerRadius="4">
+                                <Border Background="#404040">
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                        <Grid Grid.Row="1" Padding="8">
+                            <TextBlock Text="{Binding ServiceRecord.CoreStats.HeadshotKills, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                        </Grid>
+                    </Grid>
+
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="64"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Hijacks" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+
+                            <Grid Grid.Column="1" CornerRadius="4">
+                                <Border Background="#404040">
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                        <Grid Grid.Row="1" Padding="8">
+                            <TextBlock Text="{Binding ServiceRecord.CoreStats.Hijacks, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                        </Grid>
+                    </Grid>
+
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="64"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="KDA" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+
+                            <Grid Grid.Column="1" CornerRadius="4">
+                                <Border Background="#404040">
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                        <Grid Grid.Row="1" Padding="8">
+                            <TextBlock Text="{Binding ServiceRecord.CoreStats.KDA, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                        </Grid>
+                    </Grid>
+                </VariableSizedWrapGrid>
             </StackPanel>
+            
             <StackPanel Orientation="Vertical">
                 <TextBlock Margin="24,8,0,8" Text="Career" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
-                <StackPanel Orientation="Horizontal">
-                    <StackPanel Background="#404040" Width="200" Orientation="Vertical" Margin="24,8,0,8" BorderThickness="2" Padding="12" CornerRadius="4">
+                <VariableSizedWrapGrid Orientation="Horizontal" ItemWidth="250" Margin="24,0,0,0">
+                    <StackPanel Background="#404040" Orientation="Vertical" BorderThickness="2" Padding="12" CornerRadius="4">
                         <Grid>
                             <ProgressRing Height="160" Width="160" IsIndeterminate="False" Value="{Binding RankProgress}" Maximum="1" Minimum="0"></ProgressRing>
                             <Image VerticalAlignment="Center" HorizontalAlignment="Center" Height="140" Source="{Binding RankImage}"></Image>
                         </Grid>
                     </StackPanel>
 
-                    <Grid Background="#404040" Width="200" Margin="12,8,0,8" BorderThickness="2" CornerRadius="4">
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="36"></RowDefinition>
                             <RowDefinition Height="*"></RowDefinition>
@@ -250,7 +622,7 @@
                         </Grid>
                     </Grid>
 
-                    <Grid Background="#404040" Width="200" Margin="12,8,0,8" BorderThickness="2" CornerRadius="4">
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="36"></RowDefinition>
                             <RowDefinition Height="*"></RowDefinition>
@@ -269,7 +641,7 @@
                         </Grid>
                     </Grid>
 
-                    <Grid Background="#404040" Width="200" Margin="12,8,0,8" BorderThickness="2" CornerRadius="4">
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="36"></RowDefinition>
                             <RowDefinition Height="*"></RowDefinition>
@@ -282,7 +654,7 @@
                             <TextBlock Text="{Binding Title}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
                         </Grid>
                     </Grid>
-                </StackPanel>
+                </VariableSizedWrapGrid>
             </StackPanel>
         </StackPanel>
         

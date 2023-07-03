@@ -32,7 +32,7 @@ namespace OpenSpartan
             m_window = new MainWindow();
             m_window.Activate();
 
-            var databaseBootstrapResult = DataHandler.BootstrapDatabase("local.db");
+            var databaseBootstrapResult = DataHandler.BootstrapDatabase();
 
             var authResult = await UserContextManager.InitializePublicClientApplication();
             if (authResult != null)

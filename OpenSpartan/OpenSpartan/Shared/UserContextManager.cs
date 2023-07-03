@@ -4,6 +4,7 @@ using Den.Dev.Orion.Models;
 using Den.Dev.Orion.Models.HaloInfinite;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
+using OpenSpartan.Data;
 using OpenSpartan.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -23,7 +24,7 @@ namespace OpenSpartan.Shared
 
         internal static async Task<AuthenticationResult> InitializePublicClientApplication()
         {
-            var storageProperties = new StorageCreationPropertiesBuilder(Core.Configuration.CacheFileName, Core.Configuration.CacheDirectory).Build();
+            var storageProperties = new StorageCreationPropertiesBuilder(Core.Configuration.CacheFileName, Core.Configuration.AppDataDirectory).Build();
 
             var pca = PublicClientApplicationBuilder.Create(Core.Configuration.ClientID).WithAuthority(AadAuthorityAudience.PersonalMicrosoftAccount).Build();
 
@@ -143,8 +144,8 @@ namespace OpenSpartan.Shared
                         ServiceRecordViewModel.Instance.CurrentRankExperience = careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
                         ServiceRecordViewModel.Instance.RequiredRankExperience = currentCareerStage.XpRequiredForRank;
 
-                        string qualifiedRankImagePath = Path.Combine(Core.Configuration.CacheDirectory, "imagecache", currentCareerStage.RankLargeIcon);
-                        string qualifiedAdornmentImagePath = Path.Combine(Core.Configuration.CacheDirectory, "imagecache", currentCareerStage.RankAdornmentIcon);
+                        string qualifiedRankImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankLargeIcon);
+                        string qualifiedAdornmentImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankAdornmentIcon);
 
                         // Let's make sure that we create the directory if it does not exist.
                         System.IO.FileInfo file = new System.IO.FileInfo(qualifiedRankImagePath);
@@ -196,6 +197,8 @@ namespace OpenSpartan.Shared
                 if (serviceRecordResult.Result != null && serviceRecordResult.Response.Code == 200)
                 {
                     ServiceRecordViewModel.Instance.ServiceRecord = serviceRecordResult.Result;
+
+                    DataHandler.InsertServiceRecordEntry(serviceRecordResult.Response.Message);
                 }
 
                 return true;
@@ -212,7 +215,7 @@ namespace OpenSpartan.Shared
             {
                 string backgroundPath = "progression/Switcher/Season_Switcher_S4_IN.png";
                 // Get initial service record details
-                string qualifiedBackgroundImagePath = Path.Combine(Core.Configuration.CacheDirectory, "imagecache", backgroundPath);
+                string qualifiedBackgroundImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", backgroundPath);
 
                 if (!System.IO.File.Exists(qualifiedBackgroundImagePath))
                 {
@@ -262,9 +265,9 @@ namespace OpenSpartan.Shared
                         {
                             ServiceRecordViewModel.Instance.IDBadgeTextColor = configuration.Value.TextColor;
 
-                            string qualifiedNameplateImagePath = Path.Combine(Core.Configuration.CacheDirectory, "imagecache", configuration.Value.NameplateCmsPath);
-                            string qualifiedEmblemImagePath = Path.Combine(Core.Configuration.CacheDirectory, "imagecache", configuration.Value.EmblemCmsPath);
-                            string qualifiedBackdropImagePath = Path.Combine(Core.Configuration.CacheDirectory, "imagecache", backdrop.Result.ImagePath.Media.MediaUrl.Path);
+                            string qualifiedNameplateImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", configuration.Value.NameplateCmsPath);
+                            string qualifiedEmblemImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", configuration.Value.EmblemCmsPath);
+                            string qualifiedBackdropImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", backdrop.Result.ImagePath.Media.MediaUrl.Path);
 
                             // Let's make sure that we create the directory if it does not exist.
                             FileInfo file = new FileInfo(qualifiedNameplateImagePath);

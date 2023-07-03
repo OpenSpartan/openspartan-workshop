@@ -1,6 +1,7 @@
 ﻿using Microsoft.Data.Sqlite;
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -9,55 +10,73 @@ namespace OpenSpartan.Data
 {
     internal class DataHandler
     {
-        internal static bool BootstrapDatabase(string databaseName)
+        internal static string DatabasePath => Path.Combine(Core.Configuration.AppDataDirectory, "data", Core.Configuration.DatabaseFileName);
+
+        internal static bool BootstrapDatabase()
         {
             try
             {
-                string qualifiedDatabaseLocation = Path.Combine(Core.Configuration.CacheDirectory, "data", databaseName);
-
                 // Let's make sure that we create the directory if it does not exist.
-                FileInfo file = new FileInfo(qualifiedDatabaseLocation);
+                FileInfo file = new FileInfo(DatabasePath);
                 file.Directory.Create();
 
                 // Regardless of whether the file exists or not, a new database will be created
                 // when the connection is initialized.
-                using (var connection = new SqliteConnection($"Data Source={qualifiedDatabaseLocation}"))
+                using (var connection = new SqliteConnection($"Data Source={DatabasePath}"))
                 {
                     connection.Open();
 
-                    var verifyTableAvailabilityQuery = File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Queries", "VerifyTableAvailability.sql"), Encoding.UTF8);
-                    var command = connection.CreateCommand();
-                    command.CommandText = verifyTableAvailabilityQuery;
-                    command.Parameters.AddWithValue("$id", "ServiceRecordSnapshots");
-
-                    // Service record table
-                    using (var reader = command.ExecuteReader())
+                    if (!connection.IsTableAvailable("ServiceRecordSnapshots"))
                     {
-                        if (reader.HasRows)
-                        {
-                            while (reader.Read())
-                            {
-                                var name = reader.GetString(0);
+                        connection.BootstrapTable("ServiceRecordSnapshots");
+                    }
 
-                                Debug.WriteLine($"Table detected: {name}");
-                            }
-                        }
-                        else
-                        {
-                            // There is no table.
-                            Debug.WriteLine("There is no table.");
-                            var serviceRecordTableQuery = File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Queries", "BootstrapServiceRecordTable.sql"), Encoding.UTF8);
+                    if (!connection.IsTableAvailable("PlayerMatchStats"))
+                    {
+                        connection.BootstrapTable("PlayerMatchStats");
+                    }
 
-                            command = connection.CreateCommand();
-                            command.CommandText = serviceRecordTableQuery;
-
-                            // TODO: Add some error validation here.
-                            var boostrapReader = command.ExecuteReader();
-                        }
+                    if (!connection.IsTableAvailable("MatchStats"))
+                    {
+                        connection.BootstrapTable("MatchStats");
                     }
                 }
 
                 return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                return false;
+            }
+        }
+
+        internal static bool InsertServiceRecordEntry(string serviceRecordJson)
+        {
+            try
+            {
+                using (var connection = new SqliteConnection($"Data Source={DatabasePath}"))
+                {
+                    connection.Open();
+
+                    var insertServiceRecordEntryQuery = File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Queries", "Insert", "ServiceRecord.sql"), Encoding.UTF8);
+                    var command = connection.CreateCommand();
+                    command.CommandText = insertServiceRecordEntryQuery;
+                    command.Parameters.AddWithValue("$ResponseBody", serviceRecordJson);
+                    command.Parameters.AddWithValue("$SnapshotTimestamp", DateTimeOffset.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK", CultureInfo.InvariantCulture));
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        if (reader.RecordsAffected > 1)
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {

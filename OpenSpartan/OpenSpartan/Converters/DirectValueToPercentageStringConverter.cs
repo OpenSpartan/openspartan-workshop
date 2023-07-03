@@ -3,11 +3,11 @@ using System;
 
 namespace OpenSpartan.Converters
 {
-    internal class DoubleToPercentageStringConverter : IValueConverter
+    internal class DirectValueToPercentageStringConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            return String.Format("{0:P2}", System.Convert.ToDouble(value));
+            return String.Format("{0:P02}", System.Convert.ToDouble(value) / 100.0);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
