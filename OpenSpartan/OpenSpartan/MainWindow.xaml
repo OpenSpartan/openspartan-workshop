@@ -49,11 +49,6 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <NavigationViewItemSeparator />
-                <NavigationViewItem Content="Profile">
-                    <NavigationViewItem.Icon>
-                        <SymbolIcon Symbol="Contact2"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
                 <NavigationViewItem Content="Matches">
                     <NavigationViewItem.Icon>
                         <SymbolIcon Symbol="Directions"/>

@@ -1,11 +1,7 @@
-﻿using Den.Dev.Orion.Models;
-using Den.Dev.Orion.Models.HaloInfinite;
-using Microsoft.UI.Xaml;
+﻿using Microsoft.UI.Xaml;
+using OpenSpartan.Data;
 using OpenSpartan.Shared;
 using OpenSpartan.ViewModels;
-using System.Collections.Generic;
-using System.Linq;
-using System.IO;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -35,6 +31,8 @@ namespace OpenSpartan
         {
             m_window = new MainWindow();
             m_window.Activate();
+
+            var databaseBootstrapResult = DataHandler.BootstrapDatabase("local.db");
 
             var authResult = await UserContextManager.InitializePublicClientApplication();
             if (authResult != null)
