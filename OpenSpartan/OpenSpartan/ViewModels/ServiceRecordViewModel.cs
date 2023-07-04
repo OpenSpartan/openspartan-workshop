@@ -264,6 +264,8 @@ namespace OpenSpartan.ViewModels
                 {
                     _experienceEarnedToDate = value;
                     NotifyPropertyChanged();
+                    NotifyPropertyChanged(nameof(ExperienceRemaining));
+                    NotifyPropertyChanged(nameof(ExperienceProgress));
                 }
             }
         }
@@ -277,6 +279,8 @@ namespace OpenSpartan.ViewModels
                 {
                     _experienceTotalRequired = value;
                     NotifyPropertyChanged();
+                    NotifyPropertyChanged(nameof(ExperienceRemaining));
+                    NotifyPropertyChanged(nameof(ExperienceProgress));
                 }
             }
         }
