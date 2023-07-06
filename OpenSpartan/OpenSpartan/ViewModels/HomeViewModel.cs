@@ -5,11 +5,11 @@ using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.ViewModels
 {
-    internal class ServiceRecordViewModel : Observable
+    internal class HomeViewModel : Observable
     {
-        public static ServiceRecordViewModel Instance { get; } = new ServiceRecordViewModel();
+        public static HomeViewModel Instance { get; } = new HomeViewModel();
 
-        private ServiceRecordViewModel() { }
+        private HomeViewModel() { }
 
         private string _gamerTag;
         private string _xuid;

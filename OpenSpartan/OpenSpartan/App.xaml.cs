@@ -49,6 +49,8 @@ namespace OpenSpartan
                     var customizationOutcome = UserContextManager.PopulateCustomizationData();
 
                     var decorationOutcome = UserContextManager.PopulateDecorationData();
+
+                    var matchRecordsOutcome = UserContextManager.PopulateMatchRecordsData();
                 }
             }
         }        

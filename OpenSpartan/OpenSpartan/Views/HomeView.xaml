@@ -10,7 +10,7 @@
     xmlns:media="using:Microsoft.UI.Xaml.Media"
     xmlns:converters="using:OpenSpartan.Converters"
     xmlns:viewmodels="using:OpenSpartan.ViewModels"
-    DataContext="{x:Bind viewmodels:ServiceRecordViewModel.Instance}"
+    DataContext="{x:Bind viewmodels:HomeViewModel.Instance}"
     xmlns:controls="using:OpenSpartan.Controls"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 

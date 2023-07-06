@@ -5,6 +5,12 @@
     <None Update="App.xaml">
       <SubType>Designer</SubType>
     </None>
+    <Page Update="Views\MedalsView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\MatchesView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Controls\HeaderTile.xaml">
       <SubType>Designer</SubType>
     </Page>
