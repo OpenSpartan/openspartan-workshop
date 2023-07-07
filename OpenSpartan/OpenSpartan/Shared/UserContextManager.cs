@@ -372,6 +372,7 @@ namespace OpenSpartan.Shared
                         var matches = await HaloClient.StatsGetMatchHistory($"xuid({xuid})", queryStart, queryCount, MatchType.Matchmaking);
                         if (matches != null && matches.Result != null && matches.Result.Results != null && matches.Result.ResultCount > 0)
                         {
+                            // We want to extract individual match IDs first.
                             var matchIdBatch = matches.Result.Results.Select(item => item.MatchId).ToList();
                             Debug.WriteLine($"Got matches starting from {queryStart} up to {queryCount} entries. Counter at {counter} and last query yielded {matchIdBatch.Count} results.");
                             matchIds.AddRange(matchIdBatch);
