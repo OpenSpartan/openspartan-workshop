@@ -1,7 +1,6 @@
 ﻿using Den.Dev.Orion.Models;
 using Den.Dev.Orion.Models.HaloInfinite;
 using Microsoft.Data.Sqlite;
-using OpenSpartan.Models;
 using OpenSpartan.Shared;
 using System;
 using System.Collections.Generic;
@@ -11,7 +10,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace OpenSpartan.Data
@@ -122,6 +120,11 @@ namespace OpenSpartan.Data
         {
             try
             {
+                int matchAvailable = 0;
+                int playerStatsAvailable = 0;
+
+                HaloApiResultContainer<MatchStats, RawResponseContainer>? matchStats = null;
+
                 using (var connection = new SqliteConnection($"Data Source={DatabasePath}"))
                 {
                     connection.Open();
@@ -133,115 +136,119 @@ namespace OpenSpartan.Data
                     {
                         var completionProgress = (double)matchCounter / (double)matchesTotal * 100.0;
 
-                        var command = connection.CreateCommand();
-                        command.CommandText = $"SELECT EXISTS(SELECT 1 FROM MatchStats WHERE MatchId='{matchId}') AS MATCH_AVAILABLE, EXISTS(SELECT 1 FROM PlayerMatchStats WHERE MatchId='{matchId}') AS PLAYER_STATS_AVAILABLE;";
-
-                        using (var reader = command.ExecuteReader())
+                        using (var command = connection.CreateCommand())
                         {
-                            if (reader.HasRows)
+                            command.CommandText = $"SELECT EXISTS(SELECT 1 FROM MatchStats WHERE MatchId='{matchId}') AS MATCH_AVAILABLE, EXISTS(SELECT 1 FROM PlayerMatchStats WHERE MatchId='{matchId}') AS PLAYER_STATS_AVAILABLE;";
+
+                            using (var reader = command.ExecuteReader())
                             {
-                                while (reader.Read())
+                                if (reader.HasRows)
                                 {
-                                    HaloApiResultContainer<MatchStats, RawResponseContainer>? matchStats = null;
-
-                                    // MATCH_AVAILABLE - if the value is zero, that means we do not have the match data.
-                                    if (reader.GetFieldValue<int>(0) == 0)
+                                    while (reader.Read())
                                     {
-                                        Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Getting match stats for {matchId}...");
-                                        matchStats = await UserContextManager.HaloClient.StatsGetMatchStats(matchId.ToString());
-
-                                        if (matchStats != null && matchStats.Result != null)
-                                        {
-                                            var processedMatchAssetParameters = UpdateMatchAssetRecords(matchStats.Result);
-                                            var insertMatchStatsQuery = System.IO.File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Queries", "Insert", "MatchStats.sql"), Encoding.UTF8);
-
-                                            var insertionCommand = connection.CreateCommand();
-                                            insertionCommand.CommandText = insertMatchStatsQuery;
-                                            insertionCommand.Parameters.AddWithValue("$ResponseBody", matchStats.Response.Message);
-
-                                            using (var matchReader = insertionCommand.ExecuteReader())
-                                            {
-                                                if (matchReader.RecordsAffected > 0)
-                                                {
-                                                    Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored match data for {matchId} in the database.");
-                                                }
-                                            }
-                                        }
-                                        else
-                                        {
-                                            Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match stats were not available for {matchId}.");
-                                            matchCounter++;
-                                            continue;
-                                        }
+                                        matchAvailable = reader.GetFieldValue<int>(0);
+                                        playerStatsAvailable = reader.GetFieldValue<int>(1);
                                     }
-                                    else
+                                }
+                                else
+                                {
+                                    Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Something went wrong. Could not communicate with the database to get match availability.");
+                                }
+
+                                matchCounter++;
+                            }
+                        }
+
+                        // MATCH_AVAILABLE - if the value is zero, that means we do not have the match data.
+                        if (matchAvailable == 0)
+                        {
+                            Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Getting match stats for {matchId}...");
+                            matchStats = await UserContextManager.HaloClient.StatsGetMatchStats(matchId.ToString());
+
+                            if (matchStats != null && matchStats.Result != null)
+                            {
+                                var processedMatchAssetParameters = await UpdateMatchAssetRecords(matchStats.Result);
+                                var insertMatchStatsQuery = System.IO.File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Queries", "Insert", "MatchStats.sql"), Encoding.UTF8);
+
+                                using (var insertionCommand = connection.CreateCommand())
+                                {
+                                    insertionCommand.CommandText = insertMatchStatsQuery;
+                                    insertionCommand.Parameters.AddWithValue("$ResponseBody", matchStats.Response.Message);
+
+                                    var insertionResult = insertionCommand.ExecuteNonQuery();
+
+                                    if (insertionResult > 0)
                                     {
-                                        Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} already available. Not requesting new data.");
+                                        Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored match data for {matchId} in the database.");
                                     }
-
-                                    // PLAYER_STATS_AVAILABLE - if the value is zero, that means we do not have the match data.
-                                    if (reader.GetFieldValue<int>(0) == 0)
-                                    {
-                                        if (matchStats == null)
-                                        {
-                                            matchStats = await UserContextManager.HaloClient.StatsGetMatchStats(matchId.ToString());
-                                        }
-
-                                        if (matchStats != null && matchStats.Result != null && matchStats.Result.Players != null)
-                                        {
-                                            // Anything that starts with "bid" is a bot and including that in the request for player stats will result in failure.
-                                            var targetPlayers = matchStats.Result.Players.Select(p => p.PlayerId).Where(p => !p.StartsWith("bid")).ToList();
-
-                                            Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Attempting to get player results for players for match {matchId}.");
-
-                                            var playerStatsSnapshot = await UserContextManager.HaloClient.SkillGetMatchPlayerResult(matchId.ToString(), targetPlayers!);
-
-                                            if (playerStatsSnapshot != null && playerStatsSnapshot.Result != null && playerStatsSnapshot.Result.Value != null)
-                                            {
-                                                Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Got stats for {playerStatsSnapshot.Result.Value.Count} players.");
-
-                                                if (playerStatsSnapshot.Response != null)
-                                                {
-                                                    var insertMatchStatsQuery = System.IO.File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Queries", "Insert", "PlayerMatchStats.sql"), Encoding.UTF8);
-
-                                                    var insertionCommand = connection.CreateCommand();
-                                                    insertionCommand.CommandText = insertMatchStatsQuery;
-                                                    insertionCommand.Parameters.AddWithValue("$MatchId", matchId.ToString());
-                                                    insertionCommand.Parameters.AddWithValue("$ResponseBody", playerStatsSnapshot.Response.Message);
-
-                                                    using (var matchReader = insertionCommand.ExecuteReader())
-                                                    {
-                                                        if (matchReader.RecordsAffected > 0)
-                                                        {
-                                                            Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored player stats data for {matchId} in the database.");
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            else
-                                            {
-                                                Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not obtain player stats for match {matchId}. Requested {targetPlayers.Count} XUIDs.");
-                                            }
-                                        }
-                                        else
-                                        {
-                                            Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not obtain player stats for match {matchId} because the match metadata was unavailable.");
-                                        }
-
-                                    }
-                                    else
-                                    {
-                                        Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} player stats already available. Not requesting new data.");
-                                    }
-
                                 }
                             }
                             else
                             {
-                                Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Something went wrong. Could not communicate with the database to get match availability.");
+                                Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match stats were not available for {matchId}.");
+                                matchCounter++;
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} already available. Not requesting new data.");
+                        }
+
+                        // PLAYER_STATS_AVAILABLE - if the value is zero, that means we do not have the match data.
+                        if (playerStatsAvailable == 0)
+                        {
+                            if (matchStats == null)
+                            {
+                                matchStats = await UserContextManager.HaloClient.StatsGetMatchStats(matchId.ToString());
                             }
 
-                            matchCounter++;
+                            if (matchStats != null && matchStats.Result != null && matchStats.Result.Players != null)
+                            {
+                                // Anything that starts with "bid" is a bot and including that in the request for player stats will result in failure.
+                                var targetPlayers = matchStats.Result.Players.Select(p => p.PlayerId).Where(p => !p.StartsWith("bid")).ToList();
+
+                                Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Attempting to get player results for players for match {matchId}.");
+
+                                var playerStatsSnapshot = await UserContextManager.HaloClient.SkillGetMatchPlayerResult(matchId.ToString(), targetPlayers!);
+
+                                if (playerStatsSnapshot != null && playerStatsSnapshot.Result != null && playerStatsSnapshot.Result.Value != null)
+                                {
+                                    Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Got stats for {playerStatsSnapshot.Result.Value.Count} players.");
+
+                                    if (playerStatsSnapshot.Response != null)
+                                    {
+                                        var insertMatchStatsQuery = System.IO.File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Queries", "Insert", "PlayerMatchStats.sql"), Encoding.UTF8);
+
+                                        using (var insertionCommand = connection.CreateCommand())
+                                        {
+                                            insertionCommand.CommandText = insertMatchStatsQuery;
+                                            insertionCommand.Parameters.AddWithValue("$MatchId", matchId.ToString());
+                                            insertionCommand.Parameters.AddWithValue("$ResponseBody", playerStatsSnapshot.Response.Message);
+
+                                            var insertionResult = insertionCommand.ExecuteNonQuery();
+
+                                            if (insertionResult > 0)
+                                            {
+                                                Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored player stats data for {matchId} in the database.");
+                                            }
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not obtain player stats for match {matchId}. Requested {targetPlayers.Count} XUIDs.");
+                                }
+                            }
+                            else
+                            {
+                                Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not obtain player stats for match {matchId} because the match metadata was unavailable.");
+                            }
+
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} player stats already available. Not requesting new data.");
                         }
                     }
                 }
@@ -258,124 +265,179 @@ namespace OpenSpartan.Data
         {
             try
             {
+                int mapAvailable = 0;
+                int playlistAvailable = 0;
+                int playlistMapModePairAvailable = 0;
+                int gameVariantAvailable = 0;
+                int engineGameVariantAvailable = 0;
+                UGCGameVariant targetGameVariant = null;
+
                 using (var connection = new SqliteConnection($"Data Source={DatabasePath}"))
                 {
                     connection.Open();
 
-                    var command = connection.CreateCommand();
-                    command.CommandText = $"SELECT EXISTS(SELECT 1 FROM Maps WHERE AssetId='{result.MatchInfo.MapVariant.AssetId}' AND VersionId='{result.MatchInfo.MapVariant.VersionId}') AS MAP_AVAILABLE," +
-                                          $"EXISTS(SELECT 1 FROM Playlists WHERE AssetId='{result.MatchInfo.Playlist.AssetId}' AND VersionId='{result.MatchInfo.Playlist.VersionId}') AS PLAYLIST_AVAILABLE," +
-                                          $"EXISTS(SELECT 1 FROM PlaylistMapModePairs WHERE AssetId='{result.MatchInfo.PlaylistMapModePair.AssetId}' AND VersionId='{result.MatchInfo.PlaylistMapModePair.VersionId}') AS PLAYLISTMAPMODEPAIR_AVAILABLE," +
-                                          $"EXISTS(SELECT 1 FROM GameVariants WHERE AssetId='{result.MatchInfo.UgcGameVariant.AssetId}' AND VersionId='{result.MatchInfo.UgcGameVariant.VersionId}') AS GAMEVARIANT_AVAILABLE;";
-
-                    using (var reader = command.ExecuteReader())
+                    using (var command = connection.CreateCommand())
                     {
-                        if (reader.HasRows)
+                        command.CommandText = $"SELECT EXISTS(SELECT 1 FROM Maps WHERE AssetId='{result.MatchInfo.MapVariant.AssetId}' AND VersionId='{result.MatchInfo.MapVariant.VersionId}') AS MAP_AVAILABLE," +
+                                              $"EXISTS(SELECT 1 FROM Playlists WHERE AssetId='{result.MatchInfo.Playlist.AssetId}' AND VersionId='{result.MatchInfo.Playlist.VersionId}') AS PLAYLIST_AVAILABLE," +
+                                              $"EXISTS(SELECT 1 FROM PlaylistMapModePairs WHERE AssetId='{result.MatchInfo.PlaylistMapModePair.AssetId}' AND VersionId='{result.MatchInfo.PlaylistMapModePair.VersionId}') AS PLAYLISTMAPMODEPAIR_AVAILABLE," +
+                                              $"EXISTS(SELECT 1 FROM GameVariants WHERE AssetId='{result.MatchInfo.UgcGameVariant.AssetId}' AND VersionId='{result.MatchInfo.UgcGameVariant.VersionId}') AS GAMEVARIANT_AVAILABLE;";
+
+                        using (var reader = command.ExecuteReader())
                         {
-                            while (reader.Read())
+                            if (reader.HasRows)
                             {
-                                if (reader.GetFieldValue<int>(reader.GetOrdinal("MAP_AVAILABLE")) == 0)
+                                while (reader.Read())
                                 {
-                                    // Map is not available
-                                    var map = await UserContextManager.HaloClient.HIUGCDiscoveryGetMap(result.MatchInfo.MapVariant.AssetId.ToString(), result.MatchInfo.MapVariant.VersionId.ToString());
-                                    if (map != null && map.Result != null && map.Response.Code == 200)
-                                    {
-                                        var insertionCommand = connection.CreateCommand();
-                                        insertionCommand.CommandText = GetQuery("Insert", "Maps");
-                                        insertionCommand.Parameters.AddWithValue("$ResponseBody", map.Response.Message);
+                                    mapAvailable = reader.GetFieldValue<int>(reader.GetOrdinal("MAP_AVAILABLE"));
+                                    playlistAvailable = reader.GetFieldValue<int>(reader.GetOrdinal("PLAYLIST_AVAILABLE"));
+                                    playlistMapModePairAvailable = reader.GetFieldValue<int>(reader.GetOrdinal("PLAYLISTMAPMODEPAIR_AVAILABLE"));
+                                    gameVariantAvailable = reader.GetFieldValue<int>(reader.GetOrdinal("GAMEVARIANT_AVAILABLE"));
+                                }
+                            }
+                        }
+                    }
 
-                                        using (var matchReader = insertionCommand.ExecuteReader())
+                    if (mapAvailable == 0)
+                    {
+                        // Map is not available
+                        var map = await UserContextManager.HaloClient.HIUGCDiscoveryGetMap(result.MatchInfo.MapVariant.AssetId.ToString(), result.MatchInfo.MapVariant.VersionId.ToString());
+                        if (map != null && map.Result != null && map.Response.Code == 200)
+                        {
+                            using (var insertionCommand = connection.CreateCommand())
+                            {
+                                insertionCommand.CommandText = GetQuery("Insert", "Maps");
+                                insertionCommand.Parameters.AddWithValue("$ResponseBody", map.Response.Message);
+
+                                var insertionResult = insertionCommand.ExecuteNonQuery();
+
+                                if (insertionResult > 0)
+                                {
+                                    Debug.WriteLine($"Stored map: {result.MatchInfo.MapVariant.AssetId}/{result.MatchInfo.MapVariant.VersionId}");
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine($"Map exists: {result.MatchInfo.MapVariant.AssetId}/{result.MatchInfo.MapVariant.VersionId}");
+                    }
+
+                    if (playlistAvailable == 0)
+                    {
+                        // Playlist is not available
+                        var playlist = await UserContextManager.HaloClient.HIUGCDiscoveryGetPlaylist(result.MatchInfo.Playlist.AssetId.ToString(), result.MatchInfo.Playlist.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken);
+                        if (playlist != null && playlist.Result != null && playlist.Response.Code == 200)
+                        {
+                            using (var insertionCommand = connection.CreateCommand())
+                            {
+                                insertionCommand.CommandText = GetQuery("Insert", "Playlists");
+                                insertionCommand.Parameters.AddWithValue("$ResponseBody", playlist.Response.Message);
+
+                                var insertionResult = insertionCommand.ExecuteNonQuery();
+
+                                if (insertionResult > 0)
+                                {
+                                    Debug.WriteLine($"Stored playlist: {result.MatchInfo.Playlist.AssetId}/{result.MatchInfo.Playlist.VersionId}");
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine($"Playlist exists: {result.MatchInfo.Playlist.AssetId}/{result.MatchInfo.Playlist.VersionId}");
+                    }
+
+                    if (playlistMapModePairAvailable == 0)
+                    {
+                        // Playlist + map mode pair is not available
+                        var playlistMmp = await UserContextManager.HaloClient.HIUGCDiscoveryGetMapModePair(result.MatchInfo.PlaylistMapModePair.AssetId.ToString(), result.MatchInfo.PlaylistMapModePair.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken);
+                        if (playlistMmp != null && playlistMmp.Result != null && playlistMmp.Response.Code == 200)
+                        {
+                            using (var insertionCommand = connection.CreateCommand())
+                            {
+                                insertionCommand.CommandText = GetQuery("Insert", "PlaylistMapModePairs");
+                                insertionCommand.Parameters.AddWithValue("$ResponseBody", playlistMmp.Response.Message);
+
+                                var insertionResult = insertionCommand.ExecuteNonQuery();
+
+                                if (insertionResult > 0)
+                                {
+                                    Debug.WriteLine($"Stored playlist + map mode pair: {result.MatchInfo.PlaylistMapModePair.AssetId}/{result.MatchInfo.PlaylistMapModePair.VersionId}");
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine($"Playlist + map mode pair exists: {result.MatchInfo.PlaylistMapModePair.AssetId}/{result.MatchInfo.PlaylistMapModePair.VersionId}");
+                    }
+
+                    if (gameVariantAvailable == 0)
+                    {
+                        // Game variant is not available
+                        var gameVariant = await UserContextManager.HaloClient.HIUGCDiscoveryGetUgcGameVariant(result.MatchInfo.UgcGameVariant.AssetId.ToString(), result.MatchInfo.UgcGameVariant.VersionId.ToString());
+                        if (gameVariant != null && gameVariant.Result != null && gameVariant.Response.Code == 200)
+                        {
+                            targetGameVariant = gameVariant.Result;
+
+                            using (var insertionCommand = connection.CreateCommand())
+                            {
+                                insertionCommand.CommandText = GetQuery("Insert", "GameVariants");
+                                insertionCommand.Parameters.AddWithValue("$ResponseBody", gameVariant.Response.Message);
+
+                                var insertionResult = insertionCommand.ExecuteNonQuery();
+
+                                if (insertionResult > 0)
+                                {
+                                    Debug.WriteLine($"Stored game variant: {result.MatchInfo.UgcGameVariant.AssetId}/{result.MatchInfo.UgcGameVariant.VersionId}");
+                                }
+                            }
+
+                            using (var egvQueryCommand = connection.CreateCommand())
+                            {
+                                egvQueryCommand.CommandText = $"SELECT EXISTS(SELECT 1 FROM Maps WHERE AssetId='{gameVariant.Result.EngineGameVariantLink.AssetId}' AND VersionId='{gameVariant.Result.EngineGameVariantLink.VersionId}') AS ENGINEGAMEVARIANT_AVAILABLE";
+
+                                using (var egvReader = egvQueryCommand.ExecuteReader())
+                                {
+                                    if (egvReader.HasRows)
+                                    {
+                                        while (egvReader.Read())
                                         {
-                                            if (matchReader.RecordsAffected > 0)
-                                            {
-                                                Debug.WriteLine($"Stored map: {result.MatchInfo.MapVariant.AssetId}/{result.MatchInfo.MapVariant.VersionId}");
-                                            }
+                                            engineGameVariantAvailable = egvReader.GetFieldValue<int>(egvReader.GetOrdinal("ENGINEGAMEVARIANT_AVAILABLE"));
                                         }
                                     }
                                 }
-                                else
-                                {
-                                    Debug.WriteLine($"Map exists: {result.MatchInfo.MapVariant.AssetId}/{result.MatchInfo.MapVariant.VersionId}");
-                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine($"Game variant exists: {result.MatchInfo.UgcGameVariant.AssetId}/{result.MatchInfo.UgcGameVariant.VersionId}");
+                    }
 
-                                if (reader.GetFieldValue<int>(reader.GetOrdinal("PLAYLIST_AVAILABLE")) == 0)
-                                {
-                                    // Playlist is not available
-                                    var playlist = await UserContextManager.HaloClient.HIUGCDiscoveryGetPlaylist(result.MatchInfo.Playlist.AssetId.ToString(), result.MatchInfo.Playlist.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken);
-                                    if (playlist != null && playlist.Result != null && playlist.Response.Code == 200)
-                                    {
-                                        var insertionCommand = connection.CreateCommand();
-                                        insertionCommand.CommandText = GetQuery("Insert", "Playlists");
-                                        insertionCommand.Parameters.AddWithValue("$ResponseBody", playlist.Response.Message);
+                    if (engineGameVariantAvailable == 0 && targetGameVariant != null)
+                    {
+                        var engineGameVariant = await UserContextManager.HaloClient.HIUGCDiscoveryGetEngineGameVariant(targetGameVariant.EngineGameVariantLink.AssetId.ToString(), targetGameVariant.EngineGameVariantLink.VersionId.ToString());
 
-                                        using (var matchReader = insertionCommand.ExecuteReader())
-                                        {
-                                            if (matchReader.RecordsAffected > 0)
-                                            {
-                                                Debug.WriteLine($"Stored playlist: {result.MatchInfo.Playlist.AssetId}/{result.MatchInfo.Playlist.VersionId}");
-                                            }
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    Debug.WriteLine($"Playlist exists: {result.MatchInfo.Playlist.AssetId}/{result.MatchInfo.Playlist.VersionId}");
-                                }
+                        if (engineGameVariant != null && engineGameVariant.Result != null && engineGameVariant.Response.Code == 200)
+                        {
+                            using (var egvInsertionCommand = connection.CreateCommand())
+                            {
+                                egvInsertionCommand.CommandText = GetQuery("Insert", "EngineGameVariants");
+                                egvInsertionCommand.Parameters.AddWithValue("$ResponseBody", engineGameVariant.Response.Message);
 
-                                if (reader.GetFieldValue<int>(reader.GetOrdinal("PLAYLISTMAPMODEPAIR_AVAILABLE")) == 0)
-                                {
-                                    // Playlist + map mode pair is not available
-                                    var playlistMmp = await UserContextManager.HaloClient.HIUGCDiscoveryGetMapModePair(result.MatchInfo.PlaylistMapModePair.AssetId.ToString(), result.MatchInfo.PlaylistMapModePair.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken);
-                                    if (playlistMmp != null && playlistMmp.Result != null && playlistMmp.Response.Code == 200)
-                                    {
-                                        var insertionCommand = connection.CreateCommand();
-                                        insertionCommand.CommandText = GetQuery("Insert", "PlaylistMapModePairs");
-                                        insertionCommand.Parameters.AddWithValue("$ResponseBody", playlistMmp.Response.Message);
+                                var insertionResult = egvInsertionCommand.ExecuteNonQuery();
 
-                                        using (var matchReader = insertionCommand.ExecuteReader())
-                                        {
-                                            if (matchReader.RecordsAffected > 0)
-                                            {
-                                                Debug.WriteLine($"Stored playlist + map mode pair: {result.MatchInfo.PlaylistMapModePair.AssetId}/{result.MatchInfo.PlaylistMapModePair.VersionId}");
-                                            }
-                                        }
-                                    }
-                                }
-                                else
+                                if (insertionResult > 0)
                                 {
-                                    Debug.WriteLine($"Playlist + map mode pair exists: {result.MatchInfo.PlaylistMapModePair.AssetId}/{result.MatchInfo.PlaylistMapModePair.VersionId}");
-                                }
-
-                                if (reader.GetFieldValue<int>(reader.GetOrdinal("GAMEVARIANT_AVAILABLE")) == 0)
-                                {
-                                    // Game variant is not available
-                                    var gameVariant = await UserContextManager.HaloClient.HIUGCDiscoveryGetUgcGameVariant(result.MatchInfo.UgcGameVariant.AssetId.ToString(), result.MatchInfo.UgcGameVariant.VersionId.ToString());
-                                    if (gameVariant != null && gameVariant.Result != null && gameVariant.Response.Code == 200)
-                                    {
-                                        var insertionCommand = connection.CreateCommand();
-                                        insertionCommand.CommandText = GetQuery("Insert", "GameVariants");
-                                        insertionCommand.Parameters.AddWithValue("$ResponseBody", gameVariant.Response.Message);
-
-                                        using (var matchReader = insertionCommand.ExecuteReader())
-                                        {
-                                            if (matchReader.RecordsAffected > 0)
-                                            {
-                                                Debug.WriteLine($"Stored game variant: {result.MatchInfo.UgcGameVariant.AssetId}/{result.MatchInfo.UgcGameVariant.VersionId}");
-                                            }
-                                        }
-
-                                        var engineGameVariantExistenceString = $"SELECT EXISTS(SELECT 1 FROM Maps WHERE AssetId='{result.MatchInfo.MapVariant.AssetId}' AND VersionId='{result.MatchInfo.MapVariant.VersionId}') AS MAP_AVAILABLE";
-                                    }
-                                }
-                                else
-                                {
-                                    Debug.WriteLine($"Game variant exists: {result.MatchInfo.UgcGameVariant.AssetId}/{result.MatchInfo.UgcGameVariant.VersionId}");
+                                    Debug.WriteLine($"Stored engine game variant: {engineGameVariant.Result.AssetId}/{engineGameVariant.Result.VersionId}");
                                 }
                             }
                         }
                     }
                 }
-                
+
                 return true;
             }
             catch (Exception ex)
