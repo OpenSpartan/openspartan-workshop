@@ -265,11 +265,15 @@ namespace OpenSpartan.Data
         {
             try
             {
-                int mapAvailable = 0;
-                int playlistAvailable = 0;
-                int playlistMapModePairAvailable = 0;
-                int gameVariantAvailable = 0;
-                int engineGameVariantAvailable = 0;
+                bool mapAvailable = false;
+                bool gameVariantAvailable = false;
+                bool engineGameVariantAvailable = false;
+
+                // These values are defaulted to 1 because it's possible for a match to not
+                // have an associated playlist
+                bool playlistAvailable = true;
+                bool playlistMapModePairAvailable = true;
+
                 UGCGameVariant targetGameVariant = null;
 
                 using (var connection = new SqliteConnection($"Data Source={DatabasePath}"))
@@ -279,9 +283,17 @@ namespace OpenSpartan.Data
                     using (var command = connection.CreateCommand())
                     {
                         command.CommandText = $"SELECT EXISTS(SELECT 1 FROM Maps WHERE AssetId='{result.MatchInfo.MapVariant.AssetId}' AND VersionId='{result.MatchInfo.MapVariant.VersionId}') AS MAP_AVAILABLE," +
-                                              $"EXISTS(SELECT 1 FROM Playlists WHERE AssetId='{result.MatchInfo.Playlist.AssetId}' AND VersionId='{result.MatchInfo.Playlist.VersionId}') AS PLAYLIST_AVAILABLE," +
-                                              $"EXISTS(SELECT 1 FROM PlaylistMapModePairs WHERE AssetId='{result.MatchInfo.PlaylistMapModePair.AssetId}' AND VersionId='{result.MatchInfo.PlaylistMapModePair.VersionId}') AS PLAYLISTMAPMODEPAIR_AVAILABLE," +
-                                              $"EXISTS(SELECT 1 FROM GameVariants WHERE AssetId='{result.MatchInfo.UgcGameVariant.AssetId}' AND VersionId='{result.MatchInfo.UgcGameVariant.VersionId}') AS GAMEVARIANT_AVAILABLE;";
+                                              $"EXISTS(SELECT 1 FROM GameVariants WHERE AssetId='{result.MatchInfo.UgcGameVariant.AssetId}' AND VersionId='{result.MatchInfo.UgcGameVariant.VersionId}') AS GAMEVARIANT_AVAILABLE";
+
+                        if (result.MatchInfo.Playlist != null)
+                        {
+                            command.CommandText += $",EXISTS(SELECT 1 FROM Playlists WHERE AssetId='{result.MatchInfo.Playlist.AssetId}' AND VersionId='{result.MatchInfo.Playlist.VersionId}') AS PLAYLIST_AVAILABLE";
+                        }
+
+                        if (result.MatchInfo.PlaylistMapModePair != null)
+                        {
+                            command.CommandText += $",EXISTS(SELECT 1 FROM PlaylistMapModePairs WHERE AssetId='{result.MatchInfo.PlaylistMapModePair.AssetId}' AND VersionId='{result.MatchInfo.PlaylistMapModePair.VersionId}') AS PLAYLISTMAPMODEPAIR_AVAILABLE";
+                        }
 
                         using (var reader = command.ExecuteReader())
                         {
@@ -289,16 +301,16 @@ namespace OpenSpartan.Data
                             {
                                 while (reader.Read())
                                 {
-                                    mapAvailable = reader.GetFieldValue<int>(reader.GetOrdinal("MAP_AVAILABLE"));
-                                    playlistAvailable = reader.GetFieldValue<int>(reader.GetOrdinal("PLAYLIST_AVAILABLE"));
-                                    playlistMapModePairAvailable = reader.GetFieldValue<int>(reader.GetOrdinal("PLAYLISTMAPMODEPAIR_AVAILABLE"));
-                                    gameVariantAvailable = reader.GetFieldValue<int>(reader.GetOrdinal("GAMEVARIANT_AVAILABLE"));
+                                    mapAvailable = Convert.ToBoolean(reader.GetFieldValue<int>(reader.GetOrdinal("MAP_AVAILABLE")));
+                                    playlistAvailable = result.MatchInfo.Playlist != null ? Convert.ToBoolean(reader.GetFieldValue<int>(reader.GetOrdinal("PLAYLIST_AVAILABLE"))) : true;
+                                    playlistMapModePairAvailable = result.MatchInfo.PlaylistMapModePair != null ? Convert.ToBoolean(reader.GetFieldValue<int>(reader.GetOrdinal("PLAYLISTMAPMODEPAIR_AVAILABLE"))) : true;
+                                    gameVariantAvailable = Convert.ToBoolean(reader.GetFieldValue<int>(reader.GetOrdinal("GAMEVARIANT_AVAILABLE")));
                                 }
                             }
                         }
                     }
 
-                    if (mapAvailable == 0)
+                    if (!mapAvailable)
                     {
                         // Map is not available
                         var map = await UserContextManager.HaloClient.HIUGCDiscoveryGetMap(result.MatchInfo.MapVariant.AssetId.ToString(), result.MatchInfo.MapVariant.VersionId.ToString());
@@ -318,12 +330,8 @@ namespace OpenSpartan.Data
                             }
                         }
                     }
-                    else
-                    {
-                        Debug.WriteLine($"Map exists: {result.MatchInfo.MapVariant.AssetId}/{result.MatchInfo.MapVariant.VersionId}");
-                    }
 
-                    if (playlistAvailable == 0)
+                    if (!playlistAvailable)
                     {
                         // Playlist is not available
                         var playlist = await UserContextManager.HaloClient.HIUGCDiscoveryGetPlaylist(result.MatchInfo.Playlist.AssetId.ToString(), result.MatchInfo.Playlist.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken);
@@ -343,12 +351,8 @@ namespace OpenSpartan.Data
                             }
                         }
                     }
-                    else
-                    {
-                        Debug.WriteLine($"Playlist exists: {result.MatchInfo.Playlist.AssetId}/{result.MatchInfo.Playlist.VersionId}");
-                    }
 
-                    if (playlistMapModePairAvailable == 0)
+                    if (!playlistMapModePairAvailable)
                     {
                         // Playlist + map mode pair is not available
                         var playlistMmp = await UserContextManager.HaloClient.HIUGCDiscoveryGetMapModePair(result.MatchInfo.PlaylistMapModePair.AssetId.ToString(), result.MatchInfo.PlaylistMapModePair.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken);
@@ -368,12 +372,8 @@ namespace OpenSpartan.Data
                             }
                         }
                     }
-                    else
-                    {
-                        Debug.WriteLine($"Playlist + map mode pair exists: {result.MatchInfo.PlaylistMapModePair.AssetId}/{result.MatchInfo.PlaylistMapModePair.VersionId}");
-                    }
 
-                    if (gameVariantAvailable == 0)
+                    if (!gameVariantAvailable)
                     {
                         // Game variant is not available
                         var gameVariant = await UserContextManager.HaloClient.HIUGCDiscoveryGetUgcGameVariant(result.MatchInfo.UgcGameVariant.AssetId.ToString(), result.MatchInfo.UgcGameVariant.VersionId.ToString());
@@ -404,19 +404,15 @@ namespace OpenSpartan.Data
                                     {
                                         while (egvReader.Read())
                                         {
-                                            engineGameVariantAvailable = egvReader.GetFieldValue<int>(egvReader.GetOrdinal("ENGINEGAMEVARIANT_AVAILABLE"));
+                                            engineGameVariantAvailable = Convert.ToBoolean(egvReader.GetFieldValue<int>(egvReader.GetOrdinal("ENGINEGAMEVARIANT_AVAILABLE")));
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                    else
-                    {
-                        Debug.WriteLine($"Game variant exists: {result.MatchInfo.UgcGameVariant.AssetId}/{result.MatchInfo.UgcGameVariant.VersionId}");
-                    }
 
-                    if (engineGameVariantAvailable == 0 && targetGameVariant != null)
+                    if (!engineGameVariantAvailable && targetGameVariant != null)
                     {
                         var engineGameVariant = await UserContextManager.HaloClient.HIUGCDiscoveryGetEngineGameVariant(targetGameVariant.EngineGameVariantLink.AssetId.ToString(), targetGameVariant.EngineGameVariantLink.VersionId.ToString());
 
@@ -450,6 +446,11 @@ namespace OpenSpartan.Data
         private static string GetQuery(string category, string target)
         {
             return System.IO.File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Queries", category, $"{target}.sql"), Encoding.UTF8);
+        }
+
+        internal static int GetCountOfMatchRecords()
+        {
+            throw new NotImplementedException();
         }
     }
 }

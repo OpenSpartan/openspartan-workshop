@@ -337,8 +337,9 @@ namespace OpenSpartan.Shared
         {
             try
             {
+                //var currentMatchmadeRecords = DataHandler.GetCountOfMatchRecords();
                 var ids = await GetPlayerMatchIds(XboxUserContext.DisplayClaims.Xui[0].XUID);
-                if (ids != null)
+                if (ids != null && ids.Count > 0)
                 {
                     var distinctMatchIds = ids.DistinctBy(x => x.ToString());
                     var result = await DataHandler.UpdateMatchRecords(distinctMatchIds);
@@ -355,43 +356,36 @@ namespace OpenSpartan.Shared
 
         private static async Task<List<Guid>> GetPlayerMatchIds(string xuid)
         {
-            var matchCountSnapshot = await HaloClient.StatsGetMatchCount($"xuid({xuid})");
-            if (matchCountSnapshot.Result != null && matchCountSnapshot.Response.Code == 200)
+            List<Guid> matchIds = new();
+
+            int queryCount = 25;
+            int queryStart = 0;
+
+            // We start with a value of 1 to bootstrap the process. This will then be overwritten.
+            int lastResultCount = 1;
+
+            while (lastResultCount > 0)
             {
-                List<Guid> matchIds = new();
-                int queryCount = 25;
-                int queryStart = 0;
-                int counter = 0;
-
-                counter = matchCountSnapshot.Result.MatchmadeMatchesPlayedCount;
-
-                if (counter > 0)
+                var matches = await HaloClient.StatsGetMatchHistory($"xuid({xuid})", queryStart, queryCount, MatchType.All);
+                if (matches != null && matches.Result != null && matches.Result.Results != null && matches.Result.ResultCount > 0)
                 {
-                    while (counter > 0)
-                    {
-                        var matches = await HaloClient.StatsGetMatchHistory($"xuid({xuid})", queryStart, queryCount, MatchType.Matchmaking);
-                        if (matches != null && matches.Result != null && matches.Result.Results != null && matches.Result.ResultCount > 0)
-                        {
-                            // We want to extract individual match IDs first.
-                            var matchIdBatch = matches.Result.Results.Select(item => item.MatchId).ToList();
-                            Debug.WriteLine($"Got matches starting from {queryStart} up to {queryCount} entries. Counter at {counter} and last query yielded {matchIdBatch.Count} results.");
-                            matchIds.AddRange(matchIdBatch);
-                            counter = counter - matchIdBatch.Count;
-                            queryStart = queryStart + matchIdBatch.Count;
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                }
+                    lastResultCount = matches.Result.ResultCount;
 
-                return matchIds;
+                    // We want to extract individual match IDs first.
+                    var matchIdBatch = matches.Result.Results.Select(item => item.MatchId).ToList();
+                    Debug.WriteLine($"Got matches starting from {queryStart} up to {queryCount} entries. Last query yielded {matchIdBatch.Count} results.");
+                    matchIds.AddRange(matchIdBatch);
+                    //counter = counter - matchIdBatch.Count;
+                    queryStart = queryStart + matchIdBatch.Count;
+                }
+                else
+                {
+                    break;
+                }
             }
-            else
-            {
-                return null;
-            }
+
+            Debug.WriteLine($"Clocked at {matchIds.Count} total matchmade games.");
+            return matchIds;
         }
     }
 }
