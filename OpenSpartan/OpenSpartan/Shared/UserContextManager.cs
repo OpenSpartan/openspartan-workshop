@@ -342,7 +342,26 @@ namespace OpenSpartan.Shared
                 if (ids != null && ids.Count > 0)
                 {
                     var distinctMatchIds = ids.DistinctBy(x => x.ToString());
-                    var result = await DataHandler.UpdateMatchRecords(distinctMatchIds);
+
+                    var existingMatches = DataHandler.GetMatchIds();
+
+                    if (existingMatches != null)
+                    {
+                        var matchesToProcess = distinctMatchIds.Except(existingMatches);
+                        if (matchesToProcess != null && matchesToProcess.Count() > 0)
+                        {
+                            return await DataHandler.UpdateMatchRecords(matchesToProcess);
+                        }
+                        else
+                        {
+                            Debug.WriteLine("No matches to update.");
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine("No matches found locally, so need to re-hydrate the database.");
+                        return await DataHandler.UpdateMatchRecords(distinctMatchIds);
+                    }
                 }
 
                 return true;

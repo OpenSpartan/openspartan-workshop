@@ -116,6 +116,46 @@ namespace OpenSpartan.Data
             }
         }
 
+        internal static List<Guid> GetMatchIds()
+        {
+            try
+            {
+                using (var connection = new SqliteConnection($"Data Source={DatabasePath}"))
+                {
+                    connection.Open();
+
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = GetQuery("Select", "DistinctMatchIds");
+
+                        using (var reader = command.ExecuteReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                List<Guid> matchIds = new List<Guid>();
+                                while (reader.Read())
+                                {
+                                    matchIds.Add(Guid.Parse(reader.GetString(0).Trim()));
+                                }
+
+                                return matchIds;
+                            }
+                            else
+                            {
+                                Debug.WriteLine($"No rows returned for distinct match IDs.");
+                            }
+                        }
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine($"An error occurred obtaining unique match IDs. {ex.Message}");
+            }
+
+            return null;
+        }
+
         internal static async Task<bool> UpdateMatchRecords(IEnumerable<Guid> matchIds)
         {
             try

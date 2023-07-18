@@ -97,6 +97,9 @@
     <None Update="Queries\Insert\ServiceRecord.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Queries\Select\DistinctMatchIds.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Queries\VerifyTableAvailability.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

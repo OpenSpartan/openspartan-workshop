@@ -242,7 +242,7 @@ namespace OpenSpartan.ViewModels
             }
         }
 
-        public string? SeasonalBackground
+        public string SeasonalBackground
         {
             get => _seasonalBackground;
             set
