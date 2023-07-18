@@ -335,6 +335,8 @@ namespace OpenSpartan.Shared
 
         internal static async Task<bool> PopulateMatchRecordsData()
         {
+            MatchesViewModel.Instance.MatchLoadingState = Models.MatchLoadingState.Calculating;
+
             try
             {
                 //var currentMatchmadeRecords = DataHandler.GetCountOfMatchRecords();
@@ -350,6 +352,7 @@ namespace OpenSpartan.Shared
                         var matchesToProcess = distinctMatchIds.Except(existingMatches);
                         if (matchesToProcess != null && matchesToProcess.Count() > 0)
                         {
+                            MatchesViewModel.Instance.MatchLoadingState = Models.MatchLoadingState.Loading;
                             return await DataHandler.UpdateMatchRecords(matchesToProcess);
                         }
                         else
@@ -394,6 +397,9 @@ namespace OpenSpartan.Shared
                     var matchIdBatch = matches.Result.Results.Select(item => item.MatchId).ToList();
                     Debug.WriteLine($"Got matches starting from {queryStart} up to {queryCount} entries. Last query yielded {matchIdBatch.Count} results.");
                     matchIds.AddRange(matchIdBatch);
+
+                    MatchesViewModel.Instance.MatchLoadingParameter = matchIds.Count.ToString();
+
                     //counter = counter - matchIdBatch.Count;
                     queryStart = queryStart + matchIdBatch.Count;
                 }

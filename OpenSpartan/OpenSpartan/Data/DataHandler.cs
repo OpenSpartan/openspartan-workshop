@@ -2,6 +2,7 @@
 using Den.Dev.Orion.Models.HaloInfinite;
 using Microsoft.Data.Sqlite;
 using OpenSpartan.Shared;
+using OpenSpartan.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -174,6 +175,8 @@ namespace OpenSpartan.Data
 
                     foreach (var matchId in matchIds)
                     {
+                        MatchesViewModel.Instance.MatchLoadingParameter = matchId.ToString();
+
                         var completionProgress = (double)matchCounter / (double)matchesTotal * 100.0;
 
                         using (var command = connection.CreateCommand())

@@ -7,9 +7,31 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    xmlns:converters="using:OpenSpartan.Converters"
+    xmlns:viewmodels="using:OpenSpartan.ViewModels"
+    DataContext="{x:Bind viewmodels:MatchesViewModel.Instance}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
+    <Page.Resources>
+        <converters:MatchLoadingStateToVisibilityConverter x:Key="MatchLoadingStateToVisibilityConverter"></converters:MatchLoadingStateToVisibilityConverter>
+    </Page.Resources>
+    
     <Grid>
+        <StackPanel>
+            <TextBlock Text="Match History"  Style="{StaticResource TitleTextBlockStyle}" Margin="24"></TextBlock>
+            
+            <!--Informational state-->
+            <Grid Visibility="{Binding MatchLoadingState, Converter={StaticResource MatchLoadingStateToVisibilityConverter}}" Margin="24" Background="#404040" BorderThickness="2" CornerRadius="4" Height="36">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="36"></ColumnDefinition>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
 
+                <ProgressRing Height="12" Width="12"></ProgressRing>
+
+                <TextBlock Grid.Column="1" Text="{Binding MatchLoadingString}" VerticalAlignment="Center"></TextBlock>
+            </Grid>
+
+        </StackPanel>
     </Grid>
 </Page>

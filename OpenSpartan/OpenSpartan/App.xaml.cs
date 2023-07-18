@@ -42,15 +42,16 @@ namespace OpenSpartan
 
                 if (instantiationResult)
                 {
-                    var serviceRecordOutcome = UserContextManager.PopulateServiceRecordData();
+                    var serviceRecordOutcome = await UserContextManager.PopulateServiceRecordData();
 
-                    var careerOutcome = UserContextManager.PopulateCareerData();
+                    var careerOutcome = await UserContextManager.PopulateCareerData();
 
-                    var customizationOutcome = UserContextManager.PopulateCustomizationData();
+                    var customizationOutcome = await UserContextManager.PopulateCustomizationData();
 
-                    var decorationOutcome = UserContextManager.PopulateDecorationData();
+                    var decorationOutcome = await UserContextManager.PopulateDecorationData();
 
-                    var matchRecordsOutcome = UserContextManager.PopulateMatchRecordsData();
+                    var matchRecordsOutcome = await UserContextManager.PopulateMatchRecordsData();
+                    MatchesViewModel.Instance.MatchLoadingState = Models.MatchLoadingState.Completed;
                 }
             }
         }        

@@ -49,7 +49,7 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <NavigationViewItemSeparator />
-                <NavigationViewItem Content="Matches">
+                <NavigationViewItem Content="Matches"  x:Name="nviMatches" Tag="OpenSpartan.Views.MatchesView">
                     <NavigationViewItem.Icon>
                         <SymbolIcon Symbol="Directions"/>
                     </NavigationViewItem.Icon>

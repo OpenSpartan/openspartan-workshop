@@ -6,21 +6,56 @@ namespace OpenSpartan.ViewModels
 {
     internal class MatchesViewModel : Observable
     {
-        private MatchState _matchState;
+        private MatchLoadingState _matchLoadingState;
+        private string _matchLoadingParameter;
 
         public static MatchesViewModel Instance { get; } = new MatchesViewModel();
 
-        private MatchesViewModel() { }
-
-        public MatchState MatchState
+        private MatchesViewModel()
         {
-            get => _matchState;
+            MatchLoadingParameter = "0";
+        }
+
+        public string MatchLoadingString
+        {
+            get
+            {
+                switch (MatchLoadingState)
+                {
+                    case MatchLoadingState.Calculating:
+                        return $"Calculating matches. Identified {MatchLoadingParameter} matches so far...";
+                    case MatchLoadingState.Loading:
+                        return $"Loading match details. Currently processing {MatchLoadingParameter}...";
+                    default:
+                        return "NOOP - Never Seen";
+                }
+            }
+        }
+
+        public MatchLoadingState MatchLoadingState
+        {
+            get => _matchLoadingState;
             set
             {
-                if (_matchState != value)
+                if (_matchLoadingState != value)
                 {
-                    _matchState = value;
+                    _matchLoadingState = value;
                     NotifyPropertyChanged();
+                    NotifyPropertyChanged(nameof(MatchLoadingString));
+                }
+            }
+        }
+
+        public string MatchLoadingParameter
+        {
+            get => _matchLoadingParameter;
+            set
+            {
+                if (_matchLoadingParameter != value)
+                {
+                    _matchLoadingParameter = value;
+                    NotifyPropertyChanged();
+                    NotifyPropertyChanged(nameof(MatchLoadingString));
                 }
             }
         }
