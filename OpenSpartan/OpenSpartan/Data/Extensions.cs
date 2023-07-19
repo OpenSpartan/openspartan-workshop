@@ -1,5 +1,8 @@
 ﻿using Microsoft.Data.Sqlite;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -46,5 +49,7 @@ namespace OpenSpartan.Data
                 return false;
             }
         }
+
+        public static void AddRange<T>(this ObservableCollection<T> collection, IEnumerable<T> items) => items.ToList().ForEach(collection.Add);
     }
 }

@@ -1,7 +1,10 @@
 ﻿using Microsoft.UI.Xaml;
 using OpenSpartan.Data;
+using OpenSpartan.Models;
 using OpenSpartan.Shared;
 using OpenSpartan.ViewModels;
+using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -13,6 +16,8 @@ namespace OpenSpartan
     /// </summary>
     public partial class App : Application
     {
+        public Window MainWindow { get => m_window; }
+
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -50,12 +55,17 @@ namespace OpenSpartan
 
                     var decorationOutcome = await UserContextManager.PopulateDecorationData();
 
+                    await Task.Run(() =>
+                    {
+                        UserContextManager.GetPlayerMatches();
+                    });
+
                     var matchRecordsOutcome = await UserContextManager.PopulateMatchRecordsData();
                     MatchesViewModel.Instance.MatchLoadingState = Models.MatchLoadingState.Completed;
                 }
             }
         }        
 
-        private Window m_window;
+        internal Window m_window;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using OpenSpartan.Models;
 using OpenSpartan.Shared;
+using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.ViewModels
@@ -8,12 +9,14 @@ namespace OpenSpartan.ViewModels
     {
         private MatchLoadingState _matchLoadingState;
         private string _matchLoadingParameter;
+        private ObservableCollection<MatchTableEntity> _matchList;
 
         public static MatchesViewModel Instance { get; } = new MatchesViewModel();
 
         private MatchesViewModel()
         {
             MatchLoadingParameter = "0";
+            MatchList = new ObservableCollection<MatchTableEntity>();
         }
 
         public string MatchLoadingString
@@ -56,6 +59,19 @@ namespace OpenSpartan.ViewModels
                     _matchLoadingParameter = value;
                     NotifyPropertyChanged();
                     NotifyPropertyChanged(nameof(MatchLoadingString));
+                }
+            }
+        }
+
+        public ObservableCollection<MatchTableEntity> MatchList
+        {
+            get => _matchList;
+            set
+            {
+                if (_matchList != value)
+                {
+                    _matchList = value;
+                    NotifyPropertyChanged();
                 }
             }
         }

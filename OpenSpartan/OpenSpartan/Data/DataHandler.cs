@@ -1,6 +1,7 @@
 ﻿using Den.Dev.Orion.Models;
 using Den.Dev.Orion.Models.HaloInfinite;
 using Microsoft.Data.Sqlite;
+using OpenSpartan.Models;
 using OpenSpartan.Shared;
 using OpenSpartan.ViewModels;
 using System;
@@ -150,6 +151,72 @@ namespace OpenSpartan.Data
                 }
             }
             catch(Exception ex)
+            {
+                Debug.WriteLine($"An error occurred obtaining unique match IDs. {ex.Message}");
+            }
+
+            return null;
+        }
+
+        internal static List<MatchTableEntity> GetMatches(string playerXuid, string boundaryTime, int boundaryLimit)
+        {
+            try
+            {
+                using (var connection = new SqliteConnection($"Data Source={DatabasePath}"))
+                {
+                    connection.Open();
+
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = GetQuery("Select", "PlayerMatches");
+                        command.Parameters.AddWithValue("PlayerXuid", playerXuid);
+                        command.Parameters.AddWithValue("BoundaryTime", boundaryTime);
+                        command.Parameters.AddWithValue("BoundaryLimit", boundaryLimit);
+
+                        using (var reader = command.ExecuteReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                List<MatchTableEntity> matches = new();
+                                while (reader.Read())
+                                {
+                                    var matchOrdinal = reader.GetOrdinal("MatchId");
+                                    var startTimeOrdinal = reader.GetOrdinal("StartTime");
+                                    var rankOrdinal = reader.GetOrdinal("Rank");
+                                    var outcomeOrdinal = reader.GetOrdinal("Outcome");
+                                    var gameVariantCategoryOrdinal = reader.GetOrdinal("GameVariantCategory");
+                                    var mapOrdinal = reader.GetOrdinal("Map");
+                                    var playlistOrdinal = reader.GetOrdinal("Playlist");
+                                    var gameVariantOrdinal = reader.GetOrdinal("GameVariant");
+                                    var durationOrdinal = reader.GetOrdinal("Duration");
+
+                                    MatchTableEntity entity = new()
+                                    {
+                                        MatchId = reader.IsDBNull(matchOrdinal) ? string.Empty : reader.GetFieldValue<string>(matchOrdinal),
+                                        StartTime = reader.IsDBNull(startTimeOrdinal) ? DateTimeOffset.UnixEpoch : reader.GetFieldValue<DateTimeOffset>(startTimeOrdinal).ToLocalTime(),
+                                        Rank = reader.IsDBNull(rankOrdinal) ? 0 : reader.GetFieldValue<int>(rankOrdinal),
+                                        Outcome = reader.IsDBNull(outcomeOrdinal) ? Outcome.DidNotFinish : reader.GetFieldValue<Outcome>(outcomeOrdinal),
+                                        Category = reader.IsDBNull(gameVariantCategoryOrdinal) ? GameVariantCategory.None : reader.GetFieldValue<GameVariantCategory>(gameVariantCategoryOrdinal),
+                                        Map = reader.IsDBNull(mapOrdinal) ? string.Empty : reader.GetFieldValue<string>(mapOrdinal),
+                                        Playlist = reader.IsDBNull(playlistOrdinal) ? string.Empty : reader.GetFieldValue<string>(playlistOrdinal),
+                                        GameVariant = reader.IsDBNull(gameVariantOrdinal) ? string.Empty : reader.GetFieldValue<string>(gameVariantOrdinal),
+                                        Duration = reader.IsDBNull(durationOrdinal) ? string.Empty : reader.GetFieldValue<string>(durationOrdinal),
+                                    };
+
+                                    matches.Add(entity);
+                                }
+
+                                return matches;
+                            }
+                            else
+                            {
+                                Debug.WriteLine($"No rows returned for distinct match IDs.");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
             {
                 Debug.WriteLine($"An error occurred obtaining unique match IDs. {ex.Message}");
             }

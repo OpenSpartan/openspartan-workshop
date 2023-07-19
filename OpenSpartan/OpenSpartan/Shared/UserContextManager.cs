@@ -1,19 +1,25 @@
-﻿using Den.Dev.Orion.Authentication;
+﻿using CommunityToolkit.WinUI;
+using Den.Dev.Orion.Authentication;
 using Den.Dev.Orion.Core;
 using Den.Dev.Orion.Models;
 using Den.Dev.Orion.Models.HaloInfinite;
 using Microsoft.Data.Sqlite;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
 using OpenSpartan.Data;
+using OpenSpartan.Models;
 using OpenSpartan.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.DirectoryServices.ActiveDirectory;
 using System.Formats.Asn1;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MatchType = Den.Dev.Orion.Models.HaloInfinite.MatchType;
 
@@ -411,6 +417,35 @@ namespace OpenSpartan.Shared
 
             Debug.WriteLine($"Clocked at {matchIds.Count} total matchmade games.");
             return matchIds;
+        }
+
+        internal static async void GetPlayerMatches()
+        {
+            List<MatchTableEntity> matches = null;
+            string date = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture);
+
+            if (MatchesViewModel.Instance.MatchList.Count == 0)
+            {
+                matches = DataHandler.GetMatches($"xuid({HomeViewModel.Instance.Xuid})", date, 100);
+            }
+            else
+            {
+                date = MatchesViewModel.Instance.MatchList.Min(a => a.StartTime).ToString("o", CultureInfo.InvariantCulture);
+                matches = DataHandler.GetMatches($"xuid({HomeViewModel.Instance.Xuid})", date, 10);
+            }
+
+            if (matches != null)
+            {
+                var dispatcherWindow = ((Application.Current as App)?.MainWindow) as MainWindow;
+                await dispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                {
+                    MatchesViewModel.Instance.MatchList.AddRange(matches);
+                });
+            }
+            else
+            {
+                Debug.WriteLine("Could not get the list of matches for the specified parameters.");
+            }
         }
     }
 }

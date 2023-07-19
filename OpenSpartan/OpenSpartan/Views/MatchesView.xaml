@@ -7,6 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
     xmlns:converters="using:OpenSpartan.Converters"
     xmlns:viewmodels="using:OpenSpartan.ViewModels"
     DataContext="{x:Bind viewmodels:MatchesViewModel.Instance}"
@@ -15,13 +16,19 @@
     <Page.Resources>
         <converters:MatchLoadingStateToVisibilityConverter x:Key="MatchLoadingStateToVisibilityConverter"></converters:MatchLoadingStateToVisibilityConverter>
     </Page.Resources>
-    
+
     <Grid>
-        <StackPanel>
-            <TextBlock Text="Match History"  Style="{StaticResource TitleTextBlockStyle}" Margin="24"></TextBlock>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="64"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+            </Grid.RowDefinitions>
             
+            <TextBlock Text="Match History"  Style="{StaticResource TitleTextBlockStyle}" Margin="24,24,0,0" Grid.Row="0"></TextBlock>
+
             <!--Informational state-->
-            <Grid Visibility="{Binding MatchLoadingState, Converter={StaticResource MatchLoadingStateToVisibilityConverter}}" Margin="24" Background="#404040" BorderThickness="2" CornerRadius="4" Height="36">
+            <Grid Visibility="{Binding MatchLoadingState, Converter={StaticResource MatchLoadingStateToVisibilityConverter}}" Margin="24" Background="#404040" BorderThickness="2" CornerRadius="4" Height="36" Grid.Row="1">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="36"></ColumnDefinition>
                     <ColumnDefinition Width="*"></ColumnDefinition>
@@ -32,6 +39,11 @@
                 <TextBlock Grid.Column="1" Text="{Binding MatchLoadingString}" VerticalAlignment="Center"></TextBlock>
             </Grid>
 
-        </StackPanel>
+            <ScrollViewer ViewChanged="ScrollViewer_ViewChanged" Grid.Row="2" >
+                <controls:DataGrid ItemsSource="{Binding MatchList}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled">
+
+                </controls:DataGrid>
+            </ScrollViewer>
+        </Grid>
     </Grid>
 </Page>
