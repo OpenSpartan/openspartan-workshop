@@ -11,7 +11,8 @@
     xmlns:converters="using:OpenSpartan.Converters"
     xmlns:viewmodels="using:OpenSpartan.ViewModels"
     DataContext="{x:Bind viewmodels:MatchesViewModel.Instance}"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    NavigationCacheMode="Disabled">
 
     <Page.Resources>
         <converters:MatchLoadingStateToVisibilityConverter x:Key="MatchLoadingStateToVisibilityConverter"></converters:MatchLoadingStateToVisibilityConverter>
@@ -20,13 +21,24 @@
     <Grid>
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="64"></RowDefinition>
+                <RowDefinition Height="100"></RowDefinition>
                 <RowDefinition Height="Auto"></RowDefinition>
                 <RowDefinition Height="*"></RowDefinition>
             </Grid.RowDefinitions>
-            
-            <TextBlock Text="Match History"  Style="{StaticResource TitleTextBlockStyle}" Margin="24,24,0,0" Grid.Row="0"></TextBlock>
 
+            <Grid Grid.Row="0" Margin="24,24,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="36"></RowDefinition>
+                    <RowDefinition Height="*"></RowDefinition>
+                </Grid.RowDefinitions>
+                
+                <TextBlock Text="Match History" Grid.Row="0"  Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
+                <StackPanel Orientation="Horizontal" Grid.Row="1">
+                    <TextBlock Text="Loaded matches: "></TextBlock>
+                    <TextBlock Text="{Binding MatchList.Count}"></TextBlock>
+                </StackPanel>
+            </Grid>
+            
             <!--Informational state-->
             <Grid Visibility="{Binding MatchLoadingState, Converter={StaticResource MatchLoadingStateToVisibilityConverter}}" Margin="24" Background="#404040" BorderThickness="2" CornerRadius="4" Height="36" Grid.Row="1">
                 <Grid.ColumnDefinitions>
@@ -39,11 +51,9 @@
                 <TextBlock Grid.Column="1" Text="{Binding MatchLoadingString}" VerticalAlignment="Center"></TextBlock>
             </Grid>
 
-            <ScrollViewer ViewChanged="ScrollViewer_ViewChanged" Grid.Row="2" >
-                <controls:DataGrid ItemsSource="{Binding MatchList}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled">
+            <controls:DataGrid x:Name="dgdMatches" Grid.Row="2" ItemsSource="{Binding MatchList}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled">
 
-                </controls:DataGrid>
-            </ScrollViewer>
+            </controls:DataGrid>
         </Grid>
     </Grid>
 </Page>

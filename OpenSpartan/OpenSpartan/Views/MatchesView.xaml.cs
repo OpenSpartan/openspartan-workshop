@@ -1,5 +1,8 @@
 using CommunityToolkit.WinUI;
+using CommunityToolkit.WinUI.UI.Controls;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Navigation;
 using OpenSpartan.Shared;
 using System.Threading.Tasks;
 
@@ -17,7 +20,7 @@ namespace OpenSpartan.Views
         {
             this.InitializeComponent();
         }
-
+        
         private void ScrollViewer_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
         {
             var sv = sender as ScrollViewer;

@@ -282,7 +282,7 @@ namespace OpenSpartan.Shared
 
                             string qualifiedNameplateImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", configuration.Value.NameplateCmsPath);
                             string qualifiedEmblemImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", configuration.Value.EmblemCmsPath);
-                            string qualifiedBackdropImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", backdrop.Result.ImagePath.Media.MediaUrl.Path);
+                            string qualifiedBackdropImagePath = backdrop.Result != null ? Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", backdrop.Result.ImagePath.Media.MediaUrl.Path) : string.Empty;
 
                             // Let's make sure that we create the directory if it does not exist.
                             FileInfo file = new FileInfo(qualifiedNameplateImagePath);

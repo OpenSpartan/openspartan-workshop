@@ -1,9 +1,7 @@
 ﻿using Microsoft.UI.Xaml;
 using OpenSpartan.Data;
-using OpenSpartan.Models;
 using OpenSpartan.Shared;
 using OpenSpartan.ViewModels;
-using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -54,11 +52,6 @@ namespace OpenSpartan
                     var customizationOutcome = await UserContextManager.PopulateCustomizationData();
 
                     var decorationOutcome = await UserContextManager.PopulateDecorationData();
-
-                    await Task.Run(() =>
-                    {
-                        UserContextManager.GetPlayerMatches();
-                    });
 
                     var matchRecordsOutcome = await UserContextManager.PopulateMatchRecordsData();
                     MatchesViewModel.Instance.MatchLoadingState = Models.MatchLoadingState.Completed;
