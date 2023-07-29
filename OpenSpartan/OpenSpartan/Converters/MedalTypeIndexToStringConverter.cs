@@ -3,7 +3,7 @@ using System;
 
 namespace OpenSpartan.Converters
 {
-    internal class TypeIndexToStringConverter : IValueConverter
+    internal class MedalTypeIndexToStringConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

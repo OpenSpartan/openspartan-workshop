@@ -14,7 +14,10 @@
 
     <Page.Resources>
         <converters:NameIdToPathConverter x:Key="NameIdToPathConverter"></converters:NameIdToPathConverter>
-        <converters:TypeIndexToStringConverter x:Key="TypeIndexToStringConverter"></converters:TypeIndexToStringConverter>
+        <converters:MedalTypeIndexToStringConverter x:Key="MedalTypeIndexToStringConverter"></converters:MedalTypeIndexToStringConverter>
+        <converters:CommaAfterThousandsConverter x:Key="CommaAfterThousandsConverter"></converters:CommaAfterThousandsConverter>
+        <converters:MedalDifficultyToBrushConverter x:Key="MedalDifficultyToBrushConverter"></converters:MedalDifficultyToBrushConverter>
+        
         <CollectionViewSource x:Key="cvsMedals" IsSourceGrouped="True" Source="{Binding Medals}"/>
     </Page.Resources>
     
@@ -28,10 +31,10 @@
             <TextBlock Text="Medals" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
         </Grid>
 
-        <GridView Margin="24" Grid.Row="1" ItemsSource="{Binding Source={StaticResource cvsMedals}}">
+        <GridView Margin="24,0,8,0" Grid.Row="1" ItemsSource="{Binding Source={StaticResource cvsMedals}}">
             <GridView.ItemTemplate>
                 <DataTemplate>
-                    <Grid Margin="8" Background="#404040" BorderThickness="2" CornerRadius="4">
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="36"></RowDefinition>
                             <RowDefinition Height="*"></RowDefinition>
@@ -46,11 +49,12 @@
                             <TextBlock Text="{Binding Name.Value}" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
                             <Grid Grid.Column="1" CornerRadius="4">
                                 <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="{Binding Count}"></TextBlock>
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="{Binding Count, Converter={StaticResource CommaAfterThousandsConverter}}"></TextBlock>
                                 </Border>
                             </Grid>
                         </Grid>
-                        <Grid Grid.Row="1" Padding="8">
+
+                        <Grid Grid.Row="1" Padding="8" Background="{Binding DifficultyIndex, Converter={StaticResource MedalDifficultyToBrushConverter}}">
                             <Image Height="192" Width="192" Source="{Binding NameId, Converter={StaticResource NameIdToPathConverter}}"/>
                         </Grid>
                     </Grid>
@@ -62,7 +66,7 @@
                     <GroupStyle.HeaderTemplate>
                         <DataTemplate>
                             <Grid Margin="0">
-                                <TextBlock Text="{Binding Key, Converter={StaticResource TypeIndexToStringConverter}}" Style="{StaticResource TitleTextBlockStyle}"/>
+                                <TextBlock Text="{Binding Key, Converter={StaticResource MedalTypeIndexToStringConverter}}" Style="{StaticResource TitleTextBlockStyle}"/>
                             </Grid>
                         </DataTemplate>
                     </GroupStyle.HeaderTemplate>
