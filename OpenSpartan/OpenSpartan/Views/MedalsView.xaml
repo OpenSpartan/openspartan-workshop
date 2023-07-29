@@ -7,9 +7,68 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    xmlns:converters="using:OpenSpartan.Converters"
+    xmlns:viewmodels="using:OpenSpartan.ViewModels"
+    DataContext="{x:Bind viewmodels:MedalsViewModel.Instance}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
+    <Page.Resources>
+        <converters:NameIdToPathConverter x:Key="NameIdToPathConverter"></converters:NameIdToPathConverter>
+        <converters:TypeIndexToStringConverter x:Key="TypeIndexToStringConverter"></converters:TypeIndexToStringConverter>
+        <CollectionViewSource x:Key="cvsMedals" IsSourceGrouped="True" Source="{Binding Medals}"/>
+    </Page.Resources>
+    
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="100"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
 
+        <Grid Grid.Row="0" Margin="24,24,0,0">
+            <TextBlock Text="Medals" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
+        </Grid>
+
+        <GridView Margin="24" Grid.Row="1" ItemsSource="{Binding Source={StaticResource cvsMedals}}">
+            <GridView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Margin="8" Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="64"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            
+                            <TextBlock Text="{Binding Name.Value}" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                            <Grid Grid.Column="1" CornerRadius="4">
+                                <Border Background="#404040">
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="{Binding Count}"></TextBlock>
+                                </Border>
+                            </Grid>
+                        </Grid>
+                        <Grid Grid.Row="1" Padding="8">
+                            <Image Height="192" Width="192" Source="{Binding NameId, Converter={StaticResource NameIdToPathConverter}}"/>
+                        </Grid>
+                    </Grid>
+                </DataTemplate>
+            </GridView.ItemTemplate>
+
+            <GridView.GroupStyle>
+                <GroupStyle HidesIfEmpty="True">
+                    <GroupStyle.HeaderTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0">
+                                <TextBlock Text="{Binding Key, Converter={StaticResource TypeIndexToStringConverter}}" Style="{StaticResource TitleTextBlockStyle}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </GroupStyle.HeaderTemplate>
+
+                </GroupStyle>
+            </GridView.GroupStyle>
+        </GridView>
     </Grid>
 </Page>

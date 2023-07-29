@@ -13,6 +13,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Controls\HeaderTile.xaml" />
+    <None Remove="Queries\Select\LatestMedalsSnapshot.sql" />
     <None Remove="Views\HomeView.xaml" />
     <None Remove="Views\MatchesView.xaml" />
     <None Remove="Views\MedalsView.xaml" />
@@ -37,6 +38,7 @@
     <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="2.31.0" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.3.230602002" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.756" />
+    <PackageReference Include="SkiaSharp" Version="2.88.3" />
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
@@ -47,6 +49,12 @@
   -->
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <ProjectCapability Include="Msix" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Queries\Select\LatestMedalsSnapshot.sql">
+      <Generator></Generator>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Update="Queries\Bootstrap\EngineGameVariants.sql">

@@ -19,41 +19,39 @@
     </Page.Resources>
 
     <Grid>
-        <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="100"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="24,24,0,0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="100"></RowDefinition>
-                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="36"></RowDefinition>
                 <RowDefinition Height="*"></RowDefinition>
             </Grid.RowDefinitions>
 
-            <Grid Grid.Row="0" Margin="24,24,0,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="36"></RowDefinition>
-                    <RowDefinition Height="*"></RowDefinition>
-                </Grid.RowDefinitions>
-                
-                <TextBlock Text="Match History" Grid.Row="0"  Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
-                <StackPanel Orientation="Horizontal" Grid.Row="1">
-                    <TextBlock Text="Loaded matches: "></TextBlock>
-                    <TextBlock Text="{Binding MatchList.Count}"></TextBlock>
-                </StackPanel>
-            </Grid>
-            
-            <!--Informational state-->
-            <Grid Visibility="{Binding MatchLoadingState, Converter={StaticResource MatchLoadingStateToVisibilityConverter}}" Margin="24" Background="#404040" BorderThickness="2" CornerRadius="4" Height="36" Grid.Row="1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="36"></ColumnDefinition>
-                    <ColumnDefinition Width="*"></ColumnDefinition>
-                </Grid.ColumnDefinitions>
-
-                <ProgressRing Height="12" Width="12"></ProgressRing>
-
-                <TextBlock Grid.Column="1" Text="{Binding MatchLoadingString}" VerticalAlignment="Center"></TextBlock>
-            </Grid>
-
-            <controls:DataGrid x:Name="dgdMatches" Grid.Row="2" ItemsSource="{Binding MatchList}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled">
-
-            </controls:DataGrid>
+            <TextBlock Text="Match History" Grid.Row="0"  Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
+            <StackPanel Orientation="Horizontal" Grid.Row="1">
+                <TextBlock Text="Loaded matches: "></TextBlock>
+                <TextBlock Text="{Binding MatchList.Count}"></TextBlock>
+            </StackPanel>
         </Grid>
+
+        <!--Informational state-->
+        <Grid Visibility="{Binding MatchLoadingState, Converter={StaticResource MatchLoadingStateToVisibilityConverter}}" Margin="24" Background="#404040" BorderThickness="2" CornerRadius="4" Height="36" Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="36"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+
+            <ProgressRing Height="12" Width="12"></ProgressRing>
+
+            <TextBlock Grid.Column="1" Text="{Binding MatchLoadingString}" VerticalAlignment="Center"></TextBlock>
+        </Grid>
+
+        <controls:DataGrid x:Name="dgdMatches" Grid.Row="2" ItemsSource="{Binding MatchList}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled">
+
+        </controls:DataGrid>
     </Grid>
 </Page>

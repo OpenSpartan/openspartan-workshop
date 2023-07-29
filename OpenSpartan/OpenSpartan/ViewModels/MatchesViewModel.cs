@@ -2,7 +2,6 @@
 using OpenSpartan.Data;
 using OpenSpartan.Models;
 using OpenSpartan.Shared;
-using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.ViewModels
@@ -11,7 +10,6 @@ namespace OpenSpartan.ViewModels
     {
         private MatchLoadingState _matchLoadingState;
         private string _matchLoadingParameter;
-        //private ObservableCollection<MatchTableEntity> _matchList;
         private IncrementalLoadingCollection<MatchesSource, MatchTableEntity> _matchList;
 
         public static MatchesViewModel Instance { get; } = new MatchesViewModel();
@@ -78,19 +76,6 @@ namespace OpenSpartan.ViewModels
                 }
             }
         }
-
-        //public ObservableCollection<MatchTableEntity> MatchList
-        //{
-        //    get => _matchList;
-        //    set
-        //    {
-        //        if (_matchList != value)
-        //        {
-        //            _matchList = value;
-        //            NotifyPropertyChanged();
-        //        }
-        //    }
-        //}
 
         public void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
         {

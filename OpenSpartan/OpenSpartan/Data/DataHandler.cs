@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace OpenSpartan.Data
@@ -558,9 +559,44 @@ namespace OpenSpartan.Data
             return System.IO.File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Queries", category, $"{target}.sql"), Encoding.UTF8);
         }
 
-        internal static int GetCountOfMatchRecords()
+        internal static List<Medal> GetMedals()
         {
-            throw new NotImplementedException();
+            try
+            {
+                using (var connection = new SqliteConnection($"Data Source={DatabasePath}"))
+                {
+                    connection.Open();
+
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = GetQuery("Select", "LatestMedalsSnapshot");
+
+                        using (var reader = command.ExecuteReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                List<Medal> matchIds = new();
+                                while (reader.Read())
+                                {
+                                    matchIds.AddRange(JsonSerializer.Deserialize<List<Medal>>(reader.GetString(0)));
+                                }
+
+                                return matchIds;
+                            }
+                            else
+                            {
+                                Debug.WriteLine($"No rows returned for distinct match IDs.");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"An error occurred obtaining unique match IDs. {ex.Message}");
+            }
+
+            return null;
         }
     }
 }

@@ -53,6 +53,8 @@ namespace OpenSpartan
 
                     var decorationOutcome = await UserContextManager.PopulateDecorationData();
 
+                    var medalsOutcome = await UserContextManager.PopulateMedalData();
+
                     var matchRecordsOutcome = await UserContextManager.PopulateMatchRecordsData();
                     MatchesViewModel.Instance.MatchLoadingState = Models.MatchLoadingState.Completed;
                 }

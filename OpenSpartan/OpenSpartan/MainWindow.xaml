@@ -49,12 +49,12 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <NavigationViewItemSeparator />
-                <NavigationViewItem Content="Matches"  x:Name="nviMatches" Tag="OpenSpartan.Views.MatchesView">
+                <NavigationViewItem Content="Matches" x:Name="nviMatches" Tag="OpenSpartan.Views.MatchesView">
                     <NavigationViewItem.Icon>
                         <SymbolIcon Symbol="Directions"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Medals">
+                <NavigationViewItem Content="Medals" x:Name="nviMedals" Tag="OpenSpartan.Views.MedalsView">
                     <NavigationViewItem.Icon>
                         <SymbolIcon Symbol="OutlineStar"/>
                     </NavigationViewItem.Icon>

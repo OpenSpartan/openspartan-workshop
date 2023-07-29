@@ -5,6 +5,9 @@
     <None Update="App.xaml">
       <SubType>Designer</SubType>
     </None>
+    <Content Update="Queries\Select\LatestMedalsSnapshot.sql">
+      <SubType>Designer</SubType>
+    </Content>
     <Page Update="Views\MedalsView.xaml">
       <SubType>Designer</SubType>
     </Page>

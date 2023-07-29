@@ -15,12 +15,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.DirectoryServices.ActiveDirectory;
+using System.Drawing;
 using System.Formats.Asn1;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Windows.Media.Protection.PlayReady;
 using MatchType = Den.Dev.Orion.Models.HaloInfinite.MatchType;
 
 namespace OpenSpartan.Shared
@@ -446,6 +448,81 @@ namespace OpenSpartan.Shared
             {
                 Debug.WriteLine("Could not get the list of matches for the specified parameters.");
             }
+        }
+
+        internal static async Task<bool> PopulateMedalData()
+        {
+            try
+            {
+                Debug.WriteLine("Getting medal metadata...");
+                var medalReferences = (await HaloClient.GameCmsGetMedalMetadata()).Result;
+
+                if (medalReferences.Medals != null && medalReferences.Medals.Count > 0)
+                {
+                    var medals = DataHandler.GetMedals();
+
+                    if (medals != null)
+                    {
+                        // There is likely a delta in medals here because the end-result doesn't actually
+                        // account for quite a few medals, such as the ones from Infection game modes.
+                        var compoundMedals = medals.Join(medalReferences.Medals, earned => earned.NameId, references => references.NameId, (earned, references) => new Medal()
+                        {
+                            Count = earned.Count,
+                            Description = references.Description,
+                            DifficultyIndex = references.DifficultyIndex,
+                            Name = references.Name,
+                            NameId = references.NameId,
+                            PersonalScore = references.PersonalScore,
+                            SortingWeight = references.SortingWeight,
+                            SpriteIndex = references.SpriteIndex,
+                            TotalPersonalScoreAwarded = earned.TotalPersonalScoreAwarded,
+                            TypeIndex = references.TypeIndex,
+                        }).ToList();
+
+                        var group = compoundMedals.OrderByDescending(x => x.Count).GroupBy(x => x.TypeIndex);
+                        MedalsViewModel.Instance.Medals = new System.Collections.ObjectModel.ObservableCollection<IGrouping<int, Medal>>(group);
+
+                        string qualifiedMedalPath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", "medals");
+
+                        var spriteContent = (await HaloClient.GameCmsGetGenericWaypointFile(medalReferences.Sprites.ExtraLarge.Path)).Result;
+                        using MemoryStream ms = new(spriteContent);
+                        SkiaSharp.SKBitmap bmp = SkiaSharp.SKBitmap.Decode(ms);
+                        using var pixmap = bmp.PeekPixels();
+
+                        foreach (var medal in compoundMedals)
+                        {
+                            string medalImagePath = Path.Combine(qualifiedMedalPath, $"{medal.NameId}.png");
+                            if (!System.IO.File.Exists(medalImagePath))
+                            {
+                                FileInfo file = new FileInfo(medalImagePath);
+                                file.Directory.Create();
+
+                                // The spritesheet for medals is 16x16, so we want to make sure that we extract the right medals.
+                                var row = (int)Math.Floor(medal.SpriteIndex / 16.0);
+                                var column = (int)(medal.SpriteIndex % 16.0);
+
+                                SkiaSharp.SKRectI rectI = SkiaSharp.SKRectI.Create(column * 256, row * 256, 256, 256);
+
+                                var subset = pixmap.ExtractSubset(rectI);
+                                using (var data = subset.Encode(SkiaSharp.SKPngEncoderOptions.Default))
+                                {
+                                    System.IO.File.WriteAllBytes(medalImagePath, data.ToArray());
+                                    Debug.WriteLine($"Wrote medal to file: {medalImagePath}");
+                                }
+                                
+                            }             
+                        }
+
+                        Debug.WriteLine("Got medals.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Could not obtain medal metadata. Error: {ex.Message}");
+                return false;
+            }
+            return true;
         }
     }
 }
