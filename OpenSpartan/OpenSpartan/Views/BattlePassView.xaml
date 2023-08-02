@@ -7,9 +7,45 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    xmlns:converters="using:OpenSpartan.Converters"
+    xmlns:viewmodels="using:OpenSpartan.ViewModels"
+    DataContext="{x:Bind viewmodels:BattlePassViewModel.Instance}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="100"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
 
+        <Grid Grid.Row="0" Margin="24,24,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="36"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="Battle Pass" Grid.Row="0"  Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
+        </Grid>
+
+        <!--Informational state-->
+        <Grid Margin="24" Background="#404040" BorderThickness="2" CornerRadius="4" Height="36" Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="36"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+
+            <ProgressRing Height="12" Width="12"></ProgressRing>
+
+            <TextBlock Grid.Column="1" Text="Loading battlepass" VerticalAlignment="Center"></TextBlock>
+        </Grid>
+
+        <TabView TabItemsSource="{Binding BattlePasses}" Grid.Row="2" Margin="24">
+            <TabView.TabItemTemplate>
+                <DataTemplate>
+                    <TabViewItem Header="{Binding RewardTrackMetadata.Name.Value}"/>
+                </DataTemplate>
+            </TabView.TabItemTemplate>
+        </TabView>
     </Grid>
 </Page>

@@ -33,7 +33,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
-    <PackageReference Include="Den.Dev.Orion" Version="1.0.13" />
+    <PackageReference Include="Den.Dev.Orion" Version="1.0.14" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="7.0.9" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.55.0" />
     <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="2.32.0" />
