@@ -524,5 +524,25 @@ namespace OpenSpartan.Shared
             }
             return true;
         }
+
+        public static async Task<OperationRewardTrackSnapshot> GetOperations()
+        {
+            return (await HaloClient.EconomyPlayerOperations($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})")).Result;
+        }
+
+        public static async Task<RewardTrackMetadata> GetEvent(string eventId)
+        {
+            return (await HaloClient.GameCmsGetEvent(eventId, HaloClient.ClearanceToken)).Result;
+        }
+
+        public static async Task<InGameItem> GetInGameItem(string itemId)
+        {
+            return (await HaloClient.GameCmsGetItem(itemId, HaloClient.ClearanceToken)).Result;
+        }
+
+        public static async Task<CurrencyDefinition> GetInGameCurrency(string currencyId)
+        {
+            return (await HaloClient.GameCmsGetCurrency(currencyId, HaloClient.ClearanceToken)).Result;
+        }
     }
 }

@@ -23,6 +23,9 @@
     <None Update="Package.appxmanifest">
       <SubType>Designer</SubType>
     </None>
+    <Page Update="Views\BattlePassView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Views\HomeView.xaml">
       <SubType>Designer</SubType>
     </Page>

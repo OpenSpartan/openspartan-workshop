@@ -56,6 +56,7 @@ namespace OpenSpartan
                 NavView_Navigate(navPageType, args.RecommendedNavigationTransitionInfo);
             }
         }
+
         private void NavView_Navigate(Type navPageType, NavigationTransitionInfo transitionInfo)
         {
             // Get the page type before navigation so you can prevent duplicate

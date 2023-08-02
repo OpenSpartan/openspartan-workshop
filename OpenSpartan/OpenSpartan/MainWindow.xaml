@@ -59,7 +59,7 @@
                         <SymbolIcon Symbol="OutlineStar"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Battle Pass">
+                <NavigationViewItem Content="Battle Pass" x:Name="nviBattlePass" Tag="OpenSpartan.Views.BattlePassView">
                     <NavigationViewItem.Icon>
                         <SymbolIcon Symbol="Flag"/>
                     </NavigationViewItem.Icon>
