@@ -1,0 +1,1 @@
+﻿INSERT OR REPLACE INTO OperationRewardTracks (ResponseBody, Path, LastUpdated) VALUES($ResponseBody, $Path, $LastUpdated)

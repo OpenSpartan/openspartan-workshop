@@ -20,6 +20,7 @@ using System.Formats.Asn1;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.Media.Protection.PlayReady;
@@ -509,8 +510,8 @@ namespace OpenSpartan.Shared
                                     System.IO.File.WriteAllBytes(medalImagePath, data.ToArray());
                                     Debug.WriteLine($"Wrote medal to file: {medalImagePath}");
                                 }
-                                
-                            }             
+
+                            }
                         }
 
                         Debug.WriteLine("Got medals.");
@@ -530,19 +531,117 @@ namespace OpenSpartan.Shared
             return (await HaloClient.EconomyPlayerOperations($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})")).Result;
         }
 
-        public static async Task<RewardTrackMetadata> GetEvent(string eventId)
-        {
-            return (await HaloClient.GameCmsGetEvent(eventId, HaloClient.ClearanceToken)).Result;
-        }
-
-        public static async Task<InGameItem> GetInGameItem(string itemId)
-        {
-            return (await HaloClient.GameCmsGetItem(itemId, HaloClient.ClearanceToken)).Result;
-        }
-
         public static async Task<CurrencyDefinition> GetInGameCurrency(string currencyId)
         {
             return (await HaloClient.GameCmsGetCurrency(currencyId, HaloClient.ClearanceToken)).Result;
+        }
+
+        public static async Task<bool> LoadBattlePassData()
+        {
+            var operations = await UserContextManager.GetOperations();
+
+            if (operations != null)
+            {
+                foreach (var operation in operations.OperationRewardTracks)
+                {
+                    var compoundEvent = new OperationCompoundModel
+                    {
+                        RewardTrack = operation
+                    };
+
+                    // Check to see if there is a local copy. If there isn't, store the data.
+                    if (!DataHandler.IsOperationRewardTrackAvailable(operation.RewardTrackPath))
+                    {
+                        var operationDetails = await HaloClient.GameCmsGetEvent(operation.RewardTrackPath, HaloClient.ClearanceToken);
+
+                        if (operationDetails != null && operationDetails.Result != null && operationDetails.Response.Code == 200)
+                        {
+                            // We need to store operation details locally.
+                            DataHandler.UpdateOperationRewardTracks(operationDetails.Response.Message, operation.RewardTrackPath);
+
+                            compoundEvent.RewardTrackMetadata = operationDetails.Result;
+
+                            foreach (var rewardBucket in operationDetails.Result.Ranks)
+                            {
+                                var freeInventoryRewards = await ExtractInventoryRewards(rewardBucket.Rank, rewardBucket.FreeRewards.InventoryRewards, true);
+                                var freeCurrencyRewards = await ExtractCurrencyRewards(rewardBucket.Rank, rewardBucket.FreeRewards.CurrencyRewards, true);
+
+                                var paidInventoryRewards = await ExtractInventoryRewards(rewardBucket.Rank, rewardBucket.PaidRewards.InventoryRewards, false);
+                                var paidCurrencyRewards = await ExtractCurrencyRewards(rewardBucket.Rank, rewardBucket.PaidRewards.CurrencyRewards, false);
+
+                                compoundEvent.Rewards = compoundEvent.Rewards.Concat(freeInventoryRewards)
+                                                                             .Concat(freeCurrencyRewards)
+                                                                             .Concat(paidInventoryRewards)
+                                                                             .Concat(paidCurrencyRewards).ToList();
+
+                                Debug.WriteLine($"{operation.RewardTrackPath} - Rank {rewardBucket.Rank} - Completed");
+                            }
+
+                            BattlePassViewModel.Instance.BattlePasses.Add(compoundEvent);
+                        }
+                    }
+                }
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        internal static async Task<List<RewardMetaContainer>> ExtractCurrencyRewards(int rank, IEnumerable<CurrencyAmount> currencyItems, bool isFree)
+        {
+            List<RewardMetaContainer> rewardContainers = new List<RewardMetaContainer>();
+
+            foreach (var currencyReward in currencyItems)
+            {
+                RewardMetaContainer container = new()
+                {
+                    Rank = rank,
+                    IsFree = isFree,
+                    Amount = currencyReward.Amount,
+                    CurrencyDetails = await GetInGameCurrency(currencyReward.CurrencyPath)
+                };
+                rewardContainers.Add(container);
+            }
+
+            return rewardContainers;
+        }
+
+        internal static async Task<List<RewardMetaContainer>> ExtractInventoryRewards(int rank, IEnumerable<InventoryAmount> inventoryItems, bool isFree)
+        {
+            List<RewardMetaContainer> rewardContainers = new List<RewardMetaContainer>();
+
+            foreach (var inventoryReward in inventoryItems)
+            {
+                var inventoryItemLocallyAvailable = DataHandler.IsInventoryItemAvailable(inventoryReward.InventoryItemPath);
+
+                RewardMetaContainer container = new()
+                {
+                    Rank = rank,
+                    IsFree = isFree,
+                    Amount = inventoryReward.Amount,
+                };
+
+                if (inventoryItemLocallyAvailable)
+                {
+                    container.ItemDetails = DataHandler.GetInventoryItem(inventoryReward.InventoryItemPath);
+                }
+                else 
+                {
+                    var item = await HaloClient.GameCmsGetItem(inventoryReward.InventoryItemPath, HaloClient.ClearanceToken);
+                    if (item != null && item.Result != null)
+                    {
+                        DataHandler.UpdateInventoryItems(item.Response.Message, inventoryReward.InventoryItemPath);
+                        container.ItemDetails = item.Result;
+                    }
+                }
+
+                rewardContainers.Add(container);
+            }
+
+            return rewardContainers;
         }
     }
 }

@@ -74,6 +74,16 @@ namespace OpenSpartan.Data
                     {
                         connection.BootstrapTable("EngineGameVariants");
                     }
+
+                    if (!connection.IsTableAvailable("OperationRewardTracks"))
+                    {
+                        connection.BootstrapTable("OperationRewardTracks");
+                    }
+
+                    if (!connection.IsTableAvailable("InventoryItems"))
+                    {
+                        connection.BootstrapTable("InventoryItems");
+                    }
                 }
 
                 return true;
@@ -582,6 +592,151 @@ namespace OpenSpartan.Data
                                 }
 
                                 return matchIds;
+                            }
+                            else
+                            {
+                                Debug.WriteLine($"No rows returned for distinct match IDs.");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"An error occurred obtaining unique match IDs. {ex.Message}");
+            }
+
+            return null;
+        }
+
+        internal static bool UpdateOperationRewardTracks(string response, string path)
+        {
+            using var connection = new SqliteConnection($"Data Source={DatabasePath}");
+            using var insertionCommand = connection.CreateCommand();
+
+            insertionCommand.CommandText = GetQuery("Insert", "OperationRewardTracks");
+            insertionCommand.Parameters.AddWithValue("$ResponseBody", response);
+            insertionCommand.Parameters.AddWithValue("$Path", path);
+            insertionCommand.Parameters.AddWithValue("$LastUpdated", DateTimeOffset.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK", CultureInfo.InvariantCulture));
+
+            connection.Open();
+
+            var insertionResult = insertionCommand.ExecuteNonQuery();
+
+            if (insertionResult > 0)
+            {
+                Debug.WriteLine($"Stored reward track {path}.");
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        internal static bool UpdateInventoryItems(string response, string path)
+        {
+            using var connection = new SqliteConnection($"Data Source={DatabasePath}");
+            using var insertionCommand = connection.CreateCommand();
+
+            insertionCommand.CommandText = GetQuery("Insert", "InventoryItems");
+            insertionCommand.Parameters.AddWithValue("$ResponseBody", response);
+            insertionCommand.Parameters.AddWithValue("$Path", path);
+            insertionCommand.Parameters.AddWithValue("$LastUpdated", DateTimeOffset.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK", CultureInfo.InvariantCulture));
+
+            connection.Open();
+
+            var insertionResult = insertionCommand.ExecuteNonQuery();
+
+            if (insertionResult > 0)
+            {
+                Debug.WriteLine($"Stored inventory item {path}.");
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        internal static bool IsOperationRewardTrackAvailable(string path)
+        {
+            using var connection = new SqliteConnection($"Data Source={DatabasePath}");
+            using var command = connection.CreateCommand();
+
+            command.CommandText = $"SELECT EXISTS(SELECT 1 FROM OperationRewardTracks WHERE Path='{path}') AS OPERATION_AVAILABLE";
+
+            connection.Open();
+
+            using var reader = command.ExecuteReader();
+            if (reader.HasRows)
+            {
+                while (reader.Read())
+                {
+                    var operationAvailable = reader.GetFieldValue<int>(0);
+                    if (operationAvailable > 0)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        internal static bool IsInventoryItemAvailable (string id)
+        {
+            using var connection = new SqliteConnection($"Data Source={DatabasePath}");
+            using var command = connection.CreateCommand();
+
+            command.CommandText = $"SELECT EXISTS(SELECT 1 FROM InventoryItems WHERE Id='{id}') AS INVENTORY_ITEM_AVAILABLE";
+
+            connection.Open();
+
+            using var reader = command.ExecuteReader();
+            if (reader.HasRows)
+            {
+                while (reader.Read())
+                {
+                    var operationAvailable = reader.GetFieldValue<int>(0);
+                    if (operationAvailable > 0)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        internal static InGameItem GetInventoryItem(string path)
+        {
+            try
+            {
+                using (var connection = new SqliteConnection($"Data Source={DatabasePath}"))
+                {
+                    connection.Open();
+
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = GetQuery("Select", "InventoryItem");
+
+                        using (var reader = command.ExecuteReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                while (reader.Read())
+                                {
+                                    return JsonSerializer.Deserialize<InGameItem>(reader.GetString(0));
+                                }
                             }
                             else
                             {

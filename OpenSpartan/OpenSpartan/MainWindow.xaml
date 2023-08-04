@@ -64,16 +64,6 @@
                         <SymbolIcon Symbol="Flag"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Insights">
-                    <NavigationViewItem.Icon>
-                        <SymbolIcon Symbol="Library"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem Content="Gear">
-                    <NavigationViewItem.Icon>
-                        <SymbolIcon Symbol="ReportHacked"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
             </NavigationView.MenuItems>
 
             <Frame x:Name="ContentFrame"/>
