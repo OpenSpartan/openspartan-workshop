@@ -16,8 +16,6 @@
     
     <Grid>
         <StackPanel>
-            <TextBlock Text="{Binding RewardTrack.RewardTrackPath}"></TextBlock>
-
             <GridView Margin="24,0,8,0" ItemsSource="{Binding Rewards}">
                 <GridView.ItemTemplate>
                     <DataTemplate>
