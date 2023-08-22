@@ -40,12 +40,14 @@
             <TextBlock Grid.Column="1" Text="Loading battlepass" VerticalAlignment="Center"></TextBlock>
         </Grid>
 
-        <TabView TabItemsSource="{Binding BattlePasses}" Grid.Row="2" Margin="24">
-            <TabView.TabItemTemplate>
+        <NavigationView ItemInvoked="nvBattlePassDetails_ItemInvoked" Name="nvBattlePassDetails" MenuItemsSource="{Binding BattlePasses}" Grid.Row="2" Margin="24" PaneDisplayMode="Top" IsSettingsVisible="False" IsBackButtonVisible="Collapsed" IsBackEnabled="False">
+            <NavigationView.MenuItemTemplate>
                 <DataTemplate>
-                    <TabViewItem Header="{Binding RewardTrackMetadata.Name.Value}"/>
+                    <NavigationViewItem Content="{Binding RewardTrackMetadata.Name.Value}" Tag="{Binding RewardTrack.RewardTrackPath}"/>
                 </DataTemplate>
-            </TabView.TabItemTemplate>
-        </TabView>
+            </NavigationView.MenuItemTemplate>
+
+            <Frame x:Name="ContentFrame"/>
+        </NavigationView>
     </Grid>
 </Page>

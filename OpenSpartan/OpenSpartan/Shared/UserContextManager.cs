@@ -561,24 +561,22 @@ namespace OpenSpartan.Shared
 
                             compoundEvent.RewardTrackMetadata = operationDetails.Result;
 
-                            foreach (var rewardBucket in operationDetails.Result.Ranks)
-                            {
-                                var freeInventoryRewards = await ExtractInventoryRewards(rewardBucket.Rank, rewardBucket.FreeRewards.InventoryRewards, true);
-                                var freeCurrencyRewards = await ExtractCurrencyRewards(rewardBucket.Rank, rewardBucket.FreeRewards.CurrencyRewards, true);
-
-                                var paidInventoryRewards = await ExtractInventoryRewards(rewardBucket.Rank, rewardBucket.PaidRewards.InventoryRewards, false);
-                                var paidCurrencyRewards = await ExtractCurrencyRewards(rewardBucket.Rank, rewardBucket.PaidRewards.CurrencyRewards, false);
-
-                                compoundEvent.Rewards = compoundEvent.Rewards.Concat(freeInventoryRewards)
-                                                                             .Concat(freeCurrencyRewards)
-                                                                             .Concat(paidInventoryRewards)
-                                                                             .Concat(paidCurrencyRewards).ToList();
-
-                                Debug.WriteLine($"{operation.RewardTrackPath} - Rank {rewardBucket.Rank} - Completed");
-                            }
+                            compoundEvent.Rewards = await GetFlattenedRewards(operationDetails.Result.Ranks);
+                            Debug.WriteLine($"{operation.RewardTrackPath} - Completed");
 
                             BattlePassViewModel.Instance.BattlePasses.Add(compoundEvent);
                         }
+                    }
+                    // Otherwise, get the reward track directly from the database.
+                    else
+                    {
+                        var operationDetails = DataHandler.GetOperationResponseBody(operation.RewardTrackPath);
+                        compoundEvent.RewardTrackMetadata = operationDetails;
+                        compoundEvent.Rewards = await GetFlattenedRewards(operationDetails.Ranks);
+
+                        Debug.WriteLine($"{operation.RewardTrackPath} (Local) - Completed");
+
+                        BattlePassViewModel.Instance.BattlePasses.Add(compoundEvent);
                     }
                 }
 
@@ -588,6 +586,29 @@ namespace OpenSpartan.Shared
             {
                 return false;
             }
+        }
+
+        internal static async Task<List<RewardMetaContainer>> GetFlattenedRewards(List<RankSnapshot> rankSnapshots)
+        {
+            List<RewardMetaContainer> rewards = new();
+
+            foreach (var rewardBucket in rankSnapshots)
+            {
+                var freeInventoryRewards = await ExtractInventoryRewards(rewardBucket.Rank, rewardBucket.FreeRewards.InventoryRewards, true);
+                var freeCurrencyRewards = await ExtractCurrencyRewards(rewardBucket.Rank, rewardBucket.FreeRewards.CurrencyRewards, true);
+
+                var paidInventoryRewards = await ExtractInventoryRewards(rewardBucket.Rank, rewardBucket.PaidRewards.InventoryRewards, false);
+                var paidCurrencyRewards = await ExtractCurrencyRewards(rewardBucket.Rank, rewardBucket.PaidRewards.CurrencyRewards, false);
+
+                rewards.AddRange(freeInventoryRewards);
+                rewards.AddRange(freeCurrencyRewards);
+                rewards.AddRange(paidInventoryRewards);
+                rewards.AddRange(paidCurrencyRewards);
+
+                Debug.WriteLine($"Rank {rewardBucket.Rank} - Completed");
+            }
+
+            return rewards;
         }
 
         internal static async Task<List<RewardMetaContainer>> ExtractCurrencyRewards(int rank, IEnumerable<CurrencyAmount> currencyItems, bool isFree)
@@ -633,6 +654,22 @@ namespace OpenSpartan.Shared
                     var item = await HaloClient.GameCmsGetItem(inventoryReward.InventoryItemPath, HaloClient.ClearanceToken);
                     if (item != null && item.Result != null)
                     {
+                        string qualifiedImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", item.Result.CommonData.DisplayPath.Media.MediaUrl.Path);
+
+                        // Let's make sure that we create the directory if it does not exist.
+                        System.IO.FileInfo file = new System.IO.FileInfo(qualifiedImagePath);
+                        file.Directory.Create();
+
+                        if (!System.IO.File.Exists(qualifiedImagePath))
+                        {
+                            var rankImage = await HaloClient.GameCmsGetImage(item.Result.CommonData.DisplayPath.Media.MediaUrl.Path);
+                            if (rankImage.Result != null && rankImage.Response.Code == 200)
+                            {
+                                System.IO.File.WriteAllBytes(qualifiedImagePath, rankImage.Result);
+                                Debug.WriteLine("Stored local image: " + item.Result.CommonData.DisplayPath.Media.MediaUrl.Path);
+                            }
+                        }
+
                         DataHandler.UpdateInventoryItems(item.Response.Message, inventoryReward.InventoryItemPath);
                         container.ItemDetails = item.Result;
                     }

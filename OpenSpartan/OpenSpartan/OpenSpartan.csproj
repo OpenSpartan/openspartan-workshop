@@ -28,6 +28,8 @@
     <None Remove="Queries\Insert\OperationRewardTracks.sql" />
     <None Remove="Queries\Select\InventoryItem.sql" />
     <None Remove="Queries\Select\LatestMedalsSnapshot.sql" />
+    <None Remove="Queries\Select\OperationResponseBody.sql" />
+    <None Remove="Views\BattlePassDetailView.xaml" />
     <None Remove="Views\BattlePassView.xaml" />
     <None Remove="Views\HomeView.xaml" />
     <None Remove="Views\MatchesView.xaml" />
@@ -63,10 +65,13 @@
     <Content Include="Queries\Insert\OperationRewardTracks.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Queries\Select\OperationResponseBody.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
-    <PackageReference Include="Den.Dev.Orion" Version="1.0.15" />
+    <PackageReference Include="Den.Dev.Orion" Version="1.0.16" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="7.0.10" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.55.0" />
     <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="2.32.0" />
@@ -148,6 +153,9 @@
     <None Update="Queries\VerifyTableAvailability.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <Page Update="Views\BattlePassDetailView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Views\BattlePassView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

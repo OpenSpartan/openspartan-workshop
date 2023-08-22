@@ -5,7 +5,7 @@ using System.IO;
 
 namespace OpenSpartan.Converters
 {
-    internal class NameIdToPathConverter : IValueConverter
+    internal class MedalNameIdToPathConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

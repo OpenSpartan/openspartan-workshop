@@ -13,7 +13,7 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Page.Resources>
-        <converters:NameIdToPathConverter x:Key="NameIdToPathConverter"></converters:NameIdToPathConverter>
+        <converters:MedalNameIdToPathConverter x:Key="NameIdToPathConverter"></converters:MedalNameIdToPathConverter>
         <converters:MedalTypeIndexToStringConverter x:Key="MedalTypeIndexToStringConverter"></converters:MedalTypeIndexToStringConverter>
         <converters:CommaAfterThousandsConverter x:Key="CommaAfterThousandsConverter"></converters:CommaAfterThousandsConverter>
         <converters:MedalDifficultyToBrushConverter x:Key="MedalDifficultyToBrushConverter"></converters:MedalDifficultyToBrushConverter>
@@ -55,7 +55,7 @@
                         </Grid>
 
                         <Grid Grid.Row="1" Padding="8" Background="{Binding DifficultyIndex, Converter={StaticResource MedalDifficultyToBrushConverter}}">
-                            <Image Height="192" Width="192" Source="{Binding NameId, Converter={StaticResource NameIdToPathConverter}}"/>
+                            <Image Height="192" Width="192" Source="{Binding NameId, Converter={StaticResource MedalNameIdToPathConverter}}"/>
                         </Grid>
                     </Grid>
                 </DataTemplate>

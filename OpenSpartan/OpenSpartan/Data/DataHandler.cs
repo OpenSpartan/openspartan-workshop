@@ -1,4 +1,5 @@
-﻿using Den.Dev.Orion.Models;
+﻿using Den.Dev.Orion.Converters;
+using Den.Dev.Orion.Models;
 using Den.Dev.Orion.Models.HaloInfinite;
 using Microsoft.Data.Sqlite;
 using OpenSpartan.Models;
@@ -20,6 +21,16 @@ namespace OpenSpartan.Data
     internal class DataHandler
     {
         internal static string DatabasePath => Path.Combine(Core.Configuration.AppDataDirectory, "data", Core.Configuration.DatabaseFileName);
+
+        private static readonly JsonSerializerOptions serializerOptions = new()
+        {
+            WriteIndented = true,
+            PropertyNameCaseInsensitive = true,
+            Converters =
+            {
+                new EmptyDateStringToNullJsonConverter(),
+            },
+        };
 
         internal static bool BootstrapDatabase()
         {
@@ -162,6 +173,42 @@ namespace OpenSpartan.Data
                 }
             }
             catch(Exception ex)
+            {
+                Debug.WriteLine($"An error occurred obtaining unique match IDs. {ex.Message}");
+            }
+
+            return null;
+        }
+
+        internal static RewardTrackMetadata GetOperationResponseBody(string operationPath)
+        {
+            try
+            {
+                using SqliteConnection connection = new($"Data Source={DatabasePath}");
+                connection.Open();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = GetQuery("Select", "OperationResponseBody");
+                command.Parameters.AddWithValue("$OperationPath", operationPath);
+
+                using SqliteDataReader reader = command.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    RewardTrackMetadata response = new();
+
+                    while (reader.Read())
+                    {
+                        response = JsonSerializer.Deserialize<RewardTrackMetadata>(reader.GetString(0).Trim(), serializerOptions);
+                    }
+
+                    return response;
+                }
+                else
+                {
+                    Debug.WriteLine($"No rows returned for distinct match IDs.");
+                }
+            }
+            catch (Exception ex)
             {
                 Debug.WriteLine($"An error occurred obtaining unique match IDs. {ex.Message}");
             }
@@ -688,12 +735,12 @@ namespace OpenSpartan.Data
             return false;
         }
 
-        internal static bool IsInventoryItemAvailable (string id)
+        internal static bool IsInventoryItemAvailable (string path)
         {
             using var connection = new SqliteConnection($"Data Source={DatabasePath}");
             using var command = connection.CreateCommand();
 
-            command.CommandText = $"SELECT EXISTS(SELECT 1 FROM InventoryItems WHERE Id='{id}') AS INVENTORY_ITEM_AVAILABLE";
+            command.CommandText = $"SELECT EXISTS(SELECT 1 FROM InventoryItems WHERE Path='{path}') AS INVENTORY_ITEM_AVAILABLE";
 
             connection.Open();
 
@@ -728,6 +775,7 @@ namespace OpenSpartan.Data
                     using (var command = connection.CreateCommand())
                     {
                         command.CommandText = GetQuery("Select", "InventoryItem");
+                        command.Parameters.AddWithValue("$Path", path);
 
                         using (var reader = command.ExecuteReader())
                         {
@@ -735,7 +783,7 @@ namespace OpenSpartan.Data
                             {
                                 while (reader.Read())
                                 {
-                                    return JsonSerializer.Deserialize<InGameItem>(reader.GetString(0));
+                                    return JsonSerializer.Deserialize<InGameItem>(reader.GetString(0), serializerOptions);
                                 }
                             }
                             else

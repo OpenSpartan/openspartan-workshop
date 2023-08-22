@@ -1,0 +1,1 @@
+﻿SELECT ResponseBody FROM OperationRewardTracks WHERE Path = $OperationPath LIMIT 1
