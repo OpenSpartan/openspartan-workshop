@@ -538,7 +538,7 @@ namespace OpenSpartan.Shared
 
         public static async Task<bool> LoadBattlePassData()
         {
-            var operations = await UserContextManager.GetOperations();
+            var operations = await GetOperations();
 
             if (operations != null)
             {

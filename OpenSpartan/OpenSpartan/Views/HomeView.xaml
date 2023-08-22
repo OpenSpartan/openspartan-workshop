@@ -151,7 +151,7 @@
                     <Grid Margin="24,0,0,0">
                         <Image VerticalAlignment="Center" Height="180" Opacity="0.7" Source="{Binding Backdrop}"></Image>
                         <Image VerticalAlignment="Center" Height="100" Source="{Binding Nameplate}"></Image>
-                        <Image VerticalAlignment="Center" Height="110" Margin="12,0,0,0" HorizontalAlignment="Left" Source="{Binding Emblem}"></Image>
+                        <Image VerticalAlignment="Center" Height="90" Margin="12,0,0,0" HorizontalAlignment="Left" Source="{Binding Emblem}"></Image>
                         <StackPanel Margin="148,0,0,0" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Gamertag}" Style="{StaticResource TitleTextBlockStyle}" Foreground="{Binding IDBadgeTextColor}"></TextBlock>
                             <TextBlock Text="{Binding ServiceTag}" Style="{StaticResource SubtitleTextBlockStyle}" Foreground="{Binding IDBadgeTextColor}"></TextBlock>
@@ -166,7 +166,7 @@
                 <VariableSizedWrapGrid Orientation="Horizontal" ItemWidth="250" Margin="24,0,24,0">
                     <StackPanel Background="#404040" Orientation="Vertical" BorderThickness="2" Padding="12" CornerRadius="4">
                         <Grid>
-                            <ProgressRing Height="160" Width="160" IsIndeterminate="False" Value="{Binding RankProgress}" Maximum="1" Minimum="0" HorizontalAlignment="Center" VerticalAlignment="Center"></ProgressRing>
+                            <ProgressRing Background="#2F2F2F" Height="160" Width="160" IsIndeterminate="False" Value="{Binding RankProgress}" Maximum="1" Minimum="0" HorizontalAlignment="Center" VerticalAlignment="Center"></ProgressRing>
                             <Image VerticalAlignment="Center" HorizontalAlignment="Center" Height="100" Source="{Binding RankImage}"></Image>
                         </Grid>
                     </StackPanel>
@@ -256,7 +256,7 @@
                             <TextBlock Text="Overall Hero Progression" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
                         </Grid>
                         <Grid Grid.Row="1">
-                            <ProgressRing Height="110" Width="110" IsIndeterminate="False" Value="{Binding ExperienceProgress}" Maximum="1" Minimum="0"></ProgressRing>
+                            <ProgressRing Background="#2F2F2F" Height="110" Width="110" IsIndeterminate="False" Value="{Binding ExperienceProgress}" Maximum="1" Minimum="0"></ProgressRing>
                             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding ExperienceProgress, Converter={StaticResource DoubleToPercentageStringConverter}}"></TextBlock>
                         </Grid>
                     </Grid>
