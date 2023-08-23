@@ -7,6 +7,9 @@ namespace OpenSpartan.ViewModels
 {
     internal class BattlePassViewModel : Observable
     {
+        private MetadataLoadingState _battlePassLoadingState;
+        private string _battlePassLoadingParameter;
+
         public static BattlePassViewModel Instance { get; } = new BattlePassViewModel();
 
         private BattlePassViewModel()
@@ -25,6 +28,48 @@ namespace OpenSpartan.ViewModels
                 {
                     _battlePasses = value;
                     NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public string BattlePassLoadingString
+        {
+            get
+            {
+                switch (BattlePassLoadingState)
+                {
+                    case MetadataLoadingState.Loading:
+                        return $"Loading battle pass details. Currently processing {BattlePassLoadingParameter}...";
+                    default:
+                        return "NOOP - Never Seen";
+                }
+            }
+        }
+
+        public MetadataLoadingState BattlePassLoadingState
+        {
+            get => _battlePassLoadingState;
+            set
+            {
+                if (_battlePassLoadingState != value)
+                {
+                    _battlePassLoadingState = value;
+                    NotifyPropertyChanged();
+                    NotifyPropertyChanged(nameof(BattlePassLoadingString));
+                }
+            }
+        }
+
+        public string BattlePassLoadingParameter
+        {
+            get => _battlePassLoadingParameter;
+            set
+            {
+                if (_battlePassLoadingParameter != value)
+                {
+                    _battlePassLoadingParameter = value;
+                    NotifyPropertyChanged();
+                    NotifyPropertyChanged(nameof(BattlePassLoadingString));
                 }
             }
         }

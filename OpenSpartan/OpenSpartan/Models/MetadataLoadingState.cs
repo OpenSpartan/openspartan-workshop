@@ -1,6 +1,6 @@
 ﻿namespace OpenSpartan.Models
 {
-    internal enum MatchLoadingState
+    internal enum MetadataLoadingState
     {
         Calculating,
         Loading,

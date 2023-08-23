@@ -12,6 +12,10 @@
     DataContext="{x:Bind viewmodels:BattlePassViewModel.Instance}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
+    <Page.Resources>
+        <converters:MetadataLoadingStateToVisibilityConverter x:Key="MetadataLoadingStateToVisibilityConverter"></converters:MetadataLoadingStateToVisibilityConverter>
+    </Page.Resources>
+    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="100"></RowDefinition>
@@ -29,7 +33,7 @@
         </Grid>
 
         <!--Informational state-->
-        <Grid Margin="24" Background="#404040" BorderThickness="2" CornerRadius="4" Height="36" Grid.Row="1">
+        <Grid Visibility="{Binding BattlePassLoadingState, Converter={StaticResource MetadataLoadingStateToVisibilityConverter}}" Margin="24" Background="#404040" BorderThickness="2" CornerRadius="4" Height="36" Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="36"></ColumnDefinition>
                 <ColumnDefinition Width="*"></ColumnDefinition>
@@ -37,7 +41,7 @@
 
             <ProgressRing Height="12" Width="12"></ProgressRing>
 
-            <TextBlock Grid.Column="1" Text="Loading battlepass" VerticalAlignment="Center"></TextBlock>
+            <TextBlock Grid.Column="1" Text="{Binding BattlePassLoadingString}" VerticalAlignment="Center"></TextBlock>
         </Grid>
 
         <NavigationView ItemInvoked="nvBattlePassDetails_ItemInvoked" Name="nvBattlePassDetails" MenuItemsSource="{Binding BattlePasses}" Grid.Row="2" Margin="24" PaneDisplayMode="Top" IsSettingsVisible="False" IsBackButtonVisible="Collapsed" IsBackEnabled="False">

@@ -375,7 +375,7 @@ namespace OpenSpartan.Shared
 
         internal static async Task<bool> PopulateMatchRecordsData()
         {
-            MatchesViewModel.Instance.MatchLoadingState = Models.MatchLoadingState.Calculating;
+            MatchesViewModel.Instance.MatchLoadingState = Models.MetadataLoadingState.Calculating;
 
             try
             {
@@ -394,7 +394,7 @@ namespace OpenSpartan.Shared
                         {
                             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                             {
-                                MatchesViewModel.Instance.MatchLoadingState = Models.MatchLoadingState.Loading;
+                                MatchesViewModel.Instance.MatchLoadingState = Models.MetadataLoadingState.Loading;
                             });
 
                             return await DataHandler.UpdateMatchRecords(matchesToProcess);
@@ -578,14 +578,24 @@ namespace OpenSpartan.Shared
             return (await HaloClient.GameCmsGetCurrency(currencyId, HaloClient.ClearanceToken)).Result;
         }
 
-        public static async Task<bool> LoadBattlePassData()
+        public static async Task<bool> PopulateBattlePassData()
         {
+            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            {
+                BattlePassViewModel.Instance.BattlePassLoadingState = Models.MetadataLoadingState.Loading;
+            });
+
             var operations = await GetOperations();
 
             if (operations != null)
             {
                 foreach (var operation in operations.OperationRewardTracks)
                 {
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    {
+                        BattlePassViewModel.Instance.BattlePassLoadingParameter = operation.RewardTrackPath;
+                    });
+
                     var compoundEvent = new OperationCompoundModel
                     {
                         RewardTrack = operation
@@ -603,7 +613,7 @@ namespace OpenSpartan.Shared
 
                             compoundEvent.RewardTrackMetadata = operationDetails.Result;
 
-                            compoundEvent.Rewards = await GetFlattenedRewards(operationDetails.Result.Ranks);
+                            compoundEvent.Rewards = new(await GetFlattenedRewards(operationDetails.Result.Ranks));
                             Debug.WriteLine($"{operation.RewardTrackPath} - Completed");
 
                             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
@@ -617,7 +627,7 @@ namespace OpenSpartan.Shared
                     {
                         var operationDetails = DataHandler.GetOperationResponseBody(operation.RewardTrackPath);
                         compoundEvent.RewardTrackMetadata = operationDetails;
-                        compoundEvent.Rewards = await GetFlattenedRewards(operationDetails.Ranks);
+                        compoundEvent.Rewards = new(await GetFlattenedRewards(operationDetails.Ranks));
 
                         Debug.WriteLine($"{operation.RewardTrackPath} (Local) - Completed");
 
@@ -636,7 +646,7 @@ namespace OpenSpartan.Shared
             }
         }
 
-        internal static async Task<List<RewardMetaContainer>> GetFlattenedRewards(List<RankSnapshot> rankSnapshots)
+        internal static async Task<IEnumerable<IGrouping<int, RewardMetaContainer>>> GetFlattenedRewards(List<RankSnapshot> rankSnapshots)
         {
             List<RewardMetaContainer> rewards = new();
 
@@ -656,7 +666,7 @@ namespace OpenSpartan.Shared
                 Debug.WriteLine($"Rank {rewardBucket.Rank} - Completed");
             }
 
-            return rewards;
+            return rewards.GroupBy(x => x.Rank);
         }
 
         internal static async Task<List<RewardMetaContainer>> ExtractCurrencyRewards(int rank, IEnumerable<CurrencyAmount> currencyItems, bool isFree)
@@ -739,8 +749,6 @@ namespace OpenSpartan.Shared
                     var item = await HaloClient.GameCmsGetItem(inventoryReward.InventoryItemPath, HaloClient.ClearanceToken);
                     if (item != null && item.Result != null)
                     {
-                        container.ImagePath = item.Result.CommonData.DisplayPath.Media.MediaUrl.Path;
-
                         string qualifiedImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", item.Result.CommonData.DisplayPath.Media.MediaUrl.Path);
 
                         // Let's make sure that we create the directory if it does not exist.
@@ -761,6 +769,8 @@ namespace OpenSpartan.Shared
                         container.ItemDetails = item.Result;
                     }
                 }
+
+                container.ImagePath = container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path;
 
                 rewardContainers.Add(container);
             }

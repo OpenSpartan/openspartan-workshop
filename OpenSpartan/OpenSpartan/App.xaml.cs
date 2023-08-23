@@ -1,4 +1,5 @@
-﻿using Microsoft.UI.Xaml;
+﻿using CommunityToolkit.WinUI;
+using Microsoft.UI.Xaml;
 using OpenSpartan.Data;
 using OpenSpartan.Shared;
 using OpenSpartan.ViewModels;
@@ -58,9 +59,21 @@ namespace OpenSpartan
                         async () =>
                         {
                             var matchRecordsOutcome = await UserContextManager.PopulateMatchRecordsData();
-                            MatchesViewModel.Instance.MatchLoadingState = Models.MatchLoadingState.Completed;
+
+                            await (MainWindow as MainWindow).DispatcherQueue.EnqueueAsync(() =>
+                            {
+                                MatchesViewModel.Instance.MatchLoadingState = Models.MetadataLoadingState.Completed;
+                            });
                         },
-                        async () => await UserContextManager.LoadBattlePassData());
+                        async () =>
+                        {
+                            await UserContextManager.PopulateBattlePassData();
+
+                            await (MainWindow as MainWindow).DispatcherQueue.EnqueueAsync(() =>
+                            {
+                                BattlePassViewModel.Instance.BattlePassLoadingState = Models.MetadataLoadingState.Completed;
+                            });
+                        });
                 }
             }
         }

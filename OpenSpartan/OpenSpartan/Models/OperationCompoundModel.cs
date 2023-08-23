@@ -1,5 +1,7 @@
 ﻿using Den.Dev.Orion.Models.HaloInfinite;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace OpenSpartan.Models
 {
@@ -7,13 +9,13 @@ namespace OpenSpartan.Models
     {
         public OperationCompoundModel()
         {
-            Rewards = new List<RewardMetaContainer>();
+            Rewards = new();
         }
 
         public RewardTrack RewardTrack { get; set; }
 
         public RewardTrackMetadata RewardTrackMetadata { get; set; }
 
-        public List<RewardMetaContainer> Rewards { get; set; }
+        public ObservableCollection<IGrouping<int, RewardMetaContainer>> Rewards { get; set; }
     }
 }

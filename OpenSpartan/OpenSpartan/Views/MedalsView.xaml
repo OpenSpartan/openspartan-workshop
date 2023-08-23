@@ -70,7 +70,6 @@
                             </Grid>
                         </DataTemplate>
                     </GroupStyle.HeaderTemplate>
-
                 </GroupStyle>
             </GridView.GroupStyle>
         </GridView>

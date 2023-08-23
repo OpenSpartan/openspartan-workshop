@@ -5,13 +5,13 @@ using System;
 
 namespace OpenSpartan.Converters
 {
-    internal class MatchLoadingStateToVisibilityConverter : IValueConverter
+    internal class MetadataLoadingStateToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            var state = (MatchLoadingState)value;
+            var state = (MetadataLoadingState)value;
             
-            if (state != MatchLoadingState.Completed)
+            if (state != MetadataLoadingState.Completed)
             {
                 return Visibility.Visible;
             }

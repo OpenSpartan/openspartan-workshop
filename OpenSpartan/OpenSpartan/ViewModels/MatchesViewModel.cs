@@ -8,7 +8,7 @@ namespace OpenSpartan.ViewModels
 {
     internal class MatchesViewModel : Observable
     {
-        private MatchLoadingState _matchLoadingState;
+        private MetadataLoadingState _matchLoadingState;
         private string _matchLoadingParameter;
         private IncrementalLoadingCollection<MatchesSource, MatchTableEntity> _matchList;
 
@@ -26,9 +26,9 @@ namespace OpenSpartan.ViewModels
             {
                 switch (MatchLoadingState)
                 {
-                    case MatchLoadingState.Calculating:
+                    case MetadataLoadingState.Calculating:
                         return $"Calculating matches. Identified {MatchLoadingParameter} matches so far...";
-                    case MatchLoadingState.Loading:
+                    case MetadataLoadingState.Loading:
                         return $"Loading match details. Currently processing {MatchLoadingParameter}...";
                     default:
                         return "NOOP - Never Seen";
@@ -36,7 +36,7 @@ namespace OpenSpartan.ViewModels
             }
         }
 
-        public MatchLoadingState MatchLoadingState
+        public MetadataLoadingState MatchLoadingState
         {
             get => _matchLoadingState;
             set

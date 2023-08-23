@@ -12,35 +12,52 @@
 
     <Page.Resources>
         <converters:ServicePathToLocalPathConverter x:Key="ServicePathToLocalPathConverter"></converters:ServicePathToLocalPathConverter>
+        <CollectionViewSource x:Key="cvsBattlePassItems" IsSourceGrouped="True" Source="{Binding Rewards}"/>
     </Page.Resources>
-    
+
     <Grid>
-        <StackPanel>
-            <GridView Margin="24,0,8,0" ItemsSource="{Binding Rewards}">
-                <GridView.ItemTemplate>
-                    <DataTemplate>
-                        <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="36"></RowDefinition>
-                                <RowDefinition Height="*"></RowDefinition>
-                            </Grid.RowDefinitions>
+        <GridView Margin="24,0,8,0" ItemsSource="{Binding Source={StaticResource cvsBattlePassItems}}" ScrollViewer.HorizontalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollMode="Auto" ScrollViewer.IsScrollInertiaEnabled="True">
+            <GridView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
 
-                            <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"></ColumnDefinition>
-                                    <ColumnDefinition Width="64"></ColumnDefinition>
-                                </Grid.ColumnDefinitions>
+                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="64"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
 
-                                <TextBlock Text="{Binding ItemDetails.CommonData.Title.Value}" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                            </Grid>
-
-                            <Grid Grid.Row="1" Padding="8">
-                                <Image Height="192" Width="192" Source="{Binding ImagePath, Converter={StaticResource ServicePathToLocalPathConverter}}"/>
-                            </Grid>
+                            <TextBlock Text="{Binding ItemDetails.CommonData.Title.Value}" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
                         </Grid>
-                    </DataTemplate>
-                </GridView.ItemTemplate>
-            </GridView>
-        </StackPanel>
+
+                        <Grid Grid.Row="1" Padding="8">
+                            <Image Height="192" Width="192" Source="{Binding ImagePath, Converter={StaticResource ServicePathToLocalPathConverter}}"/>
+                        </Grid>
+                    </Grid>
+                </DataTemplate>
+            </GridView.ItemTemplate>
+
+            <GridView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <ItemsWrapGrid MaximumRowsOrColumns="10" AreStickyGroupHeadersEnabled="True"  Orientation="Vertical" />
+                </ItemsPanelTemplate>
+            </GridView.ItemsPanel>
+
+            <GridView.GroupStyle>
+                <GroupStyle HidesIfEmpty="True">
+                    <GroupStyle.HeaderTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0">
+                                <TextBlock Text="{Binding Key}" Style="{StaticResource TitleTextBlockStyle}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </GroupStyle.HeaderTemplate>
+                </GroupStyle>
+            </GridView.GroupStyle>
+        </GridView>
     </Grid>
 </Page>

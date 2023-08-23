@@ -15,7 +15,7 @@
     NavigationCacheMode="Disabled">
 
     <Page.Resources>
-        <converters:MatchLoadingStateToVisibilityConverter x:Key="MatchLoadingStateToVisibilityConverter"></converters:MatchLoadingStateToVisibilityConverter>
+        <converters:MetadataLoadingStateToVisibilityConverter x:Key="MetadataLoadingStateToVisibilityConverter"></converters:MetadataLoadingStateToVisibilityConverter>
     </Page.Resources>
 
     <Grid>
@@ -39,7 +39,7 @@
         </Grid>
 
         <!--Informational state-->
-        <Grid Visibility="{Binding MatchLoadingState, Converter={StaticResource MatchLoadingStateToVisibilityConverter}}" Margin="24" Background="#404040" BorderThickness="2" CornerRadius="4" Height="36" Grid.Row="1">
+        <Grid Visibility="{Binding MatchLoadingState, Converter={StaticResource MetadataLoadingStateToVisibilityConverter}}" Margin="24" Background="#404040" BorderThickness="2" CornerRadius="4" Height="36" Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="36"></ColumnDefinition>
                 <ColumnDefinition Width="*"></ColumnDefinition>
