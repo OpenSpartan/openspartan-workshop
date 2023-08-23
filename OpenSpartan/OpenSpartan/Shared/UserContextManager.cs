@@ -672,6 +672,43 @@ namespace OpenSpartan.Shared
                     Amount = currencyReward.Amount,
                     CurrencyDetails = await GetInGameCurrency(currencyReward.CurrencyPath)
                 };
+
+                if (container.CurrencyDetails != null)
+                {
+                    string currencyImageLocation = string.Empty;
+
+                    switch (container.CurrencyDetails.Id.ToLower())
+                    {
+                        case "rerollcurrency":
+                            currencyImageLocation = "progression/Currencies/1104-000-data-pad-e39bef84-2x2.png";
+                            break;
+                        case "xb":
+                            currencyImageLocation = "progression/Currencies/1103-000-xp-boost-5e92621a-2x2.png";
+                            break;
+                        case "cr":
+                            currencyImageLocation = "progression/Currencies/Credit_Coin-SM.png";
+                            break;
+                    }
+
+                    container.ImagePath = currencyImageLocation;
+
+                    string qualifiedImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", currencyImageLocation);
+
+                    // Let's make sure that we create the directory if it does not exist.
+                    FileInfo file = new(qualifiedImagePath);
+                    file.Directory.Create();
+
+                    if (!System.IO.File.Exists(qualifiedImagePath))
+                    {
+                        var rankImage = await HaloClient.GameCmsGetImage(currencyImageLocation);
+                        if (rankImage.Result != null && rankImage.Response.Code == 200)
+                        {
+                            System.IO.File.WriteAllBytes(qualifiedImagePath, rankImage.Result);
+                            Debug.WriteLine("Stored local image: " + currencyImageLocation);
+                        }
+                    }
+                }
+
                 rewardContainers.Add(container);
             }
 
@@ -702,10 +739,12 @@ namespace OpenSpartan.Shared
                     var item = await HaloClient.GameCmsGetItem(inventoryReward.InventoryItemPath, HaloClient.ClearanceToken);
                     if (item != null && item.Result != null)
                     {
+                        container.ImagePath = item.Result.CommonData.DisplayPath.Media.MediaUrl.Path;
+
                         string qualifiedImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", item.Result.CommonData.DisplayPath.Media.MediaUrl.Path);
 
                         // Let's make sure that we create the directory if it does not exist.
-                        System.IO.FileInfo file = new System.IO.FileInfo(qualifiedImagePath);
+                        FileInfo file = new FileInfo(qualifiedImagePath);
                         file.Directory.Create();
 
                         if (!System.IO.File.Exists(qualifiedImagePath))

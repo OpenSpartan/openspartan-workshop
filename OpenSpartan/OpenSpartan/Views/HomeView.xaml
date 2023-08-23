@@ -282,11 +282,6 @@
                                 </Grid.ColumnDefinitions>
 
                                 <TextBlock Text="Matches Completed" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                                <Grid Grid.Column="1" CornerRadius="4">
-                                    <Border Background="#404040">
-                                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                    </Border>
-                                </Grid>
                             </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
@@ -306,11 +301,6 @@
                                 <ColumnDefinition Width="64"></ColumnDefinition>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="Wins" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.Wins, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -330,12 +320,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Losses" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.Losses, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -355,12 +339,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Time Played" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.TimePlayed}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -380,12 +358,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Accuracy" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.Accuracy, Converter={StaticResource DirectValueToPercentageStringConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -405,12 +377,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Assists" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.Assists, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -430,12 +396,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Betrayals" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.Betrayals, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -455,12 +415,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Callout Assists" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.CalloutAssists, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -480,12 +434,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Damage Dealt" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.DamageDealt, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -505,12 +453,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Damage Taken" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.DamageTaken, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -530,12 +472,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Deaths" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.Deaths, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -555,12 +491,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Driver Assists" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.DriverAssists, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -580,12 +510,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="EMP Assists" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.EmpAssists, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -605,12 +529,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Grenade Kills" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.GrenadeKills, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -630,12 +548,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Headshot Kills" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.HeadshotKills, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -655,12 +567,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Hijacks" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.Hijacks, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -680,12 +586,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="KDA" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.AverageKDA}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -705,12 +605,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Max Killing Spree" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.MaxKillingSpree, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -730,12 +624,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Melee Kills" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.MeleeKills, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -755,12 +643,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Power Weapon Kills" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.PowerWeaponKills, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -780,12 +662,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Rounds Lost" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.RoundsLost, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -805,12 +681,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Rounds Won" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.RoundsWon, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -830,12 +700,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Rounds Tied" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.RoundsTied, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -855,12 +719,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Shots Fired" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.ShotsFired, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -880,12 +738,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Shots Hit" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.ShotsHit, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -905,12 +757,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Suicides" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.Suicides, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
@@ -930,12 +776,6 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Vehicles Destroyed" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-
-                            <Grid Grid.Column="1" CornerRadius="4">
-                                <Border Background="#404040">
-                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">+89.23%</TextBlock>
-                                </Border>
-                            </Grid>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
                             <TextBlock Text="{Binding ServiceRecord.CoreStats.VehicleDestroys, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>

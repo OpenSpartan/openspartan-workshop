@@ -35,7 +35,7 @@
                             </Grid>
 
                             <Grid Grid.Row="1" Padding="8">
-                                <Image Height="192" Width="192" Source="{Binding ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path, Converter={StaticResource ServicePathToLocalPathConverter}}"/>
+                                <Image Height="192" Width="192" Source="{Binding ImagePath, Converter={StaticResource ServicePathToLocalPathConverter}}"/>
                             </Grid>
                         </Grid>
                     </DataTemplate>
