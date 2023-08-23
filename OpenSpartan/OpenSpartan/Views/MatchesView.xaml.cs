@@ -1,8 +1,4 @@
-using CommunityToolkit.WinUI;
-using CommunityToolkit.WinUI.UI.Controls;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Navigation;
 using OpenSpartan.Shared;
 using System.Threading.Tasks;
 

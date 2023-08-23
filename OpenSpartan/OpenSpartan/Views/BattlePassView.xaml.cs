@@ -2,7 +2,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
-using OpenSpartan.Shared;
 using System;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -28,7 +27,7 @@ namespace OpenSpartan.Views
 
         private async void BattlePassView_Loaded(object sender, RoutedEventArgs e)
         {
-            var result = await UserContextManager.LoadBattlePassData();
+
         }
 
         private void On_Navigated(object sender, NavigationEventArgs e)

@@ -32,6 +32,36 @@ namespace OpenSpartan.Data
             },
         };
 
+        internal static string SetWALJournalingMode()
+        {
+            try
+            {
+                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
+                connection.Open();
+                using var command = connection.CreateCommand();
+
+                command.CommandText = GetQuery("Bootstrap", "SetWALJournalingMode");
+                using var reader = command.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        return reader.GetString(0).Trim();
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine($"WAL journaling mode not set.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
+
+            return null;
+        }
+
         internal static bool BootstrapDatabase()
         {
             try
@@ -172,7 +202,7 @@ namespace OpenSpartan.Data
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.WriteLine($"An error occurred obtaining unique match IDs. {ex.Message}");
             }
@@ -735,7 +765,7 @@ namespace OpenSpartan.Data
             return false;
         }
 
-        internal static bool IsInventoryItemAvailable (string path)
+        internal static bool IsInventoryItemAvailable(string path)
         {
             using var connection = new SqliteConnection($"Data Source={DatabasePath}");
             using var command = connection.CreateCommand();

@@ -1,6 +1,5 @@
 ﻿using Den.Dev.Orion.Models.HaloInfinite;
 using OpenSpartan.Shared;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.CompilerServices;

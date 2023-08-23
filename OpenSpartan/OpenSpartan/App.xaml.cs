@@ -2,16 +2,11 @@
 using OpenSpartan.Data;
 using OpenSpartan.Shared;
 using OpenSpartan.ViewModels;
+using System.Diagnostics;
 using System.Threading.Tasks;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace OpenSpartan
 {
-    /// <summary>
-    /// Provides application-specific behavior to supplement the default Application class.
-    /// </summary>
     public partial class App : Application
     {
         public Window MainWindow { get => m_window; }
@@ -36,6 +31,16 @@ namespace OpenSpartan
             m_window.Activate();
 
             var databaseBootstrapResult = DataHandler.BootstrapDatabase();
+            var journalingMode = DataHandler.SetWALJournalingMode();
+
+            if (journalingMode.ToLower() == "wal")
+            {
+                Debug.WriteLine("Successfully set WAL journaling mode.");
+            }
+            else
+            {
+                Debug.WriteLine("Could not set WAL journaling mode.");
+            }
 
             var authResult = await UserContextManager.InitializePublicClientApplication();
             if (authResult != null)
@@ -45,21 +50,20 @@ namespace OpenSpartan
 
                 if (instantiationResult)
                 {
-                    var serviceRecordOutcome = await UserContextManager.PopulateServiceRecordData();
-
-                    var careerOutcome = await UserContextManager.PopulateCareerData();
-
-                    var customizationOutcome = await UserContextManager.PopulateCustomizationData();
-
-                    var decorationOutcome = await UserContextManager.PopulateDecorationData();
-
-                    var medalsOutcome = await UserContextManager.PopulateMedalData();
-
-                    var matchRecordsOutcome = await UserContextManager.PopulateMatchRecordsData();
-                    MatchesViewModel.Instance.MatchLoadingState = Models.MatchLoadingState.Completed;
+                    Parallel.Invoke(async () => await UserContextManager.PopulateServiceRecordData(),
+                        async () => await UserContextManager.PopulateCareerData(),
+                        async () => await UserContextManager.PopulateCustomizationData(),
+                        async () => await UserContextManager.PopulateDecorationData(),
+                        async () => await UserContextManager.PopulateMedalData(),
+                        async () =>
+                        {
+                            var matchRecordsOutcome = await UserContextManager.PopulateMatchRecordsData();
+                            MatchesViewModel.Instance.MatchLoadingState = Models.MatchLoadingState.Completed;
+                        },
+                        async () => await UserContextManager.LoadBattlePassData());
                 }
             }
-        }        
+        }
 
         internal Window m_window;
     }

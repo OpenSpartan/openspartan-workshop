@@ -13,7 +13,7 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Page.Resources>
-        <converters:MedalNameIdToPathConverter x:Key="NameIdToPathConverter"></converters:MedalNameIdToPathConverter>
+        <converters:MedalNameIdToPathConverter x:Key="MedalNameIdToPathConverter"></converters:MedalNameIdToPathConverter>
         <converters:MedalTypeIndexToStringConverter x:Key="MedalTypeIndexToStringConverter"></converters:MedalTypeIndexToStringConverter>
         <converters:CommaAfterThousandsConverter x:Key="CommaAfterThousandsConverter"></converters:CommaAfterThousandsConverter>
         <converters:MedalDifficultyToBrushConverter x:Key="MedalDifficultyToBrushConverter"></converters:MedalDifficultyToBrushConverter>

@@ -3,10 +3,8 @@ using Den.Dev.Orion.Authentication;
 using Den.Dev.Orion.Core;
 using Den.Dev.Orion.Models;
 using Den.Dev.Orion.Models.HaloInfinite;
-using Microsoft.Data.Sqlite;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
-using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using OpenSpartan.Data;
 using OpenSpartan.Models;
@@ -14,22 +12,17 @@ using OpenSpartan.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.DirectoryServices.ActiveDirectory;
-using System.Drawing;
-using System.Formats.Asn1;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Windows.Media.Protection.PlayReady;
-using MatchType = Den.Dev.Orion.Models.HaloInfinite.MatchType;
 
 namespace OpenSpartan.Shared
 {
     internal static class UserContextManager
     {
+        internal static MainWindow DispatcherWindow = ((Application.Current as App)?.MainWindow) as MainWindow;
+
         internal static HaloInfiniteClient HaloClient { get; set; }
 
         internal static XboxTicket XboxUserContext { get; set; }
@@ -138,29 +131,38 @@ namespace OpenSpartan.Shared
 
                 if (careerTrackResult.Result != null && careerTrackResult.Response.Code == 200)
                 {
-                    HomeViewModel.Instance.CareerSnapshot = careerTrackResult.Result;
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    {
+                        HomeViewModel.Instance.CareerSnapshot = careerTrackResult.Result;
+                    });
                 }
 
                 var careerTrackContainerResult = await HaloClient.GameCmsGetCareerRanks("careerRank1");
 
                 if (careerTrackContainerResult.Result != null && careerTrackContainerResult.Response.Code == 200)
                 {
-                    HomeViewModel.Instance.MaxRank = careerTrackContainerResult.Result.Ranks.Count;
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    {
+                        HomeViewModel.Instance.MaxRank = careerTrackContainerResult.Result.Ranks.Count;
+                    });
 
                     // The rank here is incremented by one because of off-by-one counting when ranks are established. The introductory rank apparently is counted differently in the index
                     // compared to the full set of ranks in the reward track.
                     var currentCareerStage = (from c in careerTrackContainerResult.Result.Ranks where c.Rank == HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank + 1 select c).FirstOrDefault();
                     if (currentCareerStage != null)
                     {
-                        HomeViewModel.Instance.Title = currentCareerStage.RankTitle.Value;
-                        HomeViewModel.Instance.CurrentRankExperience = careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
-                        HomeViewModel.Instance.RequiredRankExperience = currentCareerStage.XpRequiredForRank;
+                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        {
+                            HomeViewModel.Instance.Title = currentCareerStage.RankTitle.Value;
+                            HomeViewModel.Instance.CurrentRankExperience = careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
+                            HomeViewModel.Instance.RequiredRankExperience = currentCareerStage.XpRequiredForRank;
 
-                        // Let's also compute secondary values that can tell us how far the user is from the Hero title.
-                        HomeViewModel.Instance.ExperienceTotalRequired = careerTrackContainerResult.Result.Ranks.Sum(item => item.XpRequiredForRank);
+                            // Let's also compute secondary values that can tell us how far the user is from the Hero title.
+                            HomeViewModel.Instance.ExperienceTotalRequired = careerTrackContainerResult.Result.Ranks.Sum(item => item.XpRequiredForRank);
 
-                        var relevantRanks = (from c in careerTrackContainerResult.Result.Ranks where c.Rank <= HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank select c);
-                        HomeViewModel.Instance.ExperienceEarnedToDate = relevantRanks.Sum(rank => rank.XpRequiredForRank) + careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
+                            var relevantRanks = (from c in careerTrackContainerResult.Result.Ranks where c.Rank <= HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank select c);
+                            HomeViewModel.Instance.ExperienceEarnedToDate = relevantRanks.Sum(rank => rank.XpRequiredForRank) + careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
+                        });
 
                         string qualifiedRankImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankLargeIcon);
                         string qualifiedAdornmentImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankAdornmentIcon);
@@ -180,7 +182,11 @@ namespace OpenSpartan.Shared
                                 System.IO.File.WriteAllBytes(qualifiedRankImagePath, rankImage.Result);
                             }
                         }
-                        HomeViewModel.Instance.RankImage = qualifiedRankImagePath;
+
+                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        {
+                            HomeViewModel.Instance.RankImage = qualifiedRankImagePath;
+                        });
 
                         if (!System.IO.File.Exists(qualifiedAdornmentImagePath))
                         {
@@ -190,7 +196,11 @@ namespace OpenSpartan.Shared
                                 System.IO.File.WriteAllBytes(qualifiedAdornmentImagePath, adornmentImage.Result);
                             }
                         }
-                        HomeViewModel.Instance.AdornmentImage = qualifiedAdornmentImagePath;
+
+                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        {
+                            HomeViewModel.Instance.AdornmentImage = qualifiedAdornmentImagePath;
+                        });
                     }
                 }
 
@@ -249,7 +259,10 @@ namespace OpenSpartan.Shared
                     }
                 }
 
-                HomeViewModel.Instance.SeasonalBackground = qualifiedBackgroundImagePath;
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                {
+                    HomeViewModel.Instance.SeasonalBackground = qualifiedBackgroundImagePath;
+                });
 
                 return true;
             }
@@ -267,7 +280,10 @@ namespace OpenSpartan.Shared
 
                 if (customizationResult.Result != null && customizationResult.Response.Code == 200)
                 {
-                    HomeViewModel.Instance.ServiceTag = customizationResult.Result.Appearance.ServiceTag;
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    {
+                        HomeViewModel.Instance.ServiceTag = customizationResult.Result.Appearance.ServiceTag;
+                    });
 
                     var emblemMapping = await HaloClient.GameCmsGetEmblemMapping();
 
@@ -281,7 +297,10 @@ namespace OpenSpartan.Shared
 
                         if (!configuration.Equals(default))
                         {
-                            HomeViewModel.Instance.IDBadgeTextColor = configuration.Value.TextColor;
+                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                            {
+                                HomeViewModel.Instance.IDBadgeTextColor = configuration.Value.TextColor;
+                            });
 
                             string qualifiedNameplateImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", configuration.Value.NameplateCmsPath);
                             string qualifiedEmblemImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", configuration.Value.EmblemCmsPath);
@@ -306,7 +325,11 @@ namespace OpenSpartan.Shared
                                     System.IO.File.WriteAllBytes(qualifiedNameplateImagePath, nameplateData.Result);
                                 }
                             }
-                            HomeViewModel.Instance.Nameplate = qualifiedNameplateImagePath;
+
+                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                            {
+                                HomeViewModel.Instance.Nameplate = qualifiedNameplateImagePath;
+                            });
 
                             if (!System.IO.File.Exists(qualifiedEmblemImagePath))
                             {
@@ -317,7 +340,11 @@ namespace OpenSpartan.Shared
                                     System.IO.File.WriteAllBytes(qualifiedEmblemImagePath, emblemData.Result);
                                 }
                             }
-                            HomeViewModel.Instance.Emblem = qualifiedEmblemImagePath;
+
+                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                            {
+                                HomeViewModel.Instance.Emblem = qualifiedEmblemImagePath;
+                            });
 
                             if (!System.IO.File.Exists(qualifiedBackdropImagePath))
                             {
@@ -328,7 +355,11 @@ namespace OpenSpartan.Shared
                                     System.IO.File.WriteAllBytes(qualifiedBackdropImagePath, backdropData.Result);
                                 }
                             }
-                            HomeViewModel.Instance.Backdrop = qualifiedBackdropImagePath;
+
+                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                            {
+                                HomeViewModel.Instance.Backdrop = qualifiedBackdropImagePath;
+                            });
                         }
                     }
                 }
@@ -361,7 +392,11 @@ namespace OpenSpartan.Shared
                         var matchesToProcess = distinctMatchIds.Except(existingMatches);
                         if (matchesToProcess != null && matchesToProcess.Count() > 0)
                         {
-                            MatchesViewModel.Instance.MatchLoadingState = Models.MatchLoadingState.Loading;
+                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                            {
+                                MatchesViewModel.Instance.MatchLoadingState = Models.MatchLoadingState.Loading;
+                            });
+
                             return await DataHandler.UpdateMatchRecords(matchesToProcess);
                         }
                         else
@@ -397,7 +432,7 @@ namespace OpenSpartan.Shared
 
             while (lastResultCount > 0)
             {
-                var matches = await HaloClient.StatsGetMatchHistory($"xuid({xuid})", queryStart, queryCount, MatchType.All);
+                var matches = await HaloClient.StatsGetMatchHistory($"xuid({xuid})", queryStart, queryCount, Den.Dev.Orion.Models.HaloInfinite.MatchType.All);
                 if (matches != null && matches.Result != null && matches.Result.Results != null && matches.Result.ResultCount > 0)
                 {
                     lastResultCount = matches.Result.ResultCount;
@@ -407,10 +442,13 @@ namespace OpenSpartan.Shared
                     Debug.WriteLine($"Got matches starting from {queryStart} up to {queryCount} entries. Last query yielded {matchIdBatch.Count} results.");
                     matchIds.AddRange(matchIdBatch);
 
-                    MatchesViewModel.Instance.MatchLoadingParameter = matchIds.Count.ToString();
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    {
+                        MatchesViewModel.Instance.MatchLoadingParameter = matchIds.Count.ToString();
+                    });
 
                     //counter = counter - matchIdBatch.Count;
-                    queryStart = queryStart + matchIdBatch.Count;
+                    queryStart += matchIdBatch.Count;
                 }
                 else
                 {
@@ -481,7 +519,11 @@ namespace OpenSpartan.Shared
                         }).ToList();
 
                         var group = compoundMedals.OrderByDescending(x => x.Count).GroupBy(x => x.TypeIndex);
-                        MedalsViewModel.Instance.Medals = new System.Collections.ObjectModel.ObservableCollection<IGrouping<int, Medal>>(group);
+
+                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        {
+                            MedalsViewModel.Instance.Medals = new System.Collections.ObjectModel.ObservableCollection<IGrouping<int, Medal>>(group);
+                        });
 
                         string qualifiedMedalPath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", "medals");
 
@@ -564,7 +606,10 @@ namespace OpenSpartan.Shared
                             compoundEvent.Rewards = await GetFlattenedRewards(operationDetails.Result.Ranks);
                             Debug.WriteLine($"{operation.RewardTrackPath} - Completed");
 
-                            BattlePassViewModel.Instance.BattlePasses.Add(compoundEvent);
+                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                            {
+                                BattlePassViewModel.Instance.BattlePasses.Add(compoundEvent);
+                            });
                         }
                     }
                     // Otherwise, get the reward track directly from the database.
@@ -576,7 +621,10 @@ namespace OpenSpartan.Shared
 
                         Debug.WriteLine($"{operation.RewardTrackPath} (Local) - Completed");
 
-                        BattlePassViewModel.Instance.BattlePasses.Add(compoundEvent);
+                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        {
+                            BattlePassViewModel.Instance.BattlePasses.Add(compoundEvent);
+                        });
                     }
                 }
 
@@ -649,7 +697,7 @@ namespace OpenSpartan.Shared
                 {
                     container.ItemDetails = DataHandler.GetInventoryItem(inventoryReward.InventoryItemPath);
                 }
-                else 
+                else
                 {
                     var item = await HaloClient.GameCmsGetItem(inventoryReward.InventoryItemPath, HaloClient.ClearanceToken);
                     if (item != null && item.Result != null)
