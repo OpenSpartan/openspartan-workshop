@@ -2,6 +2,8 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
+using OpenSpartan.Models;
+using OpenSpartan.ViewModels;
 using System;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -25,11 +27,6 @@ namespace OpenSpartan.Views
             ContentFrame.Navigated += On_Navigated;
         }
 
-        private async void BattlePassView_Loaded(object sender, RoutedEventArgs e)
-        {
-
-        }
-
         private void On_Navigated(object sender, NavigationEventArgs e)
         {
                 // Select the nav view item that corresponds to the page being navigated to.
@@ -41,20 +38,17 @@ namespace OpenSpartan.Views
 
         private void NavView_Navigate(Type navPageType, NavigationTransitionInfo transitionInfo, string argument)
         {
-            // Get the page type before navigation so you can prevent duplicate
-            // entries in the backstack.
-            Type preNavPageType = ContentFrame.CurrentSourcePageType;
-
             // Only navigate if the selected page isn't currently loaded.
             if (navPageType is not null)
             {
                 ContentFrame.Navigate(navPageType, argument, transitionInfo);
+                BattlePassViewModel.Instance.CurrentlySelectedBattlepass = argument;
             }
         }
 
         private void nvBattlePassDetails_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
-            if (args.InvokedItemContainer != null)
+            if (args.InvokedItemContainer != null && ((OperationCompoundModel)nvBattlePassDetails.SelectedItem).RewardTrack.RewardTrackPath != BattlePassViewModel.Instance.CurrentlySelectedBattlepass)
             {
                 NavView_Navigate(typeof(BattlePassDetailView), args.RecommendedNavigationTransitionInfo, args.InvokedItemContainer.Tag.ToString());
             }

@@ -9,6 +9,7 @@ namespace OpenSpartan.ViewModels
     {
         private MetadataLoadingState _battlePassLoadingState;
         private string _battlePassLoadingParameter;
+        private string _currentlySelectedBattlePass;
 
         public static BattlePassViewModel Instance { get; } = new BattlePassViewModel();
 
@@ -27,6 +28,19 @@ namespace OpenSpartan.ViewModels
                 if (_battlePasses != value)
                 {
                     _battlePasses = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public string CurrentlySelectedBattlepass
+        {
+            get => _currentlySelectedBattlePass;
+            set
+            {
+                if (_currentlySelectedBattlePass != value)
+                {
+                    _currentlySelectedBattlePass = value;
                     NotifyPropertyChanged();
                 }
             }
