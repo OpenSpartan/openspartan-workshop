@@ -12,8 +12,6 @@ namespace OpenSpartan.Data
 {
     public class MatchesSource : IIncrementalSource<MatchTableEntity>
     {
-        private readonly List<MatchTableEntity> matches;
-
         public MatchesSource()
         {
             Task.Run(() =>
@@ -24,10 +22,17 @@ namespace OpenSpartan.Data
 
         Task<IEnumerable<MatchTableEntity>> IIncrementalSource<MatchTableEntity>.GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken)
         {
-            var date = MatchesViewModel.Instance.MatchList.Min(a => a.StartTime).ToString("o", CultureInfo.InvariantCulture);
-            var matches = Task.Run(() => (IEnumerable<MatchTableEntity>)DataHandler.GetMatches($"xuid({HomeViewModel.Instance.Xuid})", date, pageSize));
+            if (MatchesViewModel.Instance.MatchList != null && MatchesViewModel.Instance.MatchList.Count > 0)
+            {
+                var date = MatchesViewModel.Instance.MatchList.Min(a => a.StartTime).ToString("o", CultureInfo.InvariantCulture);
+                var matches = Task.Run(() => (IEnumerable<MatchTableEntity>)DataHandler.GetMatches($"xuid({HomeViewModel.Instance.Xuid})", date, pageSize));
 
-            return matches;
+                return matches;
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

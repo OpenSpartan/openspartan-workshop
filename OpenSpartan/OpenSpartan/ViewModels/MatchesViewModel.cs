@@ -24,15 +24,13 @@ namespace OpenSpartan.ViewModels
         {
             get
             {
-                switch (MatchLoadingState)
+                return MatchLoadingState switch
                 {
-                    case MetadataLoadingState.Calculating:
-                        return $"Calculating matches. Identified {MatchLoadingParameter} matches so far...";
-                    case MetadataLoadingState.Loading:
-                        return $"Loading match details. Currently processing {MatchLoadingParameter}...";
-                    default:
-                        return "NOOP - Never Seen";
-                }
+                    MetadataLoadingState.Calculating => $"Calculating matches. Identified {MatchLoadingParameter} matches so far...",
+                    MetadataLoadingState.Loading => $"Loading match details. Currently processing {MatchLoadingParameter}...",
+                    MetadataLoadingState.Completed => "Completed",
+                    _ => "NOOP - Never Seen",
+                };
             }
         }
 

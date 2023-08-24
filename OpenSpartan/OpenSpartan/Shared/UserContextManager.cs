@@ -3,6 +3,7 @@ using Den.Dev.Orion.Authentication;
 using Den.Dev.Orion.Core;
 using Den.Dev.Orion.Models;
 using Den.Dev.Orion.Models.HaloInfinite;
+using Microsoft.Data.Sqlite;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
 using Microsoft.UI.Xaml;
@@ -15,6 +16,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace OpenSpartan.Shared
@@ -390,14 +393,14 @@ namespace OpenSpartan.Shared
                     if (existingMatches != null)
                     {
                         var matchesToProcess = distinctMatchIds.Except(existingMatches);
-                        if (matchesToProcess != null && matchesToProcess.Count() > 0)
+                        if (matchesToProcess != null && matchesToProcess.Any())
                         {
                             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                             {
-                                MatchesViewModel.Instance.MatchLoadingState = Models.MetadataLoadingState.Loading;
+                                MatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Loading;
                             });
 
-                            return await DataHandler.UpdateMatchRecords(matchesToProcess);
+                            return await UpdateMatchRecords(matchesToProcess);
                         }
                         else
                         {
@@ -407,10 +410,119 @@ namespace OpenSpartan.Shared
                     else
                     {
                         Debug.WriteLine("No matches found locally, so need to re-hydrate the database.");
-                        return await DataHandler.UpdateMatchRecords(distinctMatchIds);
+                        return await UpdateMatchRecords(distinctMatchIds);
                     }
                 }
 
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                return false;
+            }
+        }
+
+        internal static async Task<bool> UpdateMatchRecords(IEnumerable<Guid> matchIds)
+        {
+            try
+            {
+                // Default to match and stats not being available locally.
+                Tuple<bool, bool> matchStatsAvailability = new(false, false);
+
+                HaloApiResultContainer<MatchStats, RawResponseContainer> matchStats = null;
+
+                int matchCounter = 0;
+                int matchesTotal = matchIds.Count();
+
+                foreach (var matchId in matchIds)
+                {
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    {
+                        MatchesViewModel.Instance.MatchLoadingParameter = matchId.ToString();
+                    });
+
+                    var completionProgress = (double)matchCounter / (double)matchesTotal * 100.0;
+
+                    matchStatsAvailability = DataHandler.GetMatchStatsAvailability(matchId.ToString());
+                    matchCounter++;
+
+                    // MATCH_AVAILABLE - if the value is zero, that means we do not have the match data.
+                    if (matchStatsAvailability.Item1 == false)
+                    {
+                        Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Getting match stats for {matchId}...");
+                        matchStats = await HaloClient.StatsGetMatchStats(matchId.ToString());
+
+                        if (matchStats != null && matchStats.Result != null)
+                        {
+                            var processedMatchAssetParameters = await DataHandler.UpdateMatchAssetRecords(matchStats.Result);
+
+                            bool matchStatsInsertionResult = DataHandler.InsertMatchStats(matchStats.Response.Message);
+                            if (matchStatsInsertionResult)
+                            {
+                                Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored match data for {matchId} in the database.");
+                            }
+                            else
+                            {
+                                Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not store match {matchId} stats in the database.");
+                            }
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match stats were not available for {matchId}.");
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} already available. Not requesting new data.");
+                    }
+
+                    // PLAYER_STATS_AVAILABLE - if the value is zero, that means we do not have the match data.
+                    if (matchStatsAvailability.Item2 == false)
+                    {
+                        matchStats ??= await HaloClient.StatsGetMatchStats(matchId.ToString());
+
+                        if (matchStats != null && matchStats.Result != null && matchStats.Result.Players != null)
+                        {
+                            // Anything that starts with "bid" is a bot and including that in the request for player stats will result in failure.
+                            var targetPlayers = matchStats.Result.Players.Select(p => p.PlayerId).Where(p => !p.StartsWith("bid")).ToList();
+
+                            Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Attempting to get player results for players for match {matchId}.");
+
+                            var playerStatsSnapshot = await HaloClient.SkillGetMatchPlayerResult(matchId.ToString(), targetPlayers!);
+
+                            if (playerStatsSnapshot != null && playerStatsSnapshot.Result != null && playerStatsSnapshot.Result.Value != null)
+                            {
+                                Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Got stats for {playerStatsSnapshot.Result.Value.Count} players.");
+
+                                var playerStatsInsertionResult = DataHandler.InsertPlayerMatchStats(matchId.ToString(), playerStatsSnapshot.Response.Message);
+
+                                if (playerStatsInsertionResult)
+                                {
+                                    Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored player stats for {matchId}.");
+                                }
+                                else
+                                {
+                                    Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not store player stats for {matchId}.");
+                                }
+                            }
+                            else
+                            {
+                                Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not obtain player stats for match {matchId}. Requested {targetPlayers.Count} XUIDs.");
+                            }
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not obtain player stats for match {matchId} because the match metadata was unavailable.");
+                        }
+
+                    }
+                    else
+                    {
+                        Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} player stats already available. Not requesting new data.");
+                    }
+                }
                 return true;
             }
             catch (Exception ex)
