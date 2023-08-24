@@ -19,7 +19,6 @@ namespace OpenSpartan.Views
         public BattlePassView()
         {
             this.InitializeComponent();
-            this.Loaded += BattlePassView_Loaded;
 
             //nvBattlePassDetails.SelectedItem = nvBattlePassDetails.MenuItems.OfType<NavigationViewItem>().First();
             //ContentFrame.Navigate(typeof(Views.BattlePassView), null, new EntranceNavigationTransitionInfo());
