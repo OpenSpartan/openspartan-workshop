@@ -127,6 +127,19 @@ namespace OpenSpartan.Data
                     connection.BootstrapTable("InventoryItems");
                 }
 
+                using var command = connection.CreateCommand();
+                command.CommandText = GetQuery("Bootstrap", "Indexes");
+
+                int outcome = command.ExecuteNonQuery();
+                if (outcome > 0)
+                {
+                    Debug.WriteLine("Indices provisioned.");
+                }
+                else
+                {
+                    Debug.WriteLine("Indices could not be set up. If this is not the first run, then those are likely already configured.");
+                }
+
                 return true;
             }
             catch (Exception ex)
@@ -143,9 +156,8 @@ namespace OpenSpartan.Data
                 using var connection = new SqliteConnection($"Data Source={DatabasePath}");
                 connection.Open();
 
-                var insertServiceRecordEntryQuery = System.IO.File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Queries", "Insert", "ServiceRecord.sql"), Encoding.UTF8);
                 var command = connection.CreateCommand();
-                command.CommandText = insertServiceRecordEntryQuery;
+                command.CommandText = GetQuery("Insert", "ServiceRecord"); ;
                 command.Parameters.AddWithValue("$ResponseBody", serviceRecordJson);
                 command.Parameters.AddWithValue("$SnapshotTimestamp", DateTimeOffset.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK", CultureInfo.InvariantCulture));
 
@@ -336,10 +348,8 @@ namespace OpenSpartan.Data
                 using var connection = new SqliteConnection($"Data Source={DatabasePath}");
                 connection.Open();
 
-                var insertMatchStatsQuery = System.IO.File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Queries", "Insert", "PlayerMatchStats.sql"), Encoding.UTF8);
-
                 using var insertionCommand = connection.CreateCommand();
-                insertionCommand.CommandText = insertMatchStatsQuery;
+                insertionCommand.CommandText = GetQuery("Insert", "PlayerMatchStats");
                 insertionCommand.Parameters.AddWithValue("$MatchId", matchId);
                 insertionCommand.Parameters.AddWithValue("$ResponseBody", statsBody);
 
@@ -365,10 +375,8 @@ namespace OpenSpartan.Data
                 using var connection = new SqliteConnection($"Data Source={DatabasePath}");
                 connection.Open();
 
-                var insertMatchStatsQuery = System.IO.File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Queries", "Insert", "MatchStats.sql"), Encoding.UTF8);
-
                 using var insertionCommand = connection.CreateCommand();
-                insertionCommand.CommandText = insertMatchStatsQuery;
+                insertionCommand.CommandText = GetQuery("Insert", "MatchStats");
                 insertionCommand.Parameters.AddWithValue("$ResponseBody", matchBody);
 
                 var insertionResult = insertionCommand.ExecuteNonQuery();
@@ -511,7 +519,7 @@ namespace OpenSpartan.Data
                         }
 
                         using var egvQueryCommand = connection.CreateCommand();
-                        egvQueryCommand.CommandText = $"SELECT EXISTS(SELECT 1 FROM Maps WHERE AssetId='{gameVariant.Result.EngineGameVariantLink.AssetId}' AND VersionId='{gameVariant.Result.EngineGameVariantLink.VersionId}') AS ENGINEGAMEVARIANT_AVAILABLE";
+                        egvQueryCommand.CommandText = $"SELECT EXISTS(SELECT 1 FROM EngineGameVariants WHERE AssetId='{gameVariant.Result.EngineGameVariantLink.AssetId}' AND VersionId='{gameVariant.Result.EngineGameVariantLink.VersionId}') AS ENGINEGAMEVARIANT_AVAILABLE";
 
                         using var egvReader = egvQueryCommand.ExecuteReader();
                         if (egvReader.HasRows)

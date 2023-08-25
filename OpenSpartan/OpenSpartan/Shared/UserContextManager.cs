@@ -783,7 +783,7 @@ namespace OpenSpartan.Shared
 
         internal static async Task<List<RewardMetaContainer>> ExtractCurrencyRewards(int rank, IEnumerable<CurrencyAmount> currencyItems, bool isFree)
         {
-            List<RewardMetaContainer> rewardContainers = new List<RewardMetaContainer>();
+            List<RewardMetaContainer> rewardContainers = new();
 
             foreach (var currencyReward in currencyItems)
             {
@@ -839,7 +839,7 @@ namespace OpenSpartan.Shared
 
         internal static async Task<List<RewardMetaContainer>> ExtractInventoryRewards(int rank, IEnumerable<InventoryAmount> inventoryItems, bool isFree)
         {
-            List<RewardMetaContainer> rewardContainers = new List<RewardMetaContainer>();
+            List<RewardMetaContainer> rewardContainers = new();
 
             foreach (var inventoryReward in inventoryItems)
             {

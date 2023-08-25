@@ -22,6 +22,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Controls\HeaderTile.xaml" />
+    <None Remove="Queries\Bootstrap\Indexes.sql" />
     <None Remove="Queries\Bootstrap\InventoryItems.sql" />
     <None Remove="Queries\Bootstrap\OperationRewardTracks.sql" />
     <None Remove="Queries\Bootstrap\SetWALJournalingMode.sql" />
@@ -36,6 +37,11 @@
     <None Remove="Views\MatchesView.xaml" />
     <None Remove="Views\MedalsView.xaml" />
     <None Remove="Views\SettingsView.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Queries\Bootstrap\Indexes.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Queries\Bootstrap\SetWALJournalingMode.sql">
