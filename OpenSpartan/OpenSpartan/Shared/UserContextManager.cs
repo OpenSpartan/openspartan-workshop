@@ -296,9 +296,18 @@ namespace OpenSpartan.Shared
                         var backdrop = await HaloClient.GameCmsGetItem(customizationResult.Result.Appearance.BackdropImagePath, HaloClient.ClearanceToken);
 
                         var nameplate = (from n in emblemMapping.Result where n.Key == emblem.Result.CommonData.Id select n).FirstOrDefault();
-                        var configuration = (from c in nameplate.Value where c.Key.ToString() == customizationResult.Result.Appearance.Emblem.ConfigurationId.ToString() select c).FirstOrDefault();
 
-                        if (!configuration.Equals(default))
+                        KeyValuePair<string, EmblemMapping> configuration;
+                        if (!nameplate.Equals(default(KeyValuePair<string, Dictionary<string, EmblemMapping>>)) && !nameplate.Equals(default))
+                        {
+                            configuration = (from c in nameplate.Value where c.Key.ToString() == customizationResult.Result.Appearance.Emblem.ConfigurationId.ToString() select c).FirstOrDefault();
+                        }
+                        else
+                        {
+                            configuration = new KeyValuePair<string, EmblemMapping>("OS", new EmblemMapping() {  EmblemCmsPath = emblem.Result.CommonData.DisplayPath.Media.MediaUrl.Path, NameplateCmsPath = string.Empty, TextColor = "#FFF" });
+                        }
+
+                        if (!configuration.Equals(default(KeyValuePair<string, EmblemMapping>)) && !configuration.Equals(default))
                         {
                             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                             {
@@ -310,16 +319,16 @@ namespace OpenSpartan.Shared
                             string qualifiedBackdropImagePath = backdrop.Result != null ? Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", backdrop.Result.ImagePath.Media.MediaUrl.Path) : string.Empty;
 
                             // Let's make sure that we create the directory if it does not exist.
-                            FileInfo file = new FileInfo(qualifiedNameplateImagePath);
+                            FileInfo file = new(qualifiedNameplateImagePath);
                             file.Directory.Create();
 
-                            file = new System.IO.FileInfo(qualifiedEmblemImagePath);
+                            file = new(qualifiedEmblemImagePath);
                             file.Directory.Create();
 
-                            file = new System.IO.FileInfo(qualifiedBackdropImagePath);
+                            file = new(qualifiedBackdropImagePath);
                             file.Directory.Create();
 
-                            if (!System.IO.File.Exists(qualifiedNameplateImagePath))
+                            if (!System.IO.File.Exists(qualifiedNameplateImagePath) && !string.IsNullOrEmpty(configuration.Value.NameplateCmsPath))
                             {
                                 var nameplateData = await HaloClient.GameCmsGetGenericWaypointFile(configuration.Value.NameplateCmsPath);
 
@@ -331,12 +340,23 @@ namespace OpenSpartan.Shared
 
                             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                             {
-                                HomeViewModel.Instance.Nameplate = qualifiedNameplateImagePath;
+                                HomeViewModel.Instance.Nameplate = configuration.Value.NameplateCmsPath != null ? qualifiedNameplateImagePath : string.Empty;
                             });
 
-                            if (!System.IO.File.Exists(qualifiedEmblemImagePath))
+                            if (!string.IsNullOrEmpty(configuration.Value.EmblemCmsPath) && !System.IO.File.Exists(qualifiedEmblemImagePath))
                             {
-                                var emblemData = await HaloClient.GameCmsGetGenericWaypointFile(configuration.Value.EmblemCmsPath);
+                                HaloApiResultContainer<byte[], RawResponseContainer> emblemData;
+
+                                // We want to make sure that, where available, we're picking up the right configuration image (that is,
+                                // the right color theme). Otherwise, default to whatever is in the media URL.
+                                if (!configuration.Key.Equals("OS"))
+                                {
+                                    emblemData = await HaloClient.GameCmsGetGenericWaypointFile(configuration.Value.EmblemCmsPath);
+                                }
+                                else
+                                {
+                                    emblemData = await HaloClient.GameCmsGetImage(emblem.Result.CommonData.DisplayPath.Media.MediaUrl.Path);
+                                }
 
                                 if (emblemData.Result != null && emblemData.Response.Code == 200)
                                 {
