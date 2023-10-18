@@ -3,7 +3,6 @@ using Den.Dev.Orion.Authentication;
 using Den.Dev.Orion.Core;
 using Den.Dev.Orion.Models;
 using Den.Dev.Orion.Models.HaloInfinite;
-using Microsoft.Data.Sqlite;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
 using Microsoft.UI.Xaml;
@@ -16,8 +15,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace OpenSpartan.Shared
@@ -104,7 +101,7 @@ namespace OpenSpartan.Shared
                 string localClearance = string.Empty;
                 Task.Run(async () =>
                 {
-                    var clearance = (await HaloClient.SettingsGetClearance("RETAIL", "UNUSED", "245613.23.06.01.1708-0", "1.4")).Result;
+                    var clearance = (await HaloClient.SettingsGetClearance("RETAIL", "UNUSED", "245613.23.06.01.1708-0", "1.5")).Result;
                     if (clearance != null)
                     {
                         localClearance = clearance.FlightConfigurationId;
@@ -702,7 +699,7 @@ namespace OpenSpartan.Shared
 
         public static async Task<OperationRewardTrackSnapshot> GetOperations()
         {
-            return (await HaloClient.EconomyPlayerOperations($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})")).Result;
+            return (await HaloClient.EconomyPlayerOperations($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})", HaloClient.ClearanceToken)).Result;
         }
 
         public static async Task<CurrencyDefinition> GetInGameCurrency(string currencyId)
@@ -902,7 +899,14 @@ namespace OpenSpartan.Shared
                     }
                 }
 
-                container.ImagePath = container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path;
+                if (container.ItemDetails != null)
+                {
+                    container.ImagePath = container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path;
+                }
+                else
+                {
+                    Debug.WriteLine($"Could not set container item details for {inventoryReward.InventoryItemPath}");
+                }
 
                 rewardContainers.Add(container);
             }
