@@ -12,7 +12,7 @@ namespace OpenSpartan.Converters
 
             if (value != null)
             {
-                medalPath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", value.ToString());
+                medalPath = Path.Join(Core.Configuration.AppDataDirectory, "imagecache", value.ToString());
             }
 
             return medalPath;

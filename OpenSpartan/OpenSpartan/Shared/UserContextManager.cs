@@ -872,26 +872,42 @@ namespace OpenSpartan.Shared
                 if (inventoryItemLocallyAvailable)
                 {
                     container.ItemDetails = DataHandler.GetInventoryItem(inventoryReward.InventoryItemPath);
+
+                    if (container.ItemDetails != null)
+                    {
+                        Debug.WriteLine($"Trying to get local image for {container.ItemDetails.CommonData.Id}");
+
+                        var imageResult = await UpdateLocalImage("imagecache", container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path);
+
+                        if (imageResult == true)
+                        {
+                            Debug.WriteLine($"Stored local image: {container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path}");
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"Failed to store local image: {container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path}");
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Inventory item is null.");
+                    }
                 }
                 else
                 {
                     var item = await HaloClient.GameCmsGetItem(inventoryReward.InventoryItemPath, HaloClient.ClearanceToken);
                     if (item != null && item.Result != null)
                     {
-                        string qualifiedImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", item.Result.CommonData.DisplayPath.Media.MediaUrl.Path);
+                        Debug.WriteLine($"Trying to get local image for {item.Result.CommonData.Id}");
+                        var imageResult = await UpdateLocalImage("imagecache", item.Result.CommonData.DisplayPath.Media.MediaUrl.Path);
 
-                        // Let's make sure that we create the directory if it does not exist.
-                        FileInfo file = new FileInfo(qualifiedImagePath);
-                        file.Directory.Create();
-
-                        if (!System.IO.File.Exists(qualifiedImagePath))
+                        if (imageResult == true)
                         {
-                            var rankImage = await HaloClient.GameCmsGetImage(item.Result.CommonData.DisplayPath.Media.MediaUrl.Path);
-                            if (rankImage.Result != null && rankImage.Response.Code == 200)
-                            {
-                                System.IO.File.WriteAllBytes(qualifiedImagePath, rankImage.Result);
-                                Debug.WriteLine("Stored local image: " + item.Result.CommonData.DisplayPath.Media.MediaUrl.Path);
-                            }
+                            Debug.WriteLine($"Stored local image: {item.Result.CommonData.DisplayPath.Media.MediaUrl.Path}");
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"Failed to store local image: {item.Result.CommonData.DisplayPath.Media.MediaUrl.Path}");
                         }
 
                         DataHandler.UpdateInventoryItems(item.Response.Message, inventoryReward.InventoryItemPath);
@@ -912,6 +928,40 @@ namespace OpenSpartan.Shared
             }
 
             return rewardContainers;
+        }
+
+        internal static async Task<bool> UpdateLocalImage(string subDirectoryName, string imagePath)
+        {
+
+            string qualifiedImagePath = Path.Join(Core.Configuration.AppDataDirectory, subDirectoryName, imagePath);
+
+            if (imagePath.Contains("dandi_winter_snowlep_emblem.png"))
+            {
+                Debug.Write("Hey!");
+            }
+
+            // Let's make sure that we create the directory if it does not exist.
+            FileInfo file = new(qualifiedImagePath);
+            file.Directory.Create();
+
+            if (!System.IO.File.Exists(qualifiedImagePath))
+            {
+                var rankImage = await HaloClient.GameCmsGetImage(imagePath);
+                if (rankImage.Result != null && rankImage.Response.Code == 200)
+                {
+                    System.IO.File.WriteAllBytes(qualifiedImagePath, rankImage.Result);
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                // File already exists, so we can safely return true.
+                return true;
+            }
         }
     }
 }
