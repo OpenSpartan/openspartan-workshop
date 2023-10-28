@@ -64,12 +64,12 @@ namespace OpenSpartan.Data
             try
             {
                 // Let's make sure that we create the directory if it does not exist.
-                FileInfo file = new FileInfo(DatabasePath);
+                FileInfo file = new(DatabasePath);
                 file.Directory.Create();
 
                 // Regardless of whether the file exists or not, a new database will be created
                 // when the connection is initialized.
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
+                using SqliteConnection connection = new SqliteConnection($"Data Source={DatabasePath}");
                 connection.Open();
 
                 if (!connection.IsTableAvailable("ServiceRecordSnapshots"))
@@ -120,6 +120,11 @@ namespace OpenSpartan.Data
                 if (!connection.IsTableAvailable("InventoryItems"))
                 {
                     connection.BootstrapTable("InventoryItems");
+                }
+
+                if (!connection.IsTableAvailable("OwnedInventoryItems"))
+                {
+                    connection.BootstrapTable("OwnedInventoryItems");
                 }
 
                 using var command = connection.CreateCommand();
