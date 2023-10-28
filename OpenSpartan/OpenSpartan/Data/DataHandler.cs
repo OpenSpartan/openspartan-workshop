@@ -738,5 +738,36 @@ namespace OpenSpartan.Data
 
             return null;
         }
+
+        internal static bool InsertOwnedInventoryItems(PlayerInventory result)
+        {
+            using var connection = new SqliteConnection($"Data Source={DatabasePath}");
+            connection.Open();
+
+            var command = GetQuery("Insert", "OwnedInventoryItems");
+
+            foreach (var item in result.Items)
+            {
+                using var insertionCommand = connection.CreateCommand();
+                insertionCommand.CommandText = command;
+                insertionCommand.Parameters.AddWithValue("$Amount", item.Amount);
+                insertionCommand.Parameters.AddWithValue("$ItemId", item.ItemId);
+                insertionCommand.Parameters.AddWithValue("$ItemPath", item.ItemPath);
+                insertionCommand.Parameters.AddWithValue("$ItemType", item.ItemType);
+                insertionCommand.Parameters.AddWithValue("$FirstAcquiredDate", item.FirstAcquiredDate.ISO8601Date);
+
+                var insertionResult = insertionCommand.ExecuteNonQuery();
+                if (insertionResult > 0)
+                {
+                    Debug.WriteLine($"Stored owned inventory item {item.ItemId}.");
+                }
+                else
+                {
+                    Debug.WriteLine($"Could not store owned inventory item {item.ItemId}.");
+                }
+            }
+
+            return true;
+        }
     }
 }

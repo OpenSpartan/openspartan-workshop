@@ -775,6 +775,17 @@ namespace OpenSpartan.Shared
             }
         }
 
+        internal static async Task<bool> PopulateUserInventory()
+        {
+            var result = await HaloClient.EconomyGetInventoryItems($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})");
+            if (result != null && result.Result != null && result.Response.Code == 200)
+            {
+                var insertionResult = DataHandler.InsertOwnedInventoryItems(result.Result);
+                return insertionResult;
+            }
+            return false;
+        }
+
         internal static async Task<IEnumerable<IGrouping<int, RewardMetaContainer>>> GetFlattenedRewards(List<RankSnapshot> rankSnapshots)
         {
             List<RewardMetaContainer> rewards = new();

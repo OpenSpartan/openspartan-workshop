@@ -53,6 +53,7 @@ namespace OpenSpartan
                 {
                     Parallel.Invoke(async () => await UserContextManager.PopulateServiceRecordData(),
                         async () => await UserContextManager.PopulateCareerData(),
+                        async () => await UserContextManager.PopulateUserInventory(),
                         async () => await UserContextManager.PopulateCustomizationData(),
                         async () => await UserContextManager.PopulateDecorationData(),
                         async () => await UserContextManager.PopulateMedalData(),
