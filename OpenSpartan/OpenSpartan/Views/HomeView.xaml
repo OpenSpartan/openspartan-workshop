@@ -128,6 +128,7 @@
                 <converters:DoubleToPercentageStringConverter x:Key="DoubleToPercentageStringConverter"></converters:DoubleToPercentageStringConverter>
                 <converters:CommaAfterThousandsConverter x:Key="CommaAfterThousandsConverter"></converters:CommaAfterThousandsConverter>
                 <converters:DirectValueToPercentageStringConverter x:Key="DirectValueToPercentageStringConverter"></converters:DirectValueToPercentageStringConverter>
+                <converters:ComplexTimeToSimpleTimeConverter x:Key="ComplexTimeToSimpleTimeConverter"></converters:ComplexTimeToSimpleTimeConverter>
             </ResourceDictionary>
         </Grid.Resources>
 
@@ -340,7 +341,7 @@
                             <TextBlock Text="Time Played" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
-                            <TextBlock Text="{Binding ServiceRecord.TimePlayed}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                            <TextBlock Text="{Binding ServiceRecord.TimePlayed, Converter={StaticResource ComplexTimeToSimpleTimeConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
                         </Grid>
                     </Grid>
 
