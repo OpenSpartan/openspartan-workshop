@@ -241,7 +241,7 @@ namespace OpenSpartan.Shared
         {
             try
             {
-                string backgroundPath = "progression/Switcher/Season_Switcher_S4_IN.png";
+                string backgroundPath = "progression/Switcher/Season_Switcher_S5_REC.png";
                 // Get initial service record details
                 string qualifiedBackgroundImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", backgroundPath);
 
@@ -886,7 +886,7 @@ namespace OpenSpartan.Shared
 
                     if (container.ItemDetails != null)
                     {
-                        Debug.WriteLine($"Trying to get local image for {container.ItemDetails.CommonData.Id}");
+                        Debug.WriteLine($"Trying to get local image for {container.ItemDetails.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
 
                         var imageResult = await UpdateLocalImage("imagecache", container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path);
 
@@ -909,7 +909,7 @@ namespace OpenSpartan.Shared
                     var item = await HaloClient.GameCmsGetItem(inventoryReward.InventoryItemPath, HaloClient.ClearanceToken);
                     if (item != null && item.Result != null)
                     {
-                        Debug.WriteLine($"Trying to get local image for {item.Result.CommonData.Id}");
+                        Debug.WriteLine($"Trying to get local image for {item.Result.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
                         var imageResult = await UpdateLocalImage("imagecache", item.Result.CommonData.DisplayPath.Media.MediaUrl.Path);
 
                         if (imageResult == true)
@@ -925,7 +925,8 @@ namespace OpenSpartan.Shared
                         container.ItemDetails = item.Result;
                     }
                 }
-
+                
+                
                 if (container.ItemDetails != null)
                 {
                     container.ImagePath = container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path;
@@ -945,11 +946,6 @@ namespace OpenSpartan.Shared
         {
 
             string qualifiedImagePath = Path.Join(Core.Configuration.AppDataDirectory, subDirectoryName, imagePath);
-
-            if (imagePath.Contains("dandi_winter_snowlep_emblem.png"))
-            {
-                Debug.Write("Hey!");
-            }
 
             // Let's make sure that we create the directory if it does not exist.
             FileInfo file = new(qualifiedImagePath);

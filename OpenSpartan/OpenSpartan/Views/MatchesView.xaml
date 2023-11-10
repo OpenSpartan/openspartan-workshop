@@ -31,9 +31,9 @@
             </Grid.RowDefinitions>
 
             <TextBlock Text="Match History" Grid.Row="0"  Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
-            <StackPanel Orientation="Horizontal" Grid.Row="1">
-                <TextBlock Text="Loaded matches: "></TextBlock>
-                <TextBlock Text="{Binding MatchList.Count}"></TextBlock>
+            <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,4,0,0">
+                <TextBlock Foreground="#adb5bd" Text="Listed matches:" Margin="0,0,4,0"></TextBlock>
+                <TextBlock Foreground="#adb5bd" FontWeight="Bold" Text="{Binding MatchList.Count}"></TextBlock>
             </StackPanel>
         </Grid>
 
@@ -49,8 +49,118 @@
             <TextBlock Grid.Column="1" Text="{Binding MatchLoadingString}" VerticalAlignment="Center"></TextBlock>
         </Grid>
 
-        <controls:DataGrid x:Name="dgdMatches" Grid.Row="2" ItemsSource="{Binding MatchList}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled">
+        <controls:DataGrid x:Name="dgdMatches" AutoGenerateColumns="True" AutoGeneratingColumn="dgdMatches_AutoGeneratingColumn" Grid.Row="2" ItemsSource="{Binding MatchList}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled">
+            <controls:DataGrid.RowDetailsTemplate>
+                <DataTemplate>
+                    <StackPanel Height="600" Margin="24,12" Padding="5" Spacing="3" Orientation="Horizontal">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150"></ColumnDefinition>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
 
+                            <StackPanel Grid.Column="0">
+                                <TextBlock FontWeight="Bold" Text="Match ID"/>
+                                <TextBlock FontWeight="Bold" Text="Outcome"/>
+                                <TextBlock FontWeight="Bold" Text="Map" />
+                                <TextBlock FontWeight="Bold" Text="Playlist" />
+                                <TextBlock FontWeight="Bold" Text="Joined in-progress" />
+                                <TextBlock FontWeight="Bold" Text="Left in-progress" />
+                                <TextBlock FontWeight="Bold" Text="Present at start" />
+                                <TextBlock FontWeight="Bold" Text="Present at end" />
+                                <TextBlock FontWeight="Bold" Text="Time played" />
+                                <TextBlock FontWeight="Bold" Text="Last team ID" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="{Binding MatchId}"/>
+                                <TextBlock Text="{Binding Outcome}"/>
+                                <TextBlock Text="{Binding Map}" />
+                                <TextBlock Text="{Binding Playlist}" />
+                                <TextBlock Text="{Binding ParticipationInfo.JoinedInProgress}"></TextBlock>
+                                <TextBlock Text="{Binding ParticipationInfo.LeftInProgress}"></TextBlock>
+                                <TextBlock Text="{Binding ParticipationInfo.PresentAtBeginning}"></TextBlock>
+                                <TextBlock Text="{Binding ParticipationInfo.PresentAtCompletion}"></TextBlock>
+                                <TextBlock Text="{Binding ParticipationInfo.TimePlayed}"></TextBlock>
+                                <TextBlock Text="{Binding LastTeamId}"></TextBlock>
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Margin="48,0,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150"></ColumnDefinition>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock FontWeight="Bold" Text="Accuracy"/>
+                                <TextBlock FontWeight="Bold" Text="Assists"/>
+                                <TextBlock FontWeight="Bold" Text="Average life"/>
+                                <TextBlock FontWeight="Bold" Text="Betrayals"/>
+                                <TextBlock FontWeight="Bold" Text="Callout assists"/>
+                                <TextBlock FontWeight="Bold" Text="Damage dealt"/>
+                                <TextBlock FontWeight="Bold" Text="Damage taken"/>
+                                <TextBlock FontWeight="Bold" Text="Driver assists"/>
+                                <TextBlock FontWeight="Bold" Text="EMP assists"/>
+                                <TextBlock FontWeight="Bold" Text="Grenade kills"/>
+                                <TextBlock FontWeight="Bold" Text="Headshot kills"/>
+                                <TextBlock FontWeight="Bold" Text="Hijacks"/>
+                                <TextBlock FontWeight="Bold" Text="KDA"/>
+                                <TextBlock FontWeight="Bold" Text="Kills"/>
+                                <TextBlock FontWeight="Bold" Text="Deaths"/>
+                                <TextBlock FontWeight="Bold" Text="Max killing spree"/>
+                                <TextBlock FontWeight="Bold" Text="Medals"/>
+                                <TextBlock FontWeight="Bold" Text="Melee kills"/>
+                                <TextBlock FontWeight="Bold" Text="Objectives done"/>
+                                <TextBlock FontWeight="Bold" Text="Personal score"/>
+                                <TextBlock FontWeight="Bold" Text="Power weapon kills"/>
+                                <TextBlock FontWeight="Bold" Text="Rounds lost"/>
+                                <TextBlock FontWeight="Bold" Text="Rounds tied"/>
+                                <TextBlock FontWeight="Bold" Text="Rounds won"/>
+                                <TextBlock FontWeight="Bold" Text="Score"/>
+                                <TextBlock FontWeight="Bold" Text="Shots fired" />
+                                <TextBlock FontWeight="Bold" Text="Shots hit" />
+                                <TextBlock FontWeight="Bold" Text="Spawns" />
+                                <TextBlock FontWeight="Bold" Text="Suicides" />
+                                <TextBlock FontWeight="Bold" Text="Vehicle destroys" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Accuracy}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Assists}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.AverageLifeDuration}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Betrayals}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.CalloutAssists}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.DamageDealt}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.DamageTaken}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.DriverAssists}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.EmpAssists}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.GrenadeKills}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.HeadshotKills}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Hijacks}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.KDA}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Kills}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Deaths}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.MaxKillingSpree}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Medals.Count}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.MeleeKills}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.ObjectivesCompleted}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.PersonalScore}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.PowerWeaponKills}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.RoundsLost}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.RoundsTied}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.RoundsWon}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Score}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.ShotsFired}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.ShotsHit}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Spawns}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Suicides}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.VehicleDestroys}"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </DataTemplate>
+            </controls:DataGrid.RowDetailsTemplate>
         </controls:DataGrid>
     </Grid>
 </Page>

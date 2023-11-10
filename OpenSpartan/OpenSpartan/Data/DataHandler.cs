@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -26,6 +27,7 @@ namespace OpenSpartan.Data
             Converters =
             {
                 new EmptyDateStringToNullJsonConverter(),
+                new XmlDurationToTimeSpanJsonConverter(),
             },
         };
 
@@ -276,6 +278,10 @@ namespace OpenSpartan.Data
                         var playlistOrdinal = reader.GetOrdinal("Playlist");
                         var gameVariantOrdinal = reader.GetOrdinal("GameVariant");
                         var durationOrdinal = reader.GetOrdinal("Duration");
+                        var lastTeamIdOrdinal = reader.GetOrdinal("LastTeamId");
+                        var teamsOrdinal = reader.GetOrdinal("Teams");
+                        var participationInfoOrdinal = reader.GetOrdinal("ParticipationInfo");
+                        var playerTeamStatsOrdinal = reader.GetOrdinal("PlayerTeamStats");
 
                         MatchTableEntity entity = new()
                         {
@@ -288,6 +294,10 @@ namespace OpenSpartan.Data
                             Playlist = reader.IsDBNull(playlistOrdinal) ? string.Empty : reader.GetFieldValue<string>(playlistOrdinal),
                             GameVariant = reader.IsDBNull(gameVariantOrdinal) ? string.Empty : reader.GetFieldValue<string>(gameVariantOrdinal),
                             Duration = reader.IsDBNull(durationOrdinal) ? string.Empty : reader.GetFieldValue<string>(durationOrdinal),
+                            LastTeamId = reader.IsDBNull(durationOrdinal) ? null : reader.GetFieldValue<int>(lastTeamIdOrdinal),
+                            Teams = reader.IsDBNull(teamsOrdinal) ? null : JsonSerializer.Deserialize<List<Team>>(reader.GetFieldValue<string>(teamsOrdinal), serializerOptions),
+                            ParticipationInfo = reader.IsDBNull(teamsOrdinal) ? null : JsonSerializer.Deserialize<ParticipationInfo>(reader.GetFieldValue<string>(participationInfoOrdinal), serializerOptions),
+                            PlayerTeamStats = reader.IsDBNull(teamsOrdinal) ? null : JsonSerializer.Deserialize<List<PlayerTeamStat>>(reader.GetFieldValue<string>(playerTeamStatsOrdinal), serializerOptions),
                         };
 
                         matches.Add(entity);
