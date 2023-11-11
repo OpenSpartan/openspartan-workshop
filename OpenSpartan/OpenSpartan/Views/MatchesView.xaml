@@ -15,6 +15,8 @@
 
     <Page.Resources>
         <converters:MetadataLoadingStateToVisibilityConverter x:Key="MetadataLoadingStateToVisibilityConverter"></converters:MetadataLoadingStateToVisibilityConverter>
+        <converters:OutcomeToBackgroundConverter x:Key="OutcomeToBackgroundConverter"></converters:OutcomeToBackgroundConverter>
+        <converters:OutcomeToForegroundConverter x:Key="OutcomeToForegroundConverter"></converters:OutcomeToForegroundConverter>
     </Page.Resources>
 
     <Grid>
@@ -49,7 +51,23 @@
             <TextBlock Grid.Column="1" Text="{Binding MatchLoadingString}" VerticalAlignment="Center"></TextBlock>
         </Grid>
 
-        <controls:DataGrid IsReadOnly="True" RowDetailsVisibilityMode="VisibleWhenSelected" CanUserReorderColumns="False" CanUserSortColumns="True" x:Name="dgdMatches" AutoGenerateColumns="True" AutoGeneratingColumn="dgdMatches_AutoGeneratingColumn" Grid.Row="2" ItemsSource="{Binding MatchList}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled">
+        <controls:DataGrid IsReadOnly="True" RowDetailsVisibilityMode="VisibleWhenSelected" CanUserReorderColumns="False" CanUserSortColumns="True" x:Name="dgdMatches" AutoGenerateColumns="False" Grid.Row="2" ItemsSource="{Binding MatchList}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled">
+            <controls:DataGrid.Columns>
+                <controls:DataGridTextColumn Header="Match ID" Width="*" Binding="{Binding MatchId}"></controls:DataGridTextColumn>
+                <controls:DataGridTextColumn Header="Outcome" Width="120" Binding="{Binding Outcome}">
+                    <controls:DataGridTextColumn.CellStyle>
+                        <Style TargetType="controls:DataGridCell">
+                            <Setter Property="Foreground" Value="{Binding Outcome, Converter={StaticResource OutcomeToForegroundConverter}}" />
+                            <Setter Property="Background" Value="{Binding Outcome, Converter={StaticResource OutcomeToBackgroundConverter}}" />
+                        </Style>
+                    </controls:DataGridTextColumn.CellStyle>
+                </controls:DataGridTextColumn>
+                <controls:DataGridTextColumn Header="Duration" Width="*" Binding="{Binding Duration}"></controls:DataGridTextColumn>
+                <controls:DataGridTextColumn Header="Rank" Width="*" Binding="{Binding Rank}"></controls:DataGridTextColumn>
+                <controls:DataGridTextColumn Header="Category" Width="*" Binding="{Binding Category}"></controls:DataGridTextColumn>
+                <controls:DataGridTextColumn Header="Map" Width="*" Binding="{Binding Map}"></controls:DataGridTextColumn>
+                <controls:DataGridTextColumn Header="Playlist" Width="*" Binding="{Binding Playlist}"></controls:DataGridTextColumn>
+            </controls:DataGrid.Columns>
             <controls:DataGrid.RowDetailsTemplate>
                 <DataTemplate>
                     <StackPanel Height="600" Margin="24,12" Padding="5" Spacing="3" Orientation="Horizontal">
