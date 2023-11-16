@@ -329,7 +329,8 @@ namespace OpenSpartan.Data
 
                 using (SqliteCommand command = connection.CreateCommand())
                 {
-                    command.CommandText = $"SELECT EXISTS(SELECT 1 FROM MatchStats WHERE MatchId='{matchId}') AS MATCH_AVAILABLE, EXISTS(SELECT 1 FROM PlayerMatchStats WHERE MatchId='{matchId}') AS PLAYER_STATS_AVAILABLE;";
+                    command.CommandText = GetQuery("Select", "MatchStatsAvailability");
+                    command.Parameters.AddWithValue("$MatchId", matchId);
 
                     using var reader = command.ExecuteReader();
                     if (reader.HasRows)
