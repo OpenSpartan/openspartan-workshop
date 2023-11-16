@@ -15,7 +15,7 @@
     </Page.Resources>
 
     <Grid>
-        <GridView Margin="24,0,8,0" ItemsSource="{Binding Source={StaticResource cvsBattlePassItems}}" ScrollViewer.HorizontalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollMode="Auto" ScrollViewer.IsScrollInertiaEnabled="True">
+        <GridView Margin="24,0,8,0" ManipulationMode="System" x:Name="grdBattlePassDetails" ItemsSource="{Binding Source={StaticResource cvsBattlePassItems}}" ScrollViewer.HorizontalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollMode="Enabled" ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.VerticalScrollMode="Disabled">
             <GridView.ItemTemplate>
                 <DataTemplate>
                     <Grid Background="#404040" BorderThickness="2" CornerRadius="4">

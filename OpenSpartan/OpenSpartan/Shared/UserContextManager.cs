@@ -146,61 +146,69 @@ namespace OpenSpartan.Shared
                         HomeViewModel.Instance.MaxRank = careerTrackContainerResult.Result.Ranks.Count;
                     });
 
-                    // The rank here is incremented by one because of off-by-one counting when ranks are established. The introductory rank apparently is counted differently in the index
-                    // compared to the full set of ranks in the reward track.
-                    var currentCareerStage = (from c in careerTrackContainerResult.Result.Ranks where c.Rank == HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank + 1 select c).FirstOrDefault();
-                    if (currentCareerStage != null)
+                    if (HomeViewModel.Instance.CareerSnapshot != null)
                     {
-                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        // The rank here is incremented by one because of off-by-one counting when ranks are established. The introductory rank apparently is counted differently in the index
+                        // compared to the full set of ranks in the reward track.
+                        var currentCareerStage = (from c in careerTrackContainerResult.Result.Ranks where c.Rank == HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank + 1 select c).FirstOrDefault();
+                        if (currentCareerStage != null)
                         {
-                            HomeViewModel.Instance.Title = currentCareerStage.RankTitle.Value;
-                            HomeViewModel.Instance.CurrentRankExperience = careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
-                            HomeViewModel.Instance.RequiredRankExperience = currentCareerStage.XpRequiredForRank;
-
-                            // Let's also compute secondary values that can tell us how far the user is from the Hero title.
-                            HomeViewModel.Instance.ExperienceTotalRequired = careerTrackContainerResult.Result.Ranks.Sum(item => item.XpRequiredForRank);
-
-                            var relevantRanks = (from c in careerTrackContainerResult.Result.Ranks where c.Rank <= HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank select c);
-                            HomeViewModel.Instance.ExperienceEarnedToDate = relevantRanks.Sum(rank => rank.XpRequiredForRank) + careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
-                        });
-
-                        string qualifiedRankImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankLargeIcon);
-                        string qualifiedAdornmentImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankAdornmentIcon);
-
-                        // Let's make sure that we create the directory if it does not exist.
-                        System.IO.FileInfo file = new System.IO.FileInfo(qualifiedRankImagePath);
-                        file.Directory.Create();
-
-                        file = new System.IO.FileInfo(qualifiedAdornmentImagePath);
-                        file.Directory.Create();
-
-                        if (!System.IO.File.Exists(qualifiedRankImagePath))
-                        {
-                            var rankImage = await HaloClient.GameCmsGetImage(currentCareerStage.RankLargeIcon);
-                            if (rankImage.Result != null && rankImage.Response.Code == 200)
+                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                             {
-                                System.IO.File.WriteAllBytes(qualifiedRankImagePath, rankImage.Result);
-                            }
-                        }
+                                HomeViewModel.Instance.Title = currentCareerStage.RankTitle.Value;
+                                HomeViewModel.Instance.CurrentRankExperience = careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
+                                HomeViewModel.Instance.RequiredRankExperience = currentCareerStage.XpRequiredForRank;
 
-                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                        {
-                            HomeViewModel.Instance.RankImage = qualifiedRankImagePath;
-                        });
+                                // Let's also compute secondary values that can tell us how far the user is from the Hero title.
+                                HomeViewModel.Instance.ExperienceTotalRequired = careerTrackContainerResult.Result.Ranks.Sum(item => item.XpRequiredForRank);
 
-                        if (!System.IO.File.Exists(qualifiedAdornmentImagePath))
-                        {
-                            var adornmentImage = await HaloClient.GameCmsGetImage(currentCareerStage.RankAdornmentIcon);
-                            if (adornmentImage.Result != null && adornmentImage.Response.Code == 200)
+                                var relevantRanks = (from c in careerTrackContainerResult.Result.Ranks where c.Rank <= HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank select c);
+                                HomeViewModel.Instance.ExperienceEarnedToDate = relevantRanks.Sum(rank => rank.XpRequiredForRank) + careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
+                            });
+
+                            string qualifiedRankImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankLargeIcon);
+                            string qualifiedAdornmentImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankAdornmentIcon);
+
+                            // Let's make sure that we create the directory if it does not exist.
+                            System.IO.FileInfo file = new System.IO.FileInfo(qualifiedRankImagePath);
+                            file.Directory.Create();
+
+                            file = new System.IO.FileInfo(qualifiedAdornmentImagePath);
+                            file.Directory.Create();
+
+                            if (!System.IO.File.Exists(qualifiedRankImagePath))
                             {
-                                System.IO.File.WriteAllBytes(qualifiedAdornmentImagePath, adornmentImage.Result);
+                                var rankImage = await HaloClient.GameCmsGetImage(currentCareerStage.RankLargeIcon);
+                                if (rankImage.Result != null && rankImage.Response.Code == 200)
+                                {
+                                    System.IO.File.WriteAllBytes(qualifiedRankImagePath, rankImage.Result);
+                                }
                             }
-                        }
 
-                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                        {
-                            HomeViewModel.Instance.AdornmentImage = qualifiedAdornmentImagePath;
-                        });
+                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                            {
+                                HomeViewModel.Instance.RankImage = qualifiedRankImagePath;
+                            });
+
+                            if (!System.IO.File.Exists(qualifiedAdornmentImagePath))
+                            {
+                                var adornmentImage = await HaloClient.GameCmsGetImage(currentCareerStage.RankAdornmentIcon);
+                                if (adornmentImage.Result != null && adornmentImage.Response.Code == 200)
+                                {
+                                    System.IO.File.WriteAllBytes(qualifiedAdornmentImagePath, adornmentImage.Result);
+                                }
+                            }
+
+                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                            {
+                                HomeViewModel.Instance.AdornmentImage = qualifiedAdornmentImagePath;
+                            });
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Could not get the career snapshot - it's null in the view model.");
+                        return false;
                     }
                 }
 
