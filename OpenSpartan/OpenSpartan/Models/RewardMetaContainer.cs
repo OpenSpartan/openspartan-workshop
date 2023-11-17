@@ -1,4 +1,5 @@
 ﻿using Den.Dev.Orion.Models.HaloInfinite;
+using System;
 
 namespace OpenSpartan.Models
 {
@@ -6,7 +7,7 @@ namespace OpenSpartan.Models
     {
         public bool IsFree { get; set; }
 
-        public int Rank { get; set; }  
+        public Tuple<int, int> Ranks { get; set; }  
 
         public InGameItem ItemDetails { get; set; }
 

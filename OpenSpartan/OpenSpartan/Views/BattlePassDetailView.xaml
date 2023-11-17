@@ -11,11 +11,12 @@
 
     <Page.Resources>
         <converters:ServicePathToLocalPathConverter x:Key="ServicePathToLocalPathConverter"></converters:ServicePathToLocalPathConverter>
+        <converters:RankToVisibilityConverter x:Key="RankToVisibilityConverter"></converters:RankToVisibilityConverter>
         <CollectionViewSource x:Key="cvsBattlePassItems" IsSourceGrouped="True" Source="{Binding Rewards}"/>
     </Page.Resources>
 
     <Grid>
-        <GridView Margin="24,0,8,0" ManipulationMode="System" x:Name="grdBattlePassDetails" ItemsSource="{Binding Source={StaticResource cvsBattlePassItems}}" ScrollViewer.HorizontalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollMode="Enabled" ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.VerticalScrollMode="Disabled">
+        <GridView Margin="24,0,8,0" Tag="{Binding Path=Key, Source={StaticResource cvsBattlePassItems}}" ManipulationMode="System" x:Name="grdBattlePassDetails" ItemsSource="{Binding Source={StaticResource cvsBattlePassItems}}" ScrollViewer.HorizontalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollMode="Enabled" ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.VerticalScrollMode="Disabled">
             <GridView.ItemTemplate>
                 <DataTemplate>
                     <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
@@ -35,6 +36,13 @@
 
                         <Grid Grid.Row="1" Padding="8">
                             <Image Height="192" Width="192" Source="{Binding ImagePath, Converter={StaticResource ServicePathToLocalPathConverter}}"/>
+                            <Border BorderBrush="#EAA926" BorderThickness="6" Visibility="{Binding Path=Ranks, Converter={StaticResource RankToVisibilityConverter}}">
+                                <Grid Width="192">
+                                    <Grid HorizontalAlignment="Right" VerticalAlignment="Bottom" Background="#EAA926" Padding="5" Visibility="{Binding Path=Ranks, Converter={StaticResource RankToVisibilityConverter}}">
+                                        <FontIcon Glyph="&#xE73E;" FontSize="32" FontWeight="Black"/>
+                                    </Grid>
+                                </Grid>
+                            </Border>
                         </Grid>
                     </Grid>
                 </DataTemplate>

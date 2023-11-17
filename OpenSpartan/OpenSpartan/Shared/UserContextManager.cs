@@ -750,7 +750,7 @@ namespace OpenSpartan.Shared
 
                             compoundEvent.RewardTrackMetadata = operationDetails.Result;
 
-                            compoundEvent.Rewards = new(await GetFlattenedRewards(operationDetails.Result.Ranks));
+                            compoundEvent.Rewards = new(await GetFlattenedRewards(operationDetails.Result.Ranks, operation.CurrentProgress.Rank));
                             Debug.WriteLine($"{operation.RewardTrackPath} - Completed");
 
                             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
@@ -764,7 +764,7 @@ namespace OpenSpartan.Shared
                     {
                         var operationDetails = DataHandler.GetOperationResponseBody(operation.RewardTrackPath);
                         compoundEvent.RewardTrackMetadata = operationDetails;
-                        compoundEvent.Rewards = new(await GetFlattenedRewards(operationDetails.Ranks));
+                        compoundEvent.Rewards = new(await GetFlattenedRewards(operationDetails.Ranks, operation.CurrentProgress.Rank));
 
                         Debug.WriteLine($"{operation.RewardTrackPath} (Local) - Completed");
 
@@ -794,17 +794,17 @@ namespace OpenSpartan.Shared
             return false;
         }
 
-        internal static async Task<IEnumerable<IGrouping<int, RewardMetaContainer>>> GetFlattenedRewards(List<RankSnapshot> rankSnapshots)
+        internal static async Task<IEnumerable<IGrouping<int, RewardMetaContainer>>> GetFlattenedRewards(List<RankSnapshot> rankSnapshots, int currentPlayerRank)
         {
             List<RewardMetaContainer> rewards = new();
 
             foreach (var rewardBucket in rankSnapshots)
             {
-                var freeInventoryRewards = await ExtractInventoryRewards(rewardBucket.Rank, rewardBucket.FreeRewards.InventoryRewards, true);
-                var freeCurrencyRewards = await ExtractCurrencyRewards(rewardBucket.Rank, rewardBucket.FreeRewards.CurrencyRewards, true);
+                var freeInventoryRewards = await ExtractInventoryRewards(rewardBucket.Rank, currentPlayerRank, rewardBucket.FreeRewards.InventoryRewards, true);
+                var freeCurrencyRewards = await ExtractCurrencyRewards(rewardBucket.Rank, currentPlayerRank, rewardBucket.FreeRewards.CurrencyRewards, true);
 
-                var paidInventoryRewards = await ExtractInventoryRewards(rewardBucket.Rank, rewardBucket.PaidRewards.InventoryRewards, false);
-                var paidCurrencyRewards = await ExtractCurrencyRewards(rewardBucket.Rank, rewardBucket.PaidRewards.CurrencyRewards, false);
+                var paidInventoryRewards = await ExtractInventoryRewards(rewardBucket.Rank, currentPlayerRank, rewardBucket.PaidRewards.InventoryRewards, false);
+                var paidCurrencyRewards = await ExtractCurrencyRewards(rewardBucket.Rank, currentPlayerRank, rewardBucket.PaidRewards.CurrencyRewards, false);
 
                 rewards.AddRange(freeInventoryRewards);
                 rewards.AddRange(freeCurrencyRewards);
@@ -814,10 +814,10 @@ namespace OpenSpartan.Shared
                 Debug.WriteLine($"Rank {rewardBucket.Rank} - Completed");
             }
 
-            return rewards.GroupBy(x => x.Rank);
+            return rewards.GroupBy(x => x.Ranks.Item1);
         }
 
-        internal static async Task<List<RewardMetaContainer>> ExtractCurrencyRewards(int rank, IEnumerable<CurrencyAmount> currencyItems, bool isFree)
+        internal static async Task<List<RewardMetaContainer>> ExtractCurrencyRewards(int rank, int playerRank, IEnumerable<CurrencyAmount> currencyItems, bool isFree)
         {
             List<RewardMetaContainer> rewardContainers = new();
 
@@ -825,7 +825,7 @@ namespace OpenSpartan.Shared
             {
                 RewardMetaContainer container = new()
                 {
-                    Rank = rank,
+                    Ranks = new Tuple<int, int>(rank, playerRank),
                     IsFree = isFree,
                     Amount = currencyReward.Amount,
                     CurrencyDetails = await GetInGameCurrency(currencyReward.CurrencyPath)
@@ -873,7 +873,7 @@ namespace OpenSpartan.Shared
             return rewardContainers;
         }
 
-        internal static async Task<List<RewardMetaContainer>> ExtractInventoryRewards(int rank, IEnumerable<InventoryAmount> inventoryItems, bool isFree)
+        internal static async Task<List<RewardMetaContainer>> ExtractInventoryRewards(int rank, int playerRank, IEnumerable<InventoryAmount> inventoryItems, bool isFree)
         {
             List<RewardMetaContainer> rewardContainers = new();
 
@@ -883,7 +883,7 @@ namespace OpenSpartan.Shared
 
                 RewardMetaContainer container = new()
                 {
-                    Rank = rank,
+                    Ranks = new Tuple<int, int>(rank, playerRank),
                     IsFree = isFree,
                     Amount = inventoryReward.Amount,
                 };

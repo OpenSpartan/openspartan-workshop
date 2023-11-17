@@ -28,6 +28,7 @@
     <None Remove="Queries\Insert\OperationRewardTracks.sql" />
     <None Remove="Queries\Select\InventoryItem.sql" />
     <None Remove="Queries\Select\LatestMedalsSnapshot.sql" />
+    <None Remove="Queries\Select\MatchStatsAvailability.sql" />
     <None Remove="Queries\Select\OperationResponseBody.sql" />
     <None Remove="Views\BattlePassDetailView.xaml" />
     <None Remove="Views\BattlePassView.xaml" />
@@ -61,6 +62,9 @@
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
     <Content Include="Queries\Insert\OperationRewardTracks.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Queries\Select\MatchStatsAvailability.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Queries\Select\OperationResponseBody.sql">
