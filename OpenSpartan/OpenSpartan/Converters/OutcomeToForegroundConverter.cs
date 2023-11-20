@@ -15,7 +15,19 @@ namespace OpenSpartan.Converters
             {
                 case Outcome.DidNotFinish:
                     {
-                        return new SolidColorBrush(Windows.UI.Color.FromArgb(255, 222, 226, 230));
+                        return new SolidColorBrush(Windows.UI.Color.FromArgb(255, 115, 103, 240));
+                    }
+                case Outcome.Loss:
+                    {
+                        return new SolidColorBrush(Windows.UI.Color.FromArgb(255, 234, 84, 85));
+                    }
+                case Outcome.Tie:
+                    {
+                        return new SolidColorBrush(Windows.UI.Color.FromArgb(255, 115, 103, 240));
+                    }
+                case Outcome.Win:
+                    {
+                        return new SolidColorBrush(Windows.UI.Color.FromArgb(255, 40, 199, 111));
                     }
                 default:
                     {

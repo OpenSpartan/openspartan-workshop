@@ -9,6 +9,7 @@
     xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
     xmlns:converters="using:OpenSpartan.Converters"
     xmlns:viewmodels="using:OpenSpartan.ViewModels"
+    xmlns:shared="using:OpenSpartan.Shared"
     DataContext="{x:Bind viewmodels:MatchesViewModel.Instance}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     NavigationCacheMode="Disabled">
@@ -51,14 +52,26 @@
             <TextBlock Grid.Column="1" Text="{Binding MatchLoadingString}" VerticalAlignment="Center"></TextBlock>
         </Grid>
 
-        <controls:DataGrid IsReadOnly="True" RowDetailsVisibilityMode="VisibleWhenSelected" CanUserReorderColumns="False" CanUserSortColumns="True" x:Name="dgdMatches" AutoGenerateColumns="False" Grid.Row="2" ItemsSource="{Binding MatchList}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled">
+        <controls:DataGrid IsReadOnly="True"
+                           RowDetailsVisibilityMode="VisibleWhenSelected"
+                           CanUserReorderColumns="False"
+                           CanUserSortColumns="True"
+                           x:Name="dgdMatches"
+                           AutoGenerateColumns="False"
+                           Grid.Row="2"
+                           ItemsSource="{Binding MatchList}"
+                           VerticalAlignment="Stretch"
+                           HorizontalAlignment="Stretch"
+                           VerticalScrollBarVisibility="Visible"
+                           HorizontalScrollBarVisibility="Disabled">
             <controls:DataGrid.Columns>
                 <controls:DataGridTextColumn Header="Match ID" Width="*" Binding="{Binding MatchId}"></controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Outcome" Width="120" Binding="{Binding Outcome}">
                     <controls:DataGridTextColumn.CellStyle>
                         <Style TargetType="controls:DataGridCell">
-                            <Setter Property="Foreground" Value="{Binding Outcome, Converter={StaticResource OutcomeToForegroundConverter}}" />
-                            <Setter Property="Background" Value="{Binding Outcome, Converter={StaticResource OutcomeToBackgroundConverter}}" />
+                            <Setter Property="shared:BindingHelper.CellForegroundBindingPath" Value="Outcome" />
+                            <Setter Property="shared:BindingHelper.CellBackgroundBindingPath" Value="Outcome" />
+                            <Setter Property="FontWeight" Value="SemiBold"/>
                         </Style>
                     </controls:DataGridTextColumn.CellStyle>
                 </controls:DataGridTextColumn>

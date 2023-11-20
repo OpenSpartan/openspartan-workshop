@@ -13,6 +13,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace OpenSpartan.Data
 {
@@ -293,7 +294,7 @@ namespace OpenSpartan.Data
                             Map = reader.IsDBNull(mapOrdinal) ? string.Empty : reader.GetFieldValue<string>(mapOrdinal),
                             Playlist = reader.IsDBNull(playlistOrdinal) ? string.Empty : reader.GetFieldValue<string>(playlistOrdinal),
                             GameVariant = reader.IsDBNull(gameVariantOrdinal) ? string.Empty : reader.GetFieldValue<string>(gameVariantOrdinal),
-                            Duration = reader.IsDBNull(durationOrdinal) ? string.Empty : reader.GetFieldValue<string>(durationOrdinal),
+                            Duration = reader.IsDBNull(durationOrdinal) ? TimeSpan.Zero : XmlConvert.ToTimeSpan(reader.GetFieldValue<string>(durationOrdinal)),
                             LastTeamId = reader.IsDBNull(durationOrdinal) ? null : reader.GetFieldValue<int>(lastTeamIdOrdinal),
                             Teams = reader.IsDBNull(teamsOrdinal) ? null : JsonSerializer.Deserialize<List<Team>>(reader.GetFieldValue<string>(teamsOrdinal), serializerOptions),
                             ParticipationInfo = reader.IsDBNull(teamsOrdinal) ? null : JsonSerializer.Deserialize<ParticipationInfo>(reader.GetFieldValue<string>(participationInfoOrdinal), serializerOptions),
