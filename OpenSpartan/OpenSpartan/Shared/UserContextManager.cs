@@ -101,7 +101,7 @@ namespace OpenSpartan.Shared
                 string localClearance = string.Empty;
                 Task.Run(async () =>
                 {
-                    var clearance = (await HaloClient.SettingsGetClearance("RETAIL", "UNUSED", "245613.23.06.01.1708-0", "1.5")).Result;
+                    var clearance = (await HaloClient.SettingsGetClearance("RETAIL", "UNUSED", "254001.23.12.19.2223-2", "1.6")).Result;
                     if (clearance != null)
                     {
                         localClearance = clearance.FlightConfigurationId;
@@ -249,7 +249,7 @@ namespace OpenSpartan.Shared
         {
             try
             {
-                string backgroundPath = "progression/Switcher/Season_Switcher_S5_REC.png";
+                string backgroundPath = "progression/Switcher/Season_Switcher_S6_SOF.png";
                 // Get initial service record details
                 string qualifiedBackgroundImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", backgroundPath);
 
