@@ -34,7 +34,7 @@
             
             <StackPanel Orientation="Horizontal" Grid.Row="0">
                 <TextBlock Text="Medals" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
-                <Button VerticalAlignment="Center" Margin="4">
+                <Button VerticalAlignment="Center" Margin="4" x:Name="btnRefreshMedals" Click="btnRefreshMedals_Click">
                     <FontIcon FontSize="14" Glyph="&#xE72C;"/>
                 </Button>
             </StackPanel>

@@ -9,6 +9,57 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
-        <TextBlock Text="Settings" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="64"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="24,24,0,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="42"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+            </Grid.RowDefinitions>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="0">
+                <TextBlock Text="Settings" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
+            </StackPanel>
+        </Grid>
+
+        <StackPanel Margin="24,12,24,0" Grid.Row="1">
+            <!--Application details-->
+            <StackPanel>
+                <TextBlock Text="Application Details" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
+                <StackPanel Margin="0,4,0,0">
+                    <TextBlock>OpenSpartan Workshop</TextBlock>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock>Version:</TextBlock>
+                        <TextBlock Margin="4,0,0,0">1.0.0</TextBlock>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Margin="0,12,0,0">
+                <TextBlock Text="API Settings" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
+                <StackPanel Margin="0,4,0,0">
+                    <RadioButton>Sync with OpenSpartan Workshop settings</RadioButton>
+                    <RadioButton>Set directly</RadioButton>
+
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock>Sandbox:</TextBlock>
+                        <TextBox Width="320" Margin="4,0,0,0"></TextBox>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock>Build:</TextBlock>
+                        <TextBox Width="320" Margin="4,0,0,0"></TextBox>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock>Release:</TextBlock>
+                        <TextBox Width="320" Margin="4,0,0,0"></TextBox>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
     </Grid>
 </Page>

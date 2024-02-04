@@ -1,4 +1,5 @@
 using Microsoft.UI.Xaml.Controls;
+using OpenSpartan.Workshop.Shared;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -13,6 +14,11 @@ namespace OpenSpartan.Workshop.Views
         public MedalsView()
         {
             this.InitializeComponent();
+        }
+
+        private async void btnRefreshMedals_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+        {
+            await UserContextManager.PopulateMedalData();
         }
     }
 }
