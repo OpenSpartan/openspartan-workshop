@@ -29,13 +29,19 @@
 
         <Grid Grid.Row="0" Margin="24,24,0,0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="36"></RowDefinition>
+                <RowDefinition Height="42"></RowDefinition>
                 <RowDefinition Height="*"></RowDefinition>
             </Grid.RowDefinitions>
 
-            <TextBlock Text="Match History" Grid.Row="0"  Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Match History" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
+                <Button VerticalAlignment="Center" Margin="4">
+                    <FontIcon FontSize="14" Glyph="&#xE72C;"/>
+                </Button>
+            </StackPanel>
+            
             <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,4,0,0">
-                <TextBlock Foreground="#adb5bd" Text="Listed matches:" Margin="0,0,4,0"></TextBlock>
+                <TextBlock Foreground="#adb5bd" Text="Displayed matches:" Margin="0,0,4,0"></TextBlock>
                 <TextBlock Foreground="#adb5bd" FontWeight="Bold" Text="{Binding MatchList.Count}"></TextBlock>
             </StackPanel>
         </Grid>

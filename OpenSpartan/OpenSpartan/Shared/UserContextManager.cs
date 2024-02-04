@@ -3,6 +3,7 @@ using Den.Dev.Orion.Authentication;
 using Den.Dev.Orion.Core;
 using Den.Dev.Orion.Models;
 using Den.Dev.Orion.Models.HaloInfinite;
+using Den.Dev.Orion.Models.Security;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
 using Microsoft.UI.Xaml;

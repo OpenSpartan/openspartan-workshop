@@ -27,7 +27,17 @@
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0" Margin="24,24,0,0">
-            <TextBlock Text="Medals" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="42"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+            </Grid.RowDefinitions>
+            
+            <StackPanel Orientation="Horizontal" Grid.Row="0">
+                <TextBlock Text="Medals" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
+                <Button VerticalAlignment="Center" Margin="4">
+                    <FontIcon FontSize="14" Glyph="&#xE72C;"/>
+                </Button>
+            </StackPanel>
         </Grid>
 
         <GridView Margin="24,0,8,0" Grid.Row="1" ItemsSource="{Binding Source={StaticResource cvsMedals}}">
