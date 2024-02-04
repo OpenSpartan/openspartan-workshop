@@ -9,7 +9,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -19,7 +18,9 @@ namespace OpenSpartan.Data
 {
     internal class DataHandler
     {
-        internal static string DatabasePath => Path.Combine(Core.Configuration.AppDataDirectory, "data", Core.Configuration.DatabaseFileName);
+        internal static string PlayerXuid { get; set; }
+
+        internal static string DatabasePath => Path.Combine(Core.Configuration.AppDataDirectory, "data", $"{PlayerXuid}.db");
 
         private static readonly JsonSerializerOptions serializerOptions = new()
         {

@@ -33,18 +33,6 @@ namespace OpenSpartan
             m_window = new MainWindow();
             m_window.Activate();
 
-            var databaseBootstrapResult = DataHandler.BootstrapDatabase();
-            var journalingMode = DataHandler.SetWALJournalingMode();
-
-            if (journalingMode.ToLower() == "wal")
-            {
-                Debug.WriteLine("Successfully set WAL journaling mode.");
-            }
-            else
-            {
-                Debug.WriteLine("Could not set WAL journaling mode.");
-            }
-
             var authResult = await UserContextManager.InitializePublicClientApplication();
             if (authResult != null)
             {
@@ -53,6 +41,22 @@ namespace OpenSpartan
 
                 if (instantiationResult)
                 {
+                    // Only create the database and handle the initialization if we are able to
+                    // properly authenticate and create a Halo client.
+                    DataHandler.PlayerXuid = UserContextManager.HaloClient.Xuid;
+
+                    var databaseBootstrapResult = DataHandler.BootstrapDatabase();
+                    var journalingMode = DataHandler.SetWALJournalingMode();
+
+                    if (journalingMode.ToLower() == "wal")
+                    {
+                        Debug.WriteLine("Successfully set WAL journaling mode.");
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Could not set WAL journaling mode.");
+                    }
+
                     Parallel.Invoke(async () => await UserContextManager.PopulateServiceRecordData(),
                         async () => await UserContextManager.PopulateCareerData(),
                         async () => await UserContextManager.PopulateUserInventory(),

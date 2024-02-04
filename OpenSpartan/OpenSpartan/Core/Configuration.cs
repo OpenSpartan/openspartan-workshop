@@ -12,7 +12,5 @@ namespace OpenSpartan.Core
         internal static readonly string CacheFileName = "authcache.bin";
 
         internal static readonly string AppDataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OpenSpartan");
-
-        internal static readonly string DatabaseFileName = "local.db";
     }
 }

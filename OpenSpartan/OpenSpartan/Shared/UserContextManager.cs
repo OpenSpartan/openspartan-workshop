@@ -16,6 +16,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace OpenSpartan.Shared
@@ -70,10 +71,7 @@ namespace OpenSpartan.Shared
             Task.Run(async () =>
             {
                 ticket = await manager.RequestUserToken(authResult.AccessToken);
-                if (ticket == null)
-                {
-                    ticket = await manager.RequestUserToken(authResult.AccessToken);
-                }
+                ticket ??= await manager.RequestUserToken(authResult.AccessToken);
             }).GetAwaiter().GetResult();
 
             Task.Run(async () =>
@@ -461,14 +459,19 @@ namespace OpenSpartan.Shared
                 int matchCounter = 0;
                 int matchesTotal = matchIds.Count();
 
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                {
+                    MatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Loading;
+                });
+
                 foreach (var matchId in matchIds)
                 {
+                    var completionProgress = matchCounter / (double)matchesTotal * 100.0;
+
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                     {
-                        MatchesViewModel.Instance.MatchLoadingParameter = matchId.ToString();
+                        MatchesViewModel.Instance.MatchLoadingParameter = $"{matchId} ({matchCounter} out of {matchesTotal} - {completionProgress:#.00}%)";
                     });
-
-                    var completionProgress = (double)matchCounter / (double)matchesTotal * 100.0;
 
                     matchStatsAvailability = DataHandler.GetMatchStatsAvailability(matchId.ToString());
                     matchCounter++;
