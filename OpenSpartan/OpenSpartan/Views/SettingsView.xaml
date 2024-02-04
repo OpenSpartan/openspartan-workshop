@@ -38,26 +38,75 @@
                 </StackPanel>
             </StackPanel>
 
+            <!--Application details-->
+            <StackPanel Margin="0,12,0,0">
+                <TextBlock Text="User Details" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
+                
+                <Grid Margin="0,8,0,0" Background="#404040" BorderThickness="2" CornerRadius="4" Height="36" Width="400" HorizontalAlignment="Left">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="36"></ColumnDefinition>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+
+                    <FontIcon FontSize="14" Glyph="&#xE946;"/>
+
+                    <TextBlock Grid.Column="1" Text="Logging out does not delete your existing data." VerticalAlignment="Center"></TextBlock>
+                </Grid>
+                
+                <StackPanel Margin="0,4,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock>Logged in as:</TextBlock>
+                        <TextBlock Margin="4,0,0,0">ZeBond (XUID)</TextBlock>
+                    </StackPanel>
+                    <Button Margin="0,8,0,0" Width="100">Log Out</Button>
+                </StackPanel>
+            </StackPanel>
+
+            <!--Data details-->
+            <StackPanel Margin="0,12,0,0">
+                <TextBlock Text="Data" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
+                <Button Margin="0,8,0,0" Width="100">View Files</Button>
+            </StackPanel>
+
+            <!--API Settings-->
             <StackPanel Margin="0,12,0,0">
                 <TextBlock Text="API Settings" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
+
+                <Grid Margin="0,8,0,0" Background="#404040" BorderThickness="2" CornerRadius="4" Height="72" Width="400" HorizontalAlignment="Left">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="36"></ColumnDefinition>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+
+                    <FontIcon FontSize="14" Glyph="&#xE7BA;"/>
+
+                    <TextBlock Grid.Column="1" Text="Make sure you know what you're doing This may result in failure to acquire new data." TextWrapping="Wrap" Margin="0,0,8,0" VerticalAlignment="Center"></TextBlock>
+                </Grid>
+                
                 <StackPanel Margin="0,4,0,0">
                     <RadioButton>Sync with OpenSpartan Workshop settings</RadioButton>
                     <RadioButton>Set directly</RadioButton>
 
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock>Sandbox:</TextBlock>
-                        <TextBox Width="320" Margin="4,0,0,0"></TextBox>
-                    </StackPanel>
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100"></ColumnDefinition>
+                            <ColumnDefinition Width="200"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
 
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock>Build:</TextBlock>
-                        <TextBox Width="320" Margin="4,0,0,0"></TextBox>
-                    </StackPanel>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="40"></RowDefinition>
+                            <RowDefinition Height="40"></RowDefinition>
+                            <RowDefinition Height="40"></RowDefinition>
+                        </Grid.RowDefinitions>
 
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock>Release:</TextBlock>
-                        <TextBox Width="320" Margin="4,0,0,0"></TextBox>
-                    </StackPanel>
+                        <TextBlock VerticalAlignment="Center" Grid.Column="0" Grid.Row="0">Sandbox:</TextBlock>
+                        <TextBlock VerticalAlignment="Center"  Grid.Column="0" Grid.Row="1">Build:</TextBlock>
+                        <TextBlock VerticalAlignment="Center" Grid.Column="0" Grid.Row="2">Release:</TextBlock>
+
+                        <TextBox VerticalAlignment="Center" Grid.Column="1" Grid.Row="0" Width="320" Margin="4,0,0,0"></TextBox>
+                        <TextBox VerticalAlignment="Center" Grid.Column="1" Grid.Row="1" Width="320" Margin="4,0,0,0"></TextBox>
+                        <TextBox VerticalAlignment="Center" Grid.Column="1" Grid.Row="2" Width="320" Margin="4,0,0,0"></TextBox>
+                    </Grid>
                 </StackPanel>
             </StackPanel>
         </StackPanel>

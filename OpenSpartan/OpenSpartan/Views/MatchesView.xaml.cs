@@ -1,9 +1,12 @@
 using CommunityToolkit.WinUI;
+using CommunityToolkit.WinUI.UI.Controls;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using OpenSpartan.Workshop.Data;
+using Microsoft.UI.Xaml.Media;
 using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
+using System;
 using System.Threading.Tasks;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -40,7 +43,7 @@ namespace OpenSpartan.Workshop.Views
         private async void btnRefreshMatches_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
         {
             var matchRecordsOutcome = await UserContextManager.PopulateMatchRecordsData();
-
+            
             if (matchRecordsOutcome)
             {
                 await UserContextManager.DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
@@ -48,6 +51,36 @@ namespace OpenSpartan.Workshop.Views
                     MatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Completed;
                 });
             }
+        }
+
+        private void dgdMatches_PointerReleased(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+        {
+            DataGridRow t = FindParent<DataGridRow>((UIElement)e.OriginalSource);
+            if (t.DetailsVisibility == Visibility.Visible)
+            {
+                t.DetailsVisibility = Visibility.Collapsed;
+            }
+            else
+            {
+                t.DetailsVisibility = Visibility.Visible;
+            }
+        }
+
+        public static T FindParent<T>(DependencyObject childElement) where T : Control
+        {
+            DependencyObject currentElement = childElement;
+
+            while (currentElement != null)
+            {
+                if (currentElement is T matchingElement)
+                {
+                    return matchingElement;
+                }
+
+                currentElement = VisualTreeHelper.GetParent(currentElement);
+            }
+
+            return null;
         }
     }
 }

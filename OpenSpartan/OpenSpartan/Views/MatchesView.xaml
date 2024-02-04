@@ -59,7 +59,7 @@
         </Grid>
 
         <controls:DataGrid IsReadOnly="True"
-                           RowDetailsVisibilityMode="VisibleWhenSelected"
+                           RowDetailsVisibilityMode="Collapsed"
                            CanUserReorderColumns="False"
                            CanUserSortColumns="True"
                            x:Name="dgdMatches"
@@ -69,7 +69,8 @@
                            VerticalAlignment="Stretch"
                            HorizontalAlignment="Stretch"
                            VerticalScrollBarVisibility="Visible"
-                           HorizontalScrollBarVisibility="Disabled">
+                           HorizontalScrollBarVisibility="Disabled"
+                           PointerReleased="dgdMatches_PointerReleased">
             <controls:DataGrid.Columns>
                 <controls:DataGridTextColumn Header="Match ID" Width="*" Binding="{Binding MatchId}"></controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Outcome" Width="120" Binding="{Binding Outcome}">

@@ -22,6 +22,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Controls\HeaderTile.xaml" />
+    <None Remove="CustomImages\logo-icon.png" />
     <None Remove="Queries\Bootstrap\InventoryItems.sql" />
     <None Remove="Queries\Bootstrap\SetWALJournalingMode.sql" />
     <None Remove="Queries\Insert\InventoryItems.sql" />
@@ -38,6 +39,9 @@
     <None Remove="Views\SettingsView.xaml" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="CustomImages\logo-icon.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
     <Content Include="Queries\Bootstrap\SetWALJournalingMode.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

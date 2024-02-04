@@ -68,6 +68,8 @@
             <Frame x:Name="ContentFrame"/>
         </NavigationView>
 
-        <Grid Grid.RowSpan="2" Background="Red" DataContext="{x:Bind viewmodels:SplashScreenViewModel.Instance}" Visibility="{Binding IsBlocking, Converter={StaticResource BoolToVisibilityConverter}}"></Grid>
+        <Grid Grid.RowSpan="2" Background="#2F2F2F" DataContext="{x:Bind viewmodels:SplashScreenViewModel.Instance}" Visibility="{Binding IsBlocking, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Image Source="CustomImages/logo-icon.png" Height="256" VerticalAlignment="Center" HorizontalAlignment="Center"></Image>
+        </Grid>
     </Grid>
 </Window>
