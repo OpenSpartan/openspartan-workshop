@@ -37,9 +37,9 @@ namespace OpenSpartan.Workshop.Views
             }
         }
 
-        private void btnRefreshMatches_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+        private async void btnRefreshMatches_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
         {
-            MatchesViewModel.Instance.MatchList = new IncrementalLoadingCollection<MatchesSource, MatchTableEntity>();
+            await UserContextManager.PopulateMatchRecordsData();
         }
     }
 }

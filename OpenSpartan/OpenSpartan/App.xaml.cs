@@ -67,10 +67,13 @@ namespace OpenSpartan.Workshop
                         {
                             var matchRecordsOutcome = await UserContextManager.PopulateMatchRecordsData();
 
-                            await (MainWindow as MainWindow).DispatcherQueue.EnqueueAsync(() =>
+                            if (matchRecordsOutcome)
                             {
-                                MatchesViewModel.Instance.MatchLoadingState = Models.MetadataLoadingState.Completed;
-                            });
+                                await (MainWindow as MainWindow).DispatcherQueue.EnqueueAsync(() =>
+                                {
+                                    MatchesViewModel.Instance.MatchLoadingState = Models.MetadataLoadingState.Completed;
+                                });
+                            }
                         },
                         async () =>
                         {

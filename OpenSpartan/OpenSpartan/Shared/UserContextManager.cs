@@ -16,13 +16,15 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace OpenSpartan.Workshop.Shared
 {
     internal static class UserContextManager
     {
+        internal static CancellationTokenSource CancellationTracker = new();
+
         internal static MainWindow DispatcherWindow = ((Application.Current as App)?.MainWindow) as MainWindow;
 
         internal static HaloInfiniteClient HaloClient { get; set; }
@@ -308,7 +310,7 @@ namespace OpenSpartan.Workshop.Shared
                         }
                         else
                         {
-                            configuration = new KeyValuePair<string, EmblemMapping>("OS", new EmblemMapping() {  EmblemCmsPath = emblem.Result.CommonData.DisplayPath.Media.MediaUrl.Path, NameplateCmsPath = string.Empty, TextColor = "#FFF" });
+                            configuration = new KeyValuePair<string, EmblemMapping>("OS", new EmblemMapping() { EmblemCmsPath = emblem.Result.CommonData.DisplayPath.Media.MediaUrl.Path, NameplateCmsPath = string.Empty, TextColor = "#FFF" });
                         }
 
                         if (!configuration.Equals(default(KeyValuePair<string, EmblemMapping>)) && !configuration.Equals(default))
@@ -404,10 +406,15 @@ namespace OpenSpartan.Workshop.Shared
         {
             MatchesViewModel.Instance.MatchLoadingState = Models.MetadataLoadingState.Calculating;
 
+            CancellationTracker.Cancel();
+            CancellationTracker = new CancellationTokenSource();
+
             try
             {
                 //var currentMatchmadeRecords = DataHandler.GetCountOfMatchRecords();
-                var ids = await GetPlayerMatchIds(XboxUserContext.DisplayClaims.Xui[0].XUID);
+
+                List<Guid> ids = await GetPlayerMatchIds(XboxUserContext.DisplayClaims.Xui[0].XUID, CancellationTracker.Token);
+
                 if (ids != null && ids.Count > 0)
                 {
                     var distinctMatchIds = ids.DistinctBy(x => x.ToString());
@@ -424,7 +431,9 @@ namespace OpenSpartan.Workshop.Shared
                                 MatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Loading;
                             });
 
-                            return await UpdateMatchRecords(matchesToProcess);
+                            var result = await UpdateMatchRecords(matchesToProcess, CancellationTracker.Token);
+                            MatchesViewModel.Instance.MatchList = new IncrementalLoadingCollection<MatchesSource, MatchTableEntity>();
+                            return result;
                         }
                         else
                         {
@@ -434,7 +443,10 @@ namespace OpenSpartan.Workshop.Shared
                     else
                     {
                         Debug.WriteLine("No matches found locally, so need to re-hydrate the database.");
-                        return await UpdateMatchRecords(distinctMatchIds);
+
+                        var result = await UpdateMatchRecords(distinctMatchIds, CancellationTracker.Token);
+                        MatchesViewModel.Instance.MatchList = new IncrementalLoadingCollection<MatchesSource, MatchTableEntity>();
+                        return result;
                     }
                 }
 
@@ -447,7 +459,7 @@ namespace OpenSpartan.Workshop.Shared
             }
         }
 
-        internal static async Task<bool> UpdateMatchRecords(IEnumerable<Guid> matchIds)
+        internal static async Task<bool> UpdateMatchRecords(IEnumerable<Guid> matchIds, CancellationToken cancellationToken)
         {
             try
             {
@@ -466,6 +478,8 @@ namespace OpenSpartan.Workshop.Shared
 
                 foreach (var matchId in matchIds)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     var completionProgress = matchCounter / (double)matchesTotal * 100.0;
 
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
@@ -561,7 +575,7 @@ namespace OpenSpartan.Workshop.Shared
             }
         }
 
-        private static async Task<List<Guid>> GetPlayerMatchIds(string xuid)
+        private static async Task<List<Guid>> GetPlayerMatchIds(string xuid, CancellationToken cancellationToken)
         {
             List<Guid> matchIds = new();
 
@@ -573,6 +587,8 @@ namespace OpenSpartan.Workshop.Shared
 
             while (lastResultCount > 0)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var matches = await HaloClient.StatsGetMatchHistory($"xuid({xuid})", queryStart, queryCount, Den.Dev.Orion.Models.HaloInfinite.MatchType.All);
                 if (matches != null && matches.Result != null && matches.Result.Results != null && matches.Result.ResultCount > 0)
                 {
@@ -937,8 +953,8 @@ namespace OpenSpartan.Workshop.Shared
                         container.ItemDetails = item.Result;
                     }
                 }
-                
-                
+
+
                 if (container.ItemDetails != null)
                 {
                     container.ImagePath = container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path;
