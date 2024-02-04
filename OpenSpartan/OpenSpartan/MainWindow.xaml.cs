@@ -5,7 +5,7 @@ using Microsoft.UI.Xaml.Navigation;
 using System;
 using System.Linq;
 
-namespace OpenSpartan
+namespace OpenSpartan.Workshop
 {
     public sealed partial class MainWindow : Window
     {

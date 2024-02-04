@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace OpenSpartan.Core
+namespace OpenSpartan.Workshop.Core
 {
     internal class Configuration
     {

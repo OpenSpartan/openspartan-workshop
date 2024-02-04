@@ -1,9 +1,9 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
-using OpenSpartan.Converters;
+using OpenSpartan.Workshop.Converters;
 
-namespace OpenSpartan.Shared
+namespace OpenSpartan.Workshop.Shared
 {
     public class BindingHelper
     {

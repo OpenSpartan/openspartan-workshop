@@ -1,14 +1,14 @@
 ﻿using CommunityToolkit.WinUI;
 using Den.Dev.Orion.Converters;
 using Microsoft.UI.Xaml;
-using OpenSpartan.Data;
-using OpenSpartan.Shared;
-using OpenSpartan.ViewModels;
+using OpenSpartan.Workshop.Data;
+using OpenSpartan.Workshop.Shared;
+using OpenSpartan.Workshop.ViewModels;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace OpenSpartan
+namespace OpenSpartan.Workshop
 {
     public partial class App : Application
     {

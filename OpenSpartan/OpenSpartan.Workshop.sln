@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenSpartan", "OpenSpartan\OpenSpartan.csproj", "{8AE56AFC-602F-44D1-8177-881C6EF2D3DF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenSpartan.Workshop", "OpenSpartan\OpenSpartan.Workshop.csproj", "{8AE56AFC-602F-44D1-8177-881C6EF2D3DF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

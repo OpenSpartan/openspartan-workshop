@@ -1,7 +1,7 @@
 ﻿using Den.Dev.Orion.Models.HaloInfinite;
 using System;
 
-namespace OpenSpartan.Models
+namespace OpenSpartan.Workshop.Models
 {
     internal class RewardMetaContainer
     {

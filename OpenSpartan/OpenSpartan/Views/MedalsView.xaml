@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Page
-    x:Class="OpenSpartan.Views.MedalsView"
+    x:Class="OpenSpartan.Workshop.Views.MedalsView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    xmlns:converters="using:OpenSpartan.Converters"
-    xmlns:viewmodels="using:OpenSpartan.ViewModels"
+    xmlns:converters="using:OpenSpartan.Workshop.Converters"
+    xmlns:viewmodels="using:OpenSpartan.Workshop.ViewModels"
     DataContext="{x:Bind viewmodels:MedalsViewModel.Instance}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -22,7 +22,7 @@
     
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="100"></RowDefinition>
+            <RowDefinition Height="64"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
 
@@ -40,7 +40,7 @@
             </StackPanel>
         </Grid>
 
-        <GridView Margin="24,0,8,0" Grid.Row="1" ItemsSource="{Binding Source={StaticResource cvsMedals}}">
+        <GridView Margin="12,0,8,0" Grid.Row="1" ItemsSource="{Binding Source={StaticResource cvsMedals}}">
             <GridView.ItemTemplate>
                 <DataTemplate>
                     <Grid Background="#404040" BorderThickness="2" CornerRadius="4">

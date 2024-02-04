@@ -1,7 +1,7 @@
-﻿using OpenSpartan.Shared;
+﻿using OpenSpartan.Workshop.Shared;
 using System.Runtime.CompilerServices;
 
-namespace OpenSpartan.ViewModels
+namespace OpenSpartan.Workshop.ViewModels
 {
     internal class SplashScreenViewModel : Observable
     {

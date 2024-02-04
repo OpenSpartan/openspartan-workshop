@@ -1,9 +1,9 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Data;
-using OpenSpartan.Models;
+using OpenSpartan.Workshop.Models;
 using System;
 
-namespace OpenSpartan.Converters
+namespace OpenSpartan.Workshop.Converters
 {
     internal class MetadataLoadingStateToVisibilityConverter : IValueConverter
     {

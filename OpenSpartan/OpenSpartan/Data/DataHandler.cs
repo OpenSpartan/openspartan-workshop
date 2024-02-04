@@ -1,8 +1,8 @@
 ﻿using Den.Dev.Orion.Converters;
 using Den.Dev.Orion.Models.HaloInfinite;
 using Microsoft.Data.Sqlite;
-using OpenSpartan.Models;
-using OpenSpartan.Shared;
+using OpenSpartan.Workshop.Models;
+using OpenSpartan.Workshop.Shared;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,7 +14,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace OpenSpartan.Data
+namespace OpenSpartan.Workshop.Data
 {
     internal class DataHandler
     {

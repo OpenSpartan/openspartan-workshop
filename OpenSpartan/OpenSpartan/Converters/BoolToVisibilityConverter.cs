@@ -2,7 +2,7 @@
 using Microsoft.UI.Xaml.Data;
 using System;
 
-namespace OpenSpartan.Converters
+namespace OpenSpartan.Workshop.Converters
 {
     internal class BoolToVisibilityConverter : IValueConverter
     {

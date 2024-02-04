@@ -7,9 +7,9 @@ using Den.Dev.Orion.Models.Security;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
 using Microsoft.UI.Xaml;
-using OpenSpartan.Data;
-using OpenSpartan.Models;
-using OpenSpartan.ViewModels;
+using OpenSpartan.Workshop.Data;
+using OpenSpartan.Workshop.Models;
+using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -19,7 +19,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace OpenSpartan.Shared
+namespace OpenSpartan.Workshop.Shared
 {
     internal static class UserContextManager
     {

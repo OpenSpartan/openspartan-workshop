@@ -3,7 +3,7 @@ using Den.Dev.Orion.Models.HaloInfinite;
 using System;
 using System.Collections.Generic;
 
-namespace OpenSpartan.Models
+namespace OpenSpartan.Workshop.Models
 {
     internal class MatchTableEntity
     {

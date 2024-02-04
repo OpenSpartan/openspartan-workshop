@@ -1,11 +1,11 @@
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
-using OpenSpartan.Models;
-using OpenSpartan.ViewModels;
+using OpenSpartan.Workshop.Models;
+using OpenSpartan.Workshop.ViewModels;
 using System;
 
-namespace OpenSpartan.Views
+namespace OpenSpartan.Workshop.Views
 {
     public sealed partial class BattlePassView : Page
     {

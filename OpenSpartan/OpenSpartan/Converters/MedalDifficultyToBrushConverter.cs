@@ -2,7 +2,7 @@
 using Microsoft.UI.Xaml.Media;
 using System;
 
-namespace OpenSpartan.Converters
+namespace OpenSpartan.Workshop.Converters
 {
     internal class MedalDifficultyToBrushConverter : IValueConverter
     {

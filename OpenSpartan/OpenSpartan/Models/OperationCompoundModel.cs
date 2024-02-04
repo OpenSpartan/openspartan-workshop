@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
-namespace OpenSpartan.Models
+namespace OpenSpartan.Workshop.Models
 {
     internal class OperationCompoundModel
     {

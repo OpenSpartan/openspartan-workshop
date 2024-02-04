@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Window
-    x:Class="OpenSpartan.MainWindow"
+    x:Class="OpenSpartan.Workshop.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:converters="using:OpenSpartan.Converters"
+    xmlns:converters="using:OpenSpartan.Workshop.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewmodels="using:OpenSpartan.ViewModels"
+    xmlns:viewmodels="using:OpenSpartan.Workshop.ViewModels"
     mc:Ignorable="d" Title="OpenSpartan">
 
     <Grid>
@@ -42,23 +42,23 @@
         
         <NavigationView Grid.Row="1" PaneDisplayMode="Auto" x:Name="nvRoot" ItemInvoked="nvRoot_ItemInvoked">
             <NavigationView.MenuItems>
-                <NavigationViewItem Content="Home" x:Name="nviHome" Tag="OpenSpartan.Views.HomeView">
+                <NavigationViewItem Content="Home" x:Name="nviHome" Tag="OpenSpartan.Workshop.Views.HomeView">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xEA8A;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <NavigationViewItemSeparator />
-                <NavigationViewItem Content="Matches" x:Name="nviMatches" Tag="OpenSpartan.Views.MatchesView">
+                <NavigationViewItem Content="Matches" x:Name="nviMatches" Tag="OpenSpartan.Workshop.Views.MatchesView">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE7FC;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Medals" x:Name="nviMedals" Tag="OpenSpartan.Views.MedalsView">
+                <NavigationViewItem Content="Medals" x:Name="nviMedals" Tag="OpenSpartan.Workshop.Views.MedalsView">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xEA18;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Battle Pass" x:Name="nviBattlePass" Tag="OpenSpartan.Views.BattlePassView">
+                <NavigationViewItem Content="Battle Pass" x:Name="nviBattlePass" Tag="OpenSpartan.Workshop.Views.BattlePassView">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xF133;"/>
                     </NavigationViewItem.Icon>

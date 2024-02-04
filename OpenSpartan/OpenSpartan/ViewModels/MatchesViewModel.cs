@@ -1,10 +1,10 @@
 ﻿using CommunityToolkit.WinUI;
-using OpenSpartan.Data;
-using OpenSpartan.Models;
-using OpenSpartan.Shared;
+using OpenSpartan.Workshop.Data;
+using OpenSpartan.Workshop.Models;
+using OpenSpartan.Workshop.Shared;
 using System.Runtime.CompilerServices;
 
-namespace OpenSpartan.ViewModels
+namespace OpenSpartan.Workshop.ViewModels
 {
     internal class MatchesViewModel : Observable
     {

@@ -2,7 +2,7 @@
 using System;
 using System.IO;
 
-namespace OpenSpartan.Converters
+namespace OpenSpartan.Workshop.Converters
 {
     internal class ServicePathToLocalPathConverter : IValueConverter
     {

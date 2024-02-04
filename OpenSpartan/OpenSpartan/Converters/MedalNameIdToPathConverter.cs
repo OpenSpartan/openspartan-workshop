@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml;
 using System;
 using System.IO;
 
-namespace OpenSpartan.Converters
+namespace OpenSpartan.Workshop.Converters
 {
     internal class MedalNameIdToPathConverter : IValueConverter
     {

@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Page
-    x:Class="OpenSpartan.Views.MatchesView"
+    x:Class="OpenSpartan.Workshop.Views.MatchesView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
-    xmlns:converters="using:OpenSpartan.Converters"
-    xmlns:viewmodels="using:OpenSpartan.ViewModels"
-    xmlns:shared="using:OpenSpartan.Shared"
+    xmlns:converters="using:OpenSpartan.Workshop.Converters"
+    xmlns:viewmodels="using:OpenSpartan.Workshop.ViewModels"
+    xmlns:shared="using:OpenSpartan.Workshop.Shared"
     DataContext="{x:Bind viewmodels:MatchesViewModel.Instance}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     NavigationCacheMode="Disabled">
@@ -35,7 +35,7 @@
 
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Match History" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
-                <Button VerticalAlignment="Center" Margin="4">
+                <Button VerticalAlignment="Center" Margin="4" x:Name="btnRefreshMatches" Click="btnRefreshMatches_Click">
                     <FontIcon FontSize="14" Glyph="&#xE72C;"/>
                 </Button>
             </StackPanel>
@@ -47,7 +47,7 @@
         </Grid>
 
         <!--Informational state-->
-        <Grid Visibility="{Binding MatchLoadingState, Converter={StaticResource MetadataLoadingStateToVisibilityConverter}}" Margin="24,0,24,24" Background="#404040" BorderThickness="2" CornerRadius="4" Height="36" Grid.Row="1">
+        <Grid Visibility="{Binding MatchLoadingState, Converter={StaticResource MetadataLoadingStateToVisibilityConverter}}" Margin="20,0,24,24" Background="#404040" BorderThickness="2" CornerRadius="4" Height="36" Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="36"></ColumnDefinition>
                 <ColumnDefinition Width="*"></ColumnDefinition>

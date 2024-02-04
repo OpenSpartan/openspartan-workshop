@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Page
-    x:Class="OpenSpartan.Views.HomeView"
+    x:Class="OpenSpartan.Workshop.Views.HomeView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    xmlns:converters="using:OpenSpartan.Converters"
-    xmlns:viewmodels="using:OpenSpartan.ViewModels"
+    xmlns:converters="using:OpenSpartan.Workshop.Converters"
+    xmlns:viewmodels="using:OpenSpartan.Workshop.ViewModels"
     DataContext="{x:Bind viewmodels:HomeViewModel.Instance}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -162,107 +162,107 @@
 
             <!--Career-->
             <StackPanel Orientation="Vertical">
-                <TextBlock Margin="24,8,0,8" Text="Career" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
-                <VariableSizedWrapGrid Orientation="Horizontal" ItemWidth="250" Margin="24,0,24,0">
-                    <StackPanel Background="#404040" Orientation="Vertical" BorderThickness="2" Padding="12" CornerRadius="4">
-                        <Grid>
-                            <ProgressRing Background="#2F2F2F" Height="160" Width="160" IsIndeterminate="False" Value="{Binding RankProgress}" Maximum="1" Minimum="0" HorizontalAlignment="Center" VerticalAlignment="Center"></ProgressRing>
-                            <Image VerticalAlignment="Center" HorizontalAlignment="Center" Height="100" Source="{Binding RankImage}"></Image>
-                        </Grid>
-                    </StackPanel>
+                    <TextBlock Margin="24,8,0,8" Text="Career" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
+                    <VariableSizedWrapGrid Orientation="Horizontal" ItemWidth="250" Margin="24,0,24,0">
+                        <StackPanel Background="#404040" Orientation="Vertical" BorderThickness="2" Padding="12" CornerRadius="4">
+                            <Grid>
+                                <ProgressRing Background="#2F2F2F" Height="160" Width="160" IsIndeterminate="False" Value="{Binding RankProgress}" Maximum="1" Minimum="0" HorizontalAlignment="Center" VerticalAlignment="Center"></ProgressRing>
+                                <Image VerticalAlignment="Center" HorizontalAlignment="Center" Height="100" Source="{Binding RankImage}"></Image>
+                            </Grid>
+                        </StackPanel>
 
-                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="36"></RowDefinition>
-                            <RowDefinition Height="*"></RowDefinition>
-                        </Grid.RowDefinitions>
+                        <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="36"></RowDefinition>
+                                <RowDefinition Height="*"></RowDefinition>
+                            </Grid.RowDefinitions>
 
-                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
-                            <TextBlock Text="Experience" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                            <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                                <TextBlock Text="Experience" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                            </Grid>
+                            <Grid Grid.Row="1" Padding="8">
+                                <StackPanel>
+                                    <TextBlock Text="Earned" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                    <TextBlock Text="{Binding CurrentRankExperience, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                                    <TextBlock Text="Required" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                    <TextBlock Text="{Binding RequiredRankExperience, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                                    <TextBlock Text="Percentage" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                    <TextBlock Text="{Binding RankProgress, Converter={StaticResource DoubleToPercentageStringConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                                </StackPanel>
+                            </Grid>
                         </Grid>
-                        <Grid Grid.Row="1" Padding="8">
-                            <StackPanel>
-                                <TextBlock Text="Earned" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                                <TextBlock Text="{Binding CurrentRankExperience, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
-                                <TextBlock Text="Required" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                                <TextBlock Text="{Binding RequiredRankExperience, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
-                                <TextBlock Text="Percentage" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                                <TextBlock Text="{Binding RankProgress, Converter={StaticResource DoubleToPercentageStringConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
-                            </StackPanel>
-                        </Grid>
-                    </Grid>
 
-                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="36"></RowDefinition>
-                            <RowDefinition Height="*"></RowDefinition>
-                        </Grid.RowDefinitions>
+                        <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="36"></RowDefinition>
+                                <RowDefinition Height="*"></RowDefinition>
+                            </Grid.RowDefinitions>
 
-                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
-                            <TextBlock Text="Ranks" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                            <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                                <TextBlock Text="Ranks" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                            </Grid>
+                            <Grid Grid.Row="1" Padding="8">
+                                <StackPanel>
+                                    <TextBlock Text="Current" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                    <TextBlock Text="{Binding CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                                    <TextBlock Text="Maximum" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                    <TextBlock Text="{Binding MaxRank}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                                </StackPanel>
+                            </Grid>
                         </Grid>
-                        <Grid Grid.Row="1" Padding="8">
-                            <StackPanel>
-                                <TextBlock Text="Current" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                                <TextBlock Text="{Binding CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
-                                <TextBlock Text="Maximum" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                                <TextBlock Text="{Binding MaxRank}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
-                            </StackPanel>
-                        </Grid>
-                    </Grid>
 
-                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="36"></RowDefinition>
-                            <RowDefinition Height="*"></RowDefinition>
-                        </Grid.RowDefinitions>
+                        <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="36"></RowDefinition>
+                                <RowDefinition Height="*"></RowDefinition>
+                            </Grid.RowDefinitions>
 
-                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
-                            <TextBlock Text="Title" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                            <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                                <TextBlock Text="Title" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                            </Grid>
+                            <Grid Grid.Row="1" Padding="8">
+                                <TextBlock Text="{Binding Title}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                            </Grid>
                         </Grid>
-                        <Grid Grid.Row="1" Padding="8">
-                            <TextBlock Text="{Binding Title}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
-                        </Grid>
-                    </Grid>
 
-                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="36"></RowDefinition>
-                            <RowDefinition Height="*"></RowDefinition>
-                        </Grid.RowDefinitions>
+                        <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="36"></RowDefinition>
+                                <RowDefinition Height="*"></RowDefinition>
+                            </Grid.RowDefinitions>
 
-                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
-                            <TextBlock Text="Overall Experience" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                            <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                                <TextBlock Text="Overall Experience" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                            </Grid>
+                            <Grid Grid.Row="1" Padding="8">
+                                <StackPanel>
+                                    <TextBlock Text="Earned To Date" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                    <TextBlock Text="{Binding ExperienceEarnedToDate, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                                    <TextBlock Text="Total Required" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                    <TextBlock Text="{Binding ExperienceTotalRequired, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                                    <TextBlock Text="Remaining" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                    <TextBlock Text="{Binding ExperienceRemaining, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                                </StackPanel>
+                            </Grid>
                         </Grid>
-                        <Grid Grid.Row="1" Padding="8">
-                            <StackPanel>
-                                <TextBlock Text="Earned To Date" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                                <TextBlock Text="{Binding ExperienceEarnedToDate, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
-                                <TextBlock Text="Total Required" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                                <TextBlock Text="{Binding ExperienceTotalRequired, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
-                                <TextBlock Text="Remaining" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                                <TextBlock Text="{Binding ExperienceRemaining, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
-                            </StackPanel>
-                        </Grid>
-                    </Grid>
 
-                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="36"></RowDefinition>
-                            <RowDefinition Height="*"></RowDefinition>
-                        </Grid.RowDefinitions>
+                        <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="36"></RowDefinition>
+                                <RowDefinition Height="*"></RowDefinition>
+                            </Grid.RowDefinitions>
 
-                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
-                            <TextBlock Text="Overall Hero Progression" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                            <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                                <TextBlock Text="Overall Hero Progression" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                            </Grid>
+                            <Grid Grid.Row="1">
+                                <ProgressRing Background="#2F2F2F" Height="110" Width="110" IsIndeterminate="False" Value="{Binding ExperienceProgress}" Maximum="1" Minimum="0"></ProgressRing>
+                                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding ExperienceProgress, Converter={StaticResource DoubleToPercentageStringConverter}}"></TextBlock>
+                            </Grid>
                         </Grid>
-                        <Grid Grid.Row="1">
-                            <ProgressRing Background="#2F2F2F" Height="110" Width="110" IsIndeterminate="False" Value="{Binding ExperienceProgress}" Maximum="1" Minimum="0"></ProgressRing>
-                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding ExperienceProgress, Converter={StaticResource DoubleToPercentageStringConverter}}"></TextBlock>
-                        </Grid>
-                    </Grid>
-                </VariableSizedWrapGrid>
-            </StackPanel>
-            
+                    </VariableSizedWrapGrid>
+                </StackPanel>
+
             <!-- Content -->
             <StackPanel Orientation="Vertical">
                 <TextBlock Margin="24,8,0,8" Text="Overview" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
@@ -784,7 +784,8 @@
                 </VariableSizedWrapGrid>
             </StackPanel>
         </StackPanel>
-        
+
+
 
         <!--<ScrollViewer  HorizontalScrollBarVisibility="Hidden" x:Name="scroller"
             HorizontalScrollMode="Enabled"

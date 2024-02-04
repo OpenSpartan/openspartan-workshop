@@ -1,9 +1,9 @@
 ﻿using Den.Dev.Orion.Models.HaloInfinite;
-using OpenSpartan.Shared;
+using OpenSpartan.Workshop.Shared;
 using System;
 using System.Runtime.CompilerServices;
 
-namespace OpenSpartan.ViewModels
+namespace OpenSpartan.Workshop.ViewModels
 {
     internal class HomeViewModel : Observable
     {

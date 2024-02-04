@@ -1,14 +1,14 @@
 ﻿using CommunityToolkit.Common.Collections;
-using OpenSpartan.Models;
-using OpenSpartan.Shared;
-using OpenSpartan.ViewModels;
+using OpenSpartan.Workshop.Models;
+using OpenSpartan.Workshop.Shared;
+using OpenSpartan.Workshop.ViewModels;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace OpenSpartan.Data
+namespace OpenSpartan.Workshop.Data
 {
     public class MatchesSource : IIncrementalSource<MatchTableEntity>
     {

@@ -1,9 +1,9 @@
-﻿using OpenSpartan.Models;
-using OpenSpartan.Shared;
+﻿using OpenSpartan.Workshop.Models;
+using OpenSpartan.Workshop.Shared;
 using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 
-namespace OpenSpartan.ViewModels
+namespace OpenSpartan.Workshop.ViewModels
 {
     internal class BattlePassViewModel : Observable
     {
