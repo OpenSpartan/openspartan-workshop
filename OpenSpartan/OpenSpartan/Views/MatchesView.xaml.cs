@@ -39,7 +39,15 @@ namespace OpenSpartan.Workshop.Views
 
         private async void btnRefreshMatches_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
         {
-            await UserContextManager.PopulateMatchRecordsData();
+            var matchRecordsOutcome = await UserContextManager.PopulateMatchRecordsData();
+
+            if (matchRecordsOutcome)
+            {
+                await UserContextManager.DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                {
+                    MatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Completed;
+                });
+            }
         }
     }
 }
