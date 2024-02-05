@@ -404,7 +404,10 @@ namespace OpenSpartan.Workshop.Shared
 
         internal static async Task<bool> PopulateMatchRecordsData()
         {
-            MatchesViewModel.Instance.MatchLoadingState = Models.MetadataLoadingState.Calculating;
+            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            {
+                MatchesViewModel.Instance.MatchLoadingState = Models.MetadataLoadingState.Calculating;
+            });
 
             CancellationTracker.Cancel();
             CancellationTracker = new CancellationTokenSource();
@@ -432,7 +435,12 @@ namespace OpenSpartan.Workshop.Shared
                             });
 
                             var result = await UpdateMatchRecords(matchesToProcess, CancellationTracker.Token);
-                            MatchesViewModel.Instance.MatchList = new IncrementalLoadingCollection<MatchesSource, MatchTableEntity>();
+
+                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                            {
+                                MatchesViewModel.Instance.MatchList = new IncrementalLoadingCollection<MatchesSource, MatchTableEntity>();
+                            });
+
                             return result;
                         }
                         else
@@ -445,7 +453,12 @@ namespace OpenSpartan.Workshop.Shared
                         Debug.WriteLine("No matches found locally, so need to re-hydrate the database.");
 
                         var result = await UpdateMatchRecords(distinctMatchIds, CancellationTracker.Token);
-                        MatchesViewModel.Instance.MatchList = new IncrementalLoadingCollection<MatchesSource, MatchTableEntity>();
+
+                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        {
+                            MatchesViewModel.Instance.MatchList = new IncrementalLoadingCollection<MatchesSource, MatchTableEntity>();
+                        });
+
                         return result;
                     }
                 }
