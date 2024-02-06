@@ -603,7 +603,16 @@ namespace OpenSpartan.Workshop.Shared
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var matches = await HaloClient.StatsGetMatchHistory($"xuid({xuid})", queryStart, queryCount, Den.Dev.Orion.Models.HaloInfinite.MatchType.All);
-                if (matches != null && matches.Result != null && matches.Result.Results != null && matches.Result.ResultCount > 0)
+                if (matches.Response.Code == 401)
+                {
+                    // Need to get new tokens.
+                    var tokenResult = await ReAcquireTokens();
+                    if (!tokenResult)
+                    {
+                        Debug.WriteLine("Could not reacquire tokens.");
+                    }
+                }
+                else if (matches != null && matches.Result != null && matches.Result.Results != null && matches.Result.ResultCount > 0)
                 {
                     lastResultCount = matches.Result.ResultCount;
 
@@ -628,6 +637,21 @@ namespace OpenSpartan.Workshop.Shared
 
             Debug.WriteLine($"Clocked at {matchIds.Count} total matchmade games.");
             return matchIds;
+        }
+
+        internal static async Task<bool> ReAcquireTokens()
+        {
+            var authResult = await InitializePublicClientApplication();
+            if (authResult != null)
+            {
+                var result = InitializeHaloClient(authResult);
+
+                return result;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         internal static async void GetPlayerMatches()

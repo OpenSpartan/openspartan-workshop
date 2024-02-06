@@ -588,7 +588,7 @@
                             <TextBlock Text="KDA" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
                         </Grid>
                         <Grid Grid.Row="1" Padding="8">
-                            <TextBlock Text="{Binding ServiceRecord.CoreStats.KDA}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                            <TextBlock Text="{Binding ServiceRecord.CoreStats.AverageKDA}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
                         </Grid>
                     </Grid>
 
