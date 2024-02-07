@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.WinUI;
+﻿using CommunityToolkit.Common;
+using CommunityToolkit.WinUI;
 using Den.Dev.Orion.Authentication;
 using Den.Dev.Orion.Core;
 using Den.Dev.Orion.Models;
@@ -148,37 +149,31 @@ namespace OpenSpartan.Workshop.Shared
         {
             try
             {
-                // Get career details.
-                var careerTrackResult = await SafeAPICall(async () =>
+                var tasks = new List<Task>
                 {
-                    return await HaloClient.EconomyGetPlayerCareerRank(new List<string>() { $"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})" }, "careerRank1");
-                });
+                    SafeAPICall(async () => await HaloClient.EconomyGetPlayerCareerRank(new List<string> { $"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})" }, "careerRank1")),
+                    SafeAPICall(async () => await HaloClient.GameCmsGetCareerRanks("careerRank1"))
+                };
+
+                await Task.WhenAll(tasks);
+
+                var careerTrackResult = (HaloApiResultContainer<RewardTrackResultContainer, RawResponseContainer>)tasks[0].GetResultOrDefault();
+                var careerTrackContainerResult = (HaloApiResultContainer<CareerTrackContainer, RawResponseContainer>)tasks[1].GetResultOrDefault();
 
                 if (careerTrackResult.Result != null && careerTrackResult.Response.Code == 200)
                 {
-                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                    {
-                        HomeViewModel.Instance.CareerSnapshot = careerTrackResult.Result;
-                    });
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => HomeViewModel.Instance.CareerSnapshot = careerTrackResult.Result);
                 }
-
-                var careerTrackContainerResult = await SafeAPICall(async () =>
-                {
-                    return await HaloClient.GameCmsGetCareerRanks("careerRank1");
-                });
 
                 if (careerTrackContainerResult.Result != null && careerTrackContainerResult.Response.Code == 200)
                 {
-                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                    {
-                        HomeViewModel.Instance.MaxRank = careerTrackContainerResult.Result.Ranks.Count;
-                    });
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => HomeViewModel.Instance.MaxRank = careerTrackContainerResult.Result.Ranks.Count);
 
                     if (HomeViewModel.Instance.CareerSnapshot != null)
                     {
-                        // The rank here is incremented by one because of off-by-one counting when ranks are established. The introductory rank apparently is counted differently in the index
-                        // compared to the full set of ranks in the reward track.
-                        var currentCareerStage = (from c in careerTrackContainerResult.Result.Ranks where c.Rank == HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank + 1 select c).FirstOrDefault();
+                        var currentCareerStage = careerTrackContainerResult.Result.Ranks
+                            .FirstOrDefault(c => c.Rank == HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank + 1);
+
                         if (currentCareerStage != null)
                         {
                             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
@@ -187,58 +182,21 @@ namespace OpenSpartan.Workshop.Shared
                                 HomeViewModel.Instance.CurrentRankExperience = careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
                                 HomeViewModel.Instance.RequiredRankExperience = currentCareerStage.XpRequiredForRank;
 
-                                // Let's also compute secondary values that can tell us how far the user is from the Hero title.
                                 HomeViewModel.Instance.ExperienceTotalRequired = careerTrackContainerResult.Result.Ranks.Sum(item => item.XpRequiredForRank);
 
-                                var relevantRanks = (from c in careerTrackContainerResult.Result.Ranks where c.Rank <= HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank select c);
+                                var relevantRanks = careerTrackContainerResult.Result.Ranks
+                                    .Where(c => c.Rank <= HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank);
                                 HomeViewModel.Instance.ExperienceEarnedToDate = relevantRanks.Sum(rank => rank.XpRequiredForRank) + careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
                             });
 
                             string qualifiedRankImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankLargeIcon);
                             string qualifiedAdornmentImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankAdornmentIcon);
 
-                            // Let's make sure that we create the directory if it does not exist.
-                            System.IO.FileInfo file = new System.IO.FileInfo(qualifiedRankImagePath);
-                            file.Directory.Create();
+                            EnsureDirectoryExists(qualifiedRankImagePath);
+                            EnsureDirectoryExists(qualifiedAdornmentImagePath);
 
-                            file = new System.IO.FileInfo(qualifiedAdornmentImagePath);
-                            file.Directory.Create();
-
-                            if (!System.IO.File.Exists(qualifiedRankImagePath))
-                            {
-                                var rankImage = await SafeAPICall(async () =>
-                                {
-                                    return await HaloClient.GameCmsGetImage(currentCareerStage.RankLargeIcon);
-                                });
-
-                                if (rankImage.Result != null && rankImage.Response.Code == 200)
-                                {
-                                    System.IO.File.WriteAllBytes(qualifiedRankImagePath, rankImage.Result);
-                                }
-                            }
-
-                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                            {
-                                HomeViewModel.Instance.RankImage = qualifiedRankImagePath;
-                            });
-
-                            if (!System.IO.File.Exists(qualifiedAdornmentImagePath))
-                            {
-                                var adornmentImage = await SafeAPICall(async () =>
-                                {
-                                    return await HaloClient.GameCmsGetImage(currentCareerStage.RankAdornmentIcon);
-                                });
-
-                                if (adornmentImage.Result != null && adornmentImage.Response.Code == 200)
-                                {
-                                    System.IO.File.WriteAllBytes(qualifiedAdornmentImagePath, adornmentImage.Result);
-                                }
-                            }
-
-                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                            {
-                                HomeViewModel.Instance.AdornmentImage = qualifiedAdornmentImagePath;
-                            });
+                            await DownloadAndSetImage(currentCareerStage.RankLargeIcon, qualifiedRankImagePath, () => HomeViewModel.Instance.RankImage = qualifiedRankImagePath);
+                            await DownloadAndSetImage(currentCareerStage.RankAdornmentIcon, qualifiedAdornmentImagePath, () => HomeViewModel.Instance.AdornmentImage = qualifiedAdornmentImagePath);
                         }
                     }
                     else
@@ -254,6 +212,26 @@ namespace OpenSpartan.Workshop.Shared
             {
                 return false;
             }
+        }
+
+        private static void EnsureDirectoryExists(string path)
+        {
+            var file = new FileInfo(path);
+            file.Directory.Create();
+        }
+
+        private static async Task DownloadAndSetImage(string imageName, string imagePath, Action setImageAction)
+        {
+            if (!System.IO.File.Exists(imagePath))
+            {
+                var image = await SafeAPICall(() => HaloClient.GameCmsGetImage(imageName));
+                if (image.Result != null && image.Response.Code == 200)
+                {
+                    System.IO.File.WriteAllBytes(imagePath, image.Result);
+                }
+            }
+
+            await DispatcherWindow.DispatcherQueue.EnqueueAsync(setImageAction);
         }
 
         internal static async Task<bool> PopulateServiceRecordData()
