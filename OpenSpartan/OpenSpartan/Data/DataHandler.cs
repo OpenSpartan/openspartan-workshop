@@ -67,82 +67,24 @@ namespace OpenSpartan.Workshop.Data
         {
             try
             {
-                // Let's make sure that we create the directory if it does not exist.
-                FileInfo file = new(DatabasePath);
-                file.Directory.Create();
+                EnsureDatabaseDirectoryExists();
 
-                // Regardless of whether the file exists or not, a new database will be created
-                // when the connection is initialized.
-                using SqliteConnection connection = new SqliteConnection($"Data Source={DatabasePath}");
+                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
                 connection.Open();
 
-                if (!connection.IsTableAvailable("ServiceRecordSnapshots"))
-                {
-                    connection.BootstrapTable("ServiceRecordSnapshots");
-                }
+                BootstrapTableIfNotExists(connection, "ServiceRecordSnapshots");
+                BootstrapTableIfNotExists(connection, "PlayerMatchStats");
+                BootstrapTableIfNotExists(connection, "MatchStats");
+                BootstrapTableIfNotExists(connection, "Maps");
+                BootstrapTableIfNotExists(connection, "GameVariants");
+                BootstrapTableIfNotExists(connection, "Playlists");
+                BootstrapTableIfNotExists(connection, "PlaylistMapModePairs");
+                BootstrapTableIfNotExists(connection, "EngineGameVariants");
+                BootstrapTableIfNotExists(connection, "OperationRewardTracks");
+                BootstrapTableIfNotExists(connection, "InventoryItems");
+                BootstrapTableIfNotExists(connection, "OwnedInventoryItems");
 
-                if (!connection.IsTableAvailable("PlayerMatchStats"))
-                {
-                    connection.BootstrapTable("PlayerMatchStats");
-                }
-
-                if (!connection.IsTableAvailable("MatchStats"))
-                {
-                    connection.BootstrapTable("MatchStats");
-                }
-
-                if (!connection.IsTableAvailable("Maps"))
-                {
-                    connection.BootstrapTable("Maps");
-                }
-
-                if (!connection.IsTableAvailable("GameVariants"))
-                {
-                    connection.BootstrapTable("GameVariants");
-                }
-
-                if (!connection.IsTableAvailable("Playlists"))
-                {
-                    connection.BootstrapTable("Playlists");
-                }
-
-                if (!connection.IsTableAvailable("PlaylistMapModePairs"))
-                {
-                    connection.BootstrapTable("PlaylistMapModePairs");
-                }
-
-                if (!connection.IsTableAvailable("EngineGameVariants"))
-                {
-                    connection.BootstrapTable("EngineGameVariants");
-                }
-
-                if (!connection.IsTableAvailable("OperationRewardTracks"))
-                {
-                    connection.BootstrapTable("OperationRewardTracks");
-                }
-
-                if (!connection.IsTableAvailable("InventoryItems"))
-                {
-                    connection.BootstrapTable("InventoryItems");
-                }
-
-                if (!connection.IsTableAvailable("OwnedInventoryItems"))
-                {
-                    connection.BootstrapTable("OwnedInventoryItems");
-                }
-
-                using var command = connection.CreateCommand();
-                command.CommandText = GetQuery("Bootstrap", "Indexes");
-
-                int outcome = command.ExecuteNonQuery();
-                if (outcome > 0)
-                {
-                    Debug.WriteLine("Indices provisioned.");
-                }
-                else
-                {
-                    Debug.WriteLine("Indices could not be set up. If this is not the first run, then those are likely already configured.");
-                }
+                SetupIndices(connection);
 
                 return true;
             }
@@ -150,6 +92,37 @@ namespace OpenSpartan.Workshop.Data
             {
                 Debug.WriteLine(ex.Message);
                 return false;
+            }
+        }
+
+        private static void EnsureDatabaseDirectoryExists()
+        {
+            FileInfo file = new(DatabasePath);
+            file.Directory.Create();
+        }
+
+        private static void BootstrapTableIfNotExists(SqliteConnection connection, string tableName)
+        {
+            if (!connection.IsTableAvailable(tableName))
+            {
+                connection.BootstrapTable(tableName);
+            }
+        }
+
+        private static void SetupIndices(SqliteConnection connection)
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = GetQuery("Bootstrap", "Indexes");
+
+            int outcome = command.ExecuteNonQuery();
+
+            if (outcome > 0)
+            {
+                Debug.WriteLine("Indices provisioned.");
+            }
+            else
+            {
+                Debug.WriteLine("Indices could not be set up. If this is not the first run, then those are likely already configured.");
             }
         }
 
