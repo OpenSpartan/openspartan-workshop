@@ -224,7 +224,7 @@ namespace OpenSpartan.Workshop.Shared
         {
             if (!System.IO.File.Exists(imagePath))
             {
-                var image = await SafeAPICall(() => HaloClient.GameCmsGetImage(imageName));
+                var image = await SafeAPICall(async () => await HaloClient.GameCmsGetImage(imageName));
                 if (image.Result != null && image.Response.Code == 200)
                 {
                     System.IO.File.WriteAllBytes(imagePath, image.Result);
@@ -304,138 +304,43 @@ namespace OpenSpartan.Workshop.Shared
         {
             try
             {
-                var customizationResult = await SafeAPICall(async () =>
+                var customizationResult = await SafeAPICall(async () => await HaloClient.EconomyPlayerCustomization($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})", "public"));
+
+                if (customizationResult.Result == null || customizationResult.Response.Code != 200)
+                    return false;
+
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                 {
-                    return await HaloClient.EconomyPlayerCustomization($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})", "public");
+                    HomeViewModel.Instance.ServiceTag = customizationResult.Result.Appearance.ServiceTag;
                 });
 
-                if (customizationResult.Result != null && customizationResult.Response.Code == 200)
+                var emblemMapping = await SafeAPICall(async () => await HaloClient.GameCmsGetEmblemMapping());
+
+                if (emblemMapping.Result == null || emblemMapping.Response.Code != 200)
+                    return false;
+
+                var emblem = await SafeAPICall(async () => await HaloClient.GameCmsGetItem(customizationResult.Result.Appearance.Emblem.EmblemPath, HaloClient.ClearanceToken));
+                var backdrop = await SafeAPICall(async () => await HaloClient.GameCmsGetItem(customizationResult.Result.Appearance.BackdropImagePath, HaloClient.ClearanceToken));
+
+                var nameplate = emblemMapping.Result.GetValueOrDefault(emblem.Result.CommonData.Id)?.GetValueOrDefault(customizationResult.Result.Appearance.Emblem.ConfigurationId.ToString())
+                               ?? new EmblemMapping() { EmblemCmsPath = emblem.Result.CommonData.DisplayPath.Media.MediaUrl.Path, NameplateCmsPath = string.Empty, TextColor = "#FFF" };
+
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                 {
-                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                    {
-                        HomeViewModel.Instance.ServiceTag = customizationResult.Result.Appearance.ServiceTag;
-                    });
+                    HomeViewModel.Instance.IDBadgeTextColor = nameplate.TextColor;
+                });
 
-                    var emblemMapping = await SafeAPICall(async () =>
-                    {
-                        return await HaloClient.GameCmsGetEmblemMapping();
-                    });
+                string qualifiedNameplateImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", nameplate.NameplateCmsPath);
+                string qualifiedEmblemImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", nameplate.EmblemCmsPath);
+                string qualifiedBackdropImagePath = backdrop.Result != null ? Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", backdrop.Result.ImagePath.Media.MediaUrl.Path) : string.Empty;
 
-                    if (emblemMapping.Result != null && emblemMapping.Response.Code == 200)
-                    {
-                        var emblem = await SafeAPICall(async () =>
-                        {
-                            return await HaloClient.GameCmsGetItem(customizationResult.Result.Appearance.Emblem.EmblemPath, HaloClient.ClearanceToken);
-                        });
+                FileInfo file = new(qualifiedNameplateImagePath); file.Directory.Create();
+                file = new(qualifiedEmblemImagePath); file.Directory.Create();
+                file = new(qualifiedBackdropImagePath); file.Directory.Create();
 
-                        var backdrop = await SafeAPICall(async () =>
-                        {
-                            return await HaloClient.GameCmsGetItem(customizationResult.Result.Appearance.BackdropImagePath, HaloClient.ClearanceToken);
-                        });
-
-                        var nameplate = (from n in emblemMapping.Result where n.Key == emblem.Result.CommonData.Id select n).FirstOrDefault();
-
-                        KeyValuePair<string, EmblemMapping> configuration;
-                        if (!nameplate.Equals(default(KeyValuePair<string, Dictionary<string, EmblemMapping>>)) && !nameplate.Equals(default))
-                        {
-                            configuration = (from c in nameplate.Value where c.Key.ToString() == customizationResult.Result.Appearance.Emblem.ConfigurationId.ToString() select c).FirstOrDefault();
-                        }
-                        else
-                        {
-                            configuration = new KeyValuePair<string, EmblemMapping>("OS", new EmblemMapping() { EmblemCmsPath = emblem.Result.CommonData.DisplayPath.Media.MediaUrl.Path, NameplateCmsPath = string.Empty, TextColor = "#FFF" });
-                        }
-
-                        if (!configuration.Equals(default(KeyValuePair<string, EmblemMapping>)) && !configuration.Equals(default))
-                        {
-                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                            {
-                                HomeViewModel.Instance.IDBadgeTextColor = configuration.Value.TextColor;
-                            });
-
-                            string qualifiedNameplateImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", configuration.Value.NameplateCmsPath);
-                            string qualifiedEmblemImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", configuration.Value.EmblemCmsPath);
-                            string qualifiedBackdropImagePath = backdrop.Result != null ? Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", backdrop.Result.ImagePath.Media.MediaUrl.Path) : string.Empty;
-
-                            // Let's make sure that we create the directory if it does not exist.
-                            FileInfo file = new(qualifiedNameplateImagePath);
-                            file.Directory.Create();
-
-                            file = new(qualifiedEmblemImagePath);
-                            file.Directory.Create();
-
-                            file = new(qualifiedBackdropImagePath);
-                            file.Directory.Create();
-
-                            if (!System.IO.File.Exists(qualifiedNameplateImagePath) && !string.IsNullOrEmpty(configuration.Value.NameplateCmsPath))
-                            {
-                                var nameplateData = await SafeAPICall(async () =>
-                                {
-                                    return await HaloClient.GameCmsGetGenericWaypointFile(configuration.Value.NameplateCmsPath);
-                                });
-
-                                if (nameplateData.Result != null && nameplateData.Response.Code == 200)
-                                {
-                                    System.IO.File.WriteAllBytes(qualifiedNameplateImagePath, nameplateData.Result);
-                                }
-                            }
-
-                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                            {
-                                HomeViewModel.Instance.Nameplate = configuration.Value.NameplateCmsPath != null ? qualifiedNameplateImagePath : string.Empty;
-                            });
-
-                            if (!string.IsNullOrEmpty(configuration.Value.EmblemCmsPath) && !System.IO.File.Exists(qualifiedEmblemImagePath))
-                            {
-                                HaloApiResultContainer<byte[], RawResponseContainer> emblemData;
-
-                                // We want to make sure that, where available, we're picking up the right configuration image (that is,
-                                // the right color theme). Otherwise, default to whatever is in the media URL.
-                                if (!configuration.Key.Equals("OS"))
-                                {
-                                    emblemData = await SafeAPICall(async () =>
-                                    {
-                                        return await HaloClient.GameCmsGetGenericWaypointFile(configuration.Value.EmblemCmsPath);
-                                    });
-                                }
-                                else
-                                {
-                                    emblemData = await SafeAPICall(async () =>
-                                    {
-                                        return await HaloClient.GameCmsGetImage(emblem.Result.CommonData.DisplayPath.Media.MediaUrl.Path);
-                                    });
-                                }
-
-                                if (emblemData.Result != null && emblemData.Response.Code == 200)
-                                {
-                                    System.IO.File.WriteAllBytes(qualifiedEmblemImagePath, emblemData.Result);
-                                }
-                            }
-
-                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                            {
-                                HomeViewModel.Instance.Emblem = qualifiedEmblemImagePath;
-                            });
-
-                            if (!System.IO.File.Exists(qualifiedBackdropImagePath))
-                            {
-                                var backdropData = await SafeAPICall(async () =>
-                                {
-                                    return await HaloClient.GameCmsGetImage(backdrop.Result.ImagePath.Media.MediaUrl.Path);
-                                });
-
-                                if (backdropData.Result != null && backdropData.Response.Code == 200)
-                                {
-                                    System.IO.File.WriteAllBytes(qualifiedBackdropImagePath, backdropData.Result);
-                                }
-                            }
-
-                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                            {
-                                HomeViewModel.Instance.Backdrop = qualifiedBackdropImagePath;
-                            });
-                        }
-                    }
-                }
+                await DownloadAndSetImage(nameplate.NameplateCmsPath, qualifiedNameplateImagePath, () => HomeViewModel.Instance.Nameplate = qualifiedNameplateImagePath);
+                await DownloadAndSetImage(emblem.Result.CommonData.DisplayPath.Media.MediaUrl.Path, qualifiedEmblemImagePath, () => HomeViewModel.Instance.Emblem = qualifiedEmblemImagePath);
+                await DownloadAndSetImage(backdrop.Result.ImagePath.Media.MediaUrl.Path, qualifiedBackdropImagePath, () => HomeViewModel.Instance.Backdrop = qualifiedBackdropImagePath);
 
                 return true;
             }
@@ -520,118 +425,67 @@ namespace OpenSpartan.Workshop.Shared
         {
             try
             {
-                // Default to match and stats not being available locally.
-                Tuple<bool, bool> matchStatsAvailability = new(false, false);
-
-                HaloApiResultContainer<MatchStats, RawResponseContainer> matchStats = null;
-
-                int matchCounter = 0;
-                int matchesTotal = matchIds.Count();
-
                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                 {
                     MatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Loading;
                 });
 
+                int matchCounter = 0;
+                int matchesTotal = matchIds.Count();
+
                 foreach (var matchId in matchIds)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    var completionProgress = matchCounter / (double)matchesTotal * 100.0;
+                    double completionProgress = (matchCounter++ / (double)matchesTotal) * 100.0;
 
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                     {
                         MatchesViewModel.Instance.MatchLoadingParameter = $"{matchId} ({matchCounter} out of {matchesTotal} - {completionProgress:#.00}%)";
                     });
 
-                    matchStatsAvailability = DataHandler.GetMatchStatsAvailability(matchId.ToString());
-                    matchCounter++;
+                    Tuple<bool, bool> matchStatsAvailability = DataHandler.GetMatchStatsAvailability(matchId.ToString());
 
-                    // MATCH_AVAILABLE - if the value is zero, that means we do not have the match data.
-                    if (matchStatsAvailability.Item1 == false)
+                    if (!matchStatsAvailability.Item1)
                     {
                         Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Getting match stats for {matchId}...");
-                        matchStats = await SafeAPICall(async () =>
-                        {
-                            return await HaloClient.StatsGetMatchStats(matchId.ToString());
-                        });
 
-                        if (matchStats != null && matchStats.Result != null)
-                        {
-                            var processedMatchAssetParameters = await DataHandler.UpdateMatchAssetRecords(matchStats.Result);
-
-                            bool matchStatsInsertionResult = DataHandler.InsertMatchStats(matchStats.Response.Message);
-                            if (matchStatsInsertionResult)
-                            {
-                                Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored match data for {matchId} in the database.");
-                            }
-                            else
-                            {
-                                Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not store match {matchId} stats in the database.");
-                            }
-                        }
-                        else
-                        {
-                            Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match stats were not available for {matchId}.");
+                        var matchStats = await GetMatchStats(matchId.ToString(), completionProgress);
+                        if (matchStats == null)
                             continue;
-                        }
+
+                        var processedMatchAssetParameters = await DataHandler.UpdateMatchAssetRecords(matchStats.Result);
+
+                        bool matchStatsInsertionResult = DataHandler.InsertMatchStats(matchStats.Response.Message);
+                        Debug.WriteLine(matchStatsInsertionResult
+                            ? $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored match data for {matchId} in the database."
+                            : $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not store match {matchId} stats in the database.");
                     }
                     else
                     {
                         Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} already available. Not requesting new data.");
                     }
 
-                    // PLAYER_STATS_AVAILABLE - if the value is zero, that means we do not have the match data.
-                    if (matchStatsAvailability.Item2 == false)
+                    if (!matchStatsAvailability.Item2)
                     {
-                        matchStats ??= await SafeAPICall(async () =>
-                        {
-                            return await HaloClient.StatsGetMatchStats(matchId.ToString());
-                        });
+                        Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Attempting to get player results for players for match {matchId}.");
 
-                        if (matchStats != null && matchStats.Result != null && matchStats.Result.Players != null)
-                        {
-                            // Anything that starts with "bid" is a bot and including that in the request for player stats will result in failure.
-                            var targetPlayers = matchStats.Result.Players.Select(p => p.PlayerId).Where(p => !p.StartsWith("bid")).ToList();
+                        var playerStatsSnapshot = await GetPlayerStats(matchId.ToString());
+                        if (playerStatsSnapshot == null)
+                            continue;
 
-                            Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Attempting to get player results for players for match {matchId}.");
+                        var playerStatsInsertionResult = DataHandler.InsertPlayerMatchStats(matchId.ToString(), playerStatsSnapshot.Response.Message);
 
-                            var playerStatsSnapshot = await SafeAPICall(async () =>
-                            {
-                                return await HaloClient.SkillGetMatchPlayerResult(matchId.ToString(), targetPlayers!);
-                            });
-
-                            if (playerStatsSnapshot != null && playerStatsSnapshot.Result != null && playerStatsSnapshot.Result.Value != null)
-                            {
-                                Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Got stats for {playerStatsSnapshot.Result.Value.Count} players.");
-
-                                var playerStatsInsertionResult = DataHandler.InsertPlayerMatchStats(matchId.ToString(), playerStatsSnapshot.Response.Message);
-
-                                if (playerStatsInsertionResult)
-                                {
-                                    Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored player stats for {matchId}.");
-                                }
-                                else
-                                {
-                                    Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not store player stats for {matchId}.");
-                                }
-                            }
-                            else
-                            {
-                                Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not obtain player stats for match {matchId}. Requested {targetPlayers.Count} XUIDs.");
-                            }
-                        }
-                        else
-                        {
-                            Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not obtain player stats for match {matchId} because the match metadata was unavailable.");
-                        }
-
+                        Debug.WriteLine(playerStatsInsertionResult
+                            ? $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored player stats for {matchId}."
+                            : $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not store player stats for {matchId}.");
                     }
                     else
                     {
                         Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} player stats already available. Not requesting new data.");
                     }
                 }
+
                 return true;
             }
             catch (Exception ex)
@@ -639,6 +493,40 @@ namespace OpenSpartan.Workshop.Shared
                 Debug.WriteLine(ex.Message);
                 return false;
             }
+        }
+
+        private static async Task<HaloApiResultContainer<MatchStats, RawResponseContainer>> GetMatchStats(string matchId, double completionProgress)
+        {
+            var matchStats = await SafeAPICall(async () => await HaloClient.StatsGetMatchStats(matchId));
+            if (matchStats == null || matchStats.Result == null)
+            {
+                Debug.WriteLine($"[{completionProgress:#.00}%] [Error] Getting match stats failed for {matchId}.");
+                return null;
+            }
+
+            return matchStats;
+        }
+
+        private static async Task<HaloApiResultContainer<MatchSkillInfo, RawResponseContainer>> GetPlayerStats(string matchId)
+        {
+            var matchStats = await HaloClient.StatsGetMatchStats(matchId);
+            if (matchStats == null || matchStats.Result == null || matchStats.Result.Players == null)
+            {
+                Debug.WriteLine($"[Error] Could not obtain player stats for match {matchId} because the match metadata was unavailable.");
+                return null;
+            }
+
+            // Anything that starts with "bid" is a bot and including that in the request for player stats will result in failure.
+            var targetPlayers = matchStats.Result.Players.Select(p => p.PlayerId).Where(p => !p.StartsWith("bid")).ToList();
+
+            var playerStatsSnapshot = await SafeAPICall(async () => await HaloClient.SkillGetMatchPlayerResult(matchId, targetPlayers!));
+            if (playerStatsSnapshot == null || playerStatsSnapshot.Result == null || playerStatsSnapshot.Result.Value == null)
+            {
+                Debug.WriteLine($"Could not obtain player stats for match {matchId}. Requested {targetPlayers.Count} XUIDs.");
+                return null;
+            }
+
+            return playerStatsSnapshot;
         }
 
         private static async Task<List<Guid>> GetPlayerMatchIds(string xuid, CancellationToken cancellationToken)
@@ -736,97 +624,77 @@ namespace OpenSpartan.Workshop.Shared
             try
             {
                 Debug.WriteLine("Getting medal metadata...");
-                var medalData = await SafeAPICall(async () =>
+                var medalData = await SafeAPICall(async () => await HaloClient.GameCmsGetMedalMetadata());
+
+                if (medalData?.Result?.Medals == null || medalData.Result.Medals.Count == 0)
+                    return false;
+
+                var medals = DataHandler.GetMedals();
+                if (medals == null)
+                    return false;
+
+                var compoundMedals = medals.Join(medalData.Result.Medals, earned => earned.NameId, references => references.NameId, (earned, references) => new Medal()
                 {
-                    return await HaloClient.GameCmsGetMedalMetadata();
+                    Count = earned.Count,
+                    Description = references.Description,
+                    DifficultyIndex = references.DifficultyIndex,
+                    Name = references.Name,
+                    NameId = references.NameId,
+                    PersonalScore = references.PersonalScore,
+                    SortingWeight = references.SortingWeight,
+                    SpriteIndex = references.SpriteIndex,
+                    TotalPersonalScoreAwarded = earned.TotalPersonalScoreAwarded,
+                    TypeIndex = references.TypeIndex,
+                }).ToList();
+
+                var group = compoundMedals.OrderByDescending(x => x.Count).GroupBy(x => x.TypeIndex);
+
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                {
+                    MedalsViewModel.Instance.Medals = new System.Collections.ObjectModel.ObservableCollection<IGrouping<int, Medal>>(group);
                 });
 
-                if (medalData.Result.Medals != null && medalData.Result.Medals.Count > 0)
+                string qualifiedMedalPath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", "medals");
+
+                var spriteRequestResult = await SafeAPICall(async () => await HaloClient.GameCmsGetGenericWaypointFile(medalData.Result.Sprites.ExtraLarge.Path));
+                if (spriteRequestResult?.Response?.Code == 401)
                 {
-                    var medals = DataHandler.GetMedals();
-
-                    if (medals != null)
+                    var tokenResult = await ReAcquireTokens();
+                    if (!tokenResult)
                     {
-                        // There is likely a delta in medals here because the end-result doesn't actually
-                        // account for quite a few medals, such as the ones from Infection game modes.
-                        var compoundMedals = medals.Join(medalData.Result.Medals, earned => earned.NameId, references => references.NameId, (earned, references) => new Medal()
-                        {
-                            Count = earned.Count,
-                            Description = references.Description,
-                            DifficultyIndex = references.DifficultyIndex,
-                            Name = references.Name,
-                            NameId = references.NameId,
-                            PersonalScore = references.PersonalScore,
-                            SortingWeight = references.SortingWeight,
-                            SpriteIndex = references.SpriteIndex,
-                            TotalPersonalScoreAwarded = earned.TotalPersonalScoreAwarded,
-                            TypeIndex = references.TypeIndex,
-                        }).ToList();
-
-                        var group = compoundMedals.OrderByDescending(x => x.Count).GroupBy(x => x.TypeIndex);
-
-                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                        {
-                            MedalsViewModel.Instance.Medals = new System.Collections.ObjectModel.ObservableCollection<IGrouping<int, Medal>>(group);
-                        });
-
-                        string qualifiedMedalPath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", "medals");
-
-                        var spriteRequestResult = await SafeAPICall(async () =>
-                        {
-                            return await HaloClient.GameCmsGetGenericWaypointFile(medalData.Result.Sprites.ExtraLarge.Path);
-                        });
-
-                        if (spriteRequestResult.Response.Code == 401)
-                        {
-                            // Need to get new tokens.
-                            var tokenResult = await ReAcquireTokens();
-
-                            if (!tokenResult)
-                            {
-                                Debug.WriteLine("Could not reacquire tokens.");
-
-                                // Return because this is a failure in token reacquisition and there is likely a bigger problem.
-                                return false;
-                            }
-
-                            spriteRequestResult = await SafeAPICall(async () =>
-                            {
-                                return await HaloClient.GameCmsGetGenericWaypointFile(medalData.Result.Sprites.ExtraLarge.Path);
-                            });
-                        }
-
-                        var spriteContent = spriteRequestResult.Result;
-                        using MemoryStream ms = new(spriteContent);
-                        SkiaSharp.SKBitmap bmp = SkiaSharp.SKBitmap.Decode(ms);
-                        using var pixmap = bmp.PeekPixels();
-
-                        foreach (var medal in compoundMedals)
-                        {
-                            string medalImagePath = Path.Combine(qualifiedMedalPath, $"{medal.NameId}.png");
-                            if (!System.IO.File.Exists(medalImagePath))
-                            {
-                                FileInfo file = new FileInfo(medalImagePath);
-                                file.Directory.Create();
-
-                                // The spritesheet for medals is 16x16, so we want to make sure that we extract the right medals.
-                                var row = (int)Math.Floor(medal.SpriteIndex / 16.0);
-                                var column = (int)(medal.SpriteIndex % 16.0);
-
-                                SkiaSharp.SKRectI rectI = SkiaSharp.SKRectI.Create(column * 256, row * 256, 256, 256);
-
-                                var subset = pixmap.ExtractSubset(rectI);
-                                using (var data = subset.Encode(SkiaSharp.SKPngEncoderOptions.Default))
-                                {
-                                    System.IO.File.WriteAllBytes(medalImagePath, data.ToArray());
-                                    Debug.WriteLine($"Wrote medal to file: {medalImagePath}");
-                                }
-
-                            }
-                        }
-
-                        Debug.WriteLine("Got medals.");
+                        Debug.WriteLine("Could not reacquire tokens.");
+                        return false;
                     }
+
+                    spriteRequestResult = await SafeAPICall(async () => await HaloClient.GameCmsGetGenericWaypointFile(medalData.Result.Sprites.ExtraLarge.Path));
+                }
+
+                var spriteContent = spriteRequestResult?.Result;
+                if (spriteContent != null)
+                {
+                    using MemoryStream ms = new(spriteContent);
+                    SkiaSharp.SKBitmap bmp = SkiaSharp.SKBitmap.Decode(ms);
+                    using var pixmap = bmp.PeekPixels();
+
+                    foreach (var medal in compoundMedals)
+                    {
+                        string medalImagePath = Path.Combine(qualifiedMedalPath, $"{medal.NameId}.png");
+                        EnsureDirectoryExists(medalImagePath);
+
+                        if (!System.IO.File.Exists(medalImagePath))
+                        {
+                            var row = (int)Math.Floor(medal.SpriteIndex / 16.0);
+                            var column = (int)(medal.SpriteIndex % 16.0);
+                            SkiaSharp.SKRectI rectI = SkiaSharp.SKRectI.Create(column * 256, row * 256, 256, 256);
+
+                            var subset = pixmap.ExtractSubset(rectI);
+                            using var data = subset.Encode(SkiaSharp.SKPngEncoderOptions.Default);
+                            System.IO.File.WriteAllBytes(medalImagePath, data.ToArray());
+                            Debug.WriteLine($"Wrote medal to file: {medalImagePath}");
+                        }
+                    }
+
+                    Debug.WriteLine("Got medals.");
                 }
             }
             catch (Exception ex)
