@@ -16,6 +16,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -60,6 +61,27 @@ namespace OpenSpartan.Workshop.Shared
             return authResult;
         }
 
+        public static async Task<HaloApiResultContainer<T, RawResponseContainer>> SafeAPICall<T>(Func<Task<HaloApiResultContainer<T, RawResponseContainer>>> orionAPICall)
+        {
+            var result = await orionAPICall();
+
+            if (result.Response.Code == 401)
+            {
+                var tokenResult = await ReAcquireTokens();
+
+                if (!tokenResult)
+                {
+                    Debug.WriteLine("Could not reacquire tokens.");
+
+                    return default;
+                }
+
+                return await orionAPICall();
+            }
+
+            return result;
+        }
+
         internal static bool InitializeHaloClient(AuthenticationResult authResult)
         {
             HaloAuthenticationClient haloAuthClient = new();
@@ -102,7 +124,7 @@ namespace OpenSpartan.Workshop.Shared
                 string localClearance = string.Empty;
                 Task.Run(async () =>
                 {
-                    var clearance = (await HaloClient.SettingsGetClearance("RETAIL", "UNUSED", "254001.23.12.19.2223-2", "1.6")).Result;
+                    var clearance = (await SafeAPICall(async () => { return await HaloClient.SettingsGetClearance("RETAIL", "UNUSED", "254001.23.12.19.2223-2", "1.6"); })).Result;
                     if (clearance != null)
                     {
                         localClearance = clearance.FlightConfigurationId;
@@ -128,7 +150,10 @@ namespace OpenSpartan.Workshop.Shared
             try
             {
                 // Get career details.
-                var careerTrackResult = await HaloClient.EconomyGetPlayerCareerRank(new List<string>() { $"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})" }, "careerRank1");
+                var careerTrackResult = await SafeAPICall(async () =>
+                {
+                    return await HaloClient.EconomyGetPlayerCareerRank(new List<string>() { $"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})" }, "careerRank1");
+                });
 
                 if (careerTrackResult.Result != null && careerTrackResult.Response.Code == 200)
                 {
@@ -138,7 +163,10 @@ namespace OpenSpartan.Workshop.Shared
                     });
                 }
 
-                var careerTrackContainerResult = await HaloClient.GameCmsGetCareerRanks("careerRank1");
+                var careerTrackContainerResult = await SafeAPICall(async () =>
+                {
+                    return await HaloClient.GameCmsGetCareerRanks("careerRank1");
+                });
 
                 if (careerTrackContainerResult.Result != null && careerTrackContainerResult.Response.Code == 200)
                 {
@@ -179,7 +207,11 @@ namespace OpenSpartan.Workshop.Shared
 
                             if (!System.IO.File.Exists(qualifiedRankImagePath))
                             {
-                                var rankImage = await HaloClient.GameCmsGetImage(currentCareerStage.RankLargeIcon);
+                                var rankImage = await SafeAPICall(async () =>
+                                {
+                                    return await HaloClient.GameCmsGetImage(currentCareerStage.RankLargeIcon);
+                                });
+
                                 if (rankImage.Result != null && rankImage.Response.Code == 200)
                                 {
                                     System.IO.File.WriteAllBytes(qualifiedRankImagePath, rankImage.Result);
@@ -193,7 +225,11 @@ namespace OpenSpartan.Workshop.Shared
 
                             if (!System.IO.File.Exists(qualifiedAdornmentImagePath))
                             {
-                                var adornmentImage = await HaloClient.GameCmsGetImage(currentCareerStage.RankAdornmentIcon);
+                                var adornmentImage = await SafeAPICall(async () =>
+                                {
+                                    return await HaloClient.GameCmsGetImage(currentCareerStage.RankAdornmentIcon);
+                                });
+
                                 if (adornmentImage.Result != null && adornmentImage.Response.Code == 200)
                                 {
                                     System.IO.File.WriteAllBytes(qualifiedAdornmentImagePath, adornmentImage.Result);
@@ -229,7 +265,10 @@ namespace OpenSpartan.Workshop.Shared
                 HomeViewModel.Instance.Xuid = XboxUserContext.DisplayClaims.Xui[0].XUID;
 
                 // Get initial service record details
-                var serviceRecordResult = await HaloClient.StatsGetPlayerServiceRecord(HomeViewModel.Instance.Gamertag, Den.Dev.Orion.Models.HaloInfinite.LifecycleMode.Matchmade);
+                var serviceRecordResult = await SafeAPICall(async () =>
+                {
+                    return await HaloClient.StatsGetPlayerServiceRecord(HomeViewModel.Instance.Gamertag, Den.Dev.Orion.Models.HaloInfinite.LifecycleMode.Matchmade);
+                });
 
                 if (serviceRecordResult.Result != null && serviceRecordResult.Response.Code == 200)
                 {
@@ -256,7 +295,10 @@ namespace OpenSpartan.Workshop.Shared
 
                 if (!System.IO.File.Exists(qualifiedBackgroundImagePath))
                 {
-                    var backgroundImageResult = await HaloClient.GameCmsGetImage(backgroundPath);
+                    var backgroundImageResult = await SafeAPICall(async () =>
+                    {
+                        return await HaloClient.GameCmsGetImage(backgroundPath);
+                    });
 
                     if (backgroundImageResult.Result != null && backgroundImageResult.Response.Code == 200)
                     {
@@ -285,7 +327,10 @@ namespace OpenSpartan.Workshop.Shared
         {
             try
             {
-                var customizationResult = await HaloClient.EconomyPlayerCustomization($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})", "public");
+                var customizationResult = await SafeAPICall(async () =>
+                {
+                    return await HaloClient.EconomyPlayerCustomization($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})", "public");
+                });
 
                 if (customizationResult.Result != null && customizationResult.Response.Code == 200)
                 {
@@ -294,12 +339,22 @@ namespace OpenSpartan.Workshop.Shared
                         HomeViewModel.Instance.ServiceTag = customizationResult.Result.Appearance.ServiceTag;
                     });
 
-                    var emblemMapping = await HaloClient.GameCmsGetEmblemMapping();
+                    var emblemMapping = await SafeAPICall(async () =>
+                    {
+                        return await HaloClient.GameCmsGetEmblemMapping();
+                    });
 
                     if (emblemMapping.Result != null && emblemMapping.Response.Code == 200)
                     {
-                        var emblem = await HaloClient.GameCmsGetItem(customizationResult.Result.Appearance.Emblem.EmblemPath, HaloClient.ClearanceToken);
-                        var backdrop = await HaloClient.GameCmsGetItem(customizationResult.Result.Appearance.BackdropImagePath, HaloClient.ClearanceToken);
+                        var emblem = await SafeAPICall(async () =>
+                        {
+                            return await HaloClient.GameCmsGetItem(customizationResult.Result.Appearance.Emblem.EmblemPath, HaloClient.ClearanceToken);
+                        });
+
+                        var backdrop = await SafeAPICall(async () =>
+                        {
+                            return await HaloClient.GameCmsGetItem(customizationResult.Result.Appearance.BackdropImagePath, HaloClient.ClearanceToken);
+                        });
 
                         var nameplate = (from n in emblemMapping.Result where n.Key == emblem.Result.CommonData.Id select n).FirstOrDefault();
 
@@ -336,7 +391,10 @@ namespace OpenSpartan.Workshop.Shared
 
                             if (!System.IO.File.Exists(qualifiedNameplateImagePath) && !string.IsNullOrEmpty(configuration.Value.NameplateCmsPath))
                             {
-                                var nameplateData = await HaloClient.GameCmsGetGenericWaypointFile(configuration.Value.NameplateCmsPath);
+                                var nameplateData = await SafeAPICall(async () =>
+                                {
+                                    return await HaloClient.GameCmsGetGenericWaypointFile(configuration.Value.NameplateCmsPath);
+                                });
 
                                 if (nameplateData.Result != null && nameplateData.Response.Code == 200)
                                 {
@@ -357,11 +415,17 @@ namespace OpenSpartan.Workshop.Shared
                                 // the right color theme). Otherwise, default to whatever is in the media URL.
                                 if (!configuration.Key.Equals("OS"))
                                 {
-                                    emblemData = await HaloClient.GameCmsGetGenericWaypointFile(configuration.Value.EmblemCmsPath);
+                                    emblemData = await SafeAPICall(async () =>
+                                    {
+                                        return await HaloClient.GameCmsGetGenericWaypointFile(configuration.Value.EmblemCmsPath);
+                                    });
                                 }
                                 else
                                 {
-                                    emblemData = await HaloClient.GameCmsGetImage(emblem.Result.CommonData.DisplayPath.Media.MediaUrl.Path);
+                                    emblemData = await SafeAPICall(async () =>
+                                    {
+                                        return await HaloClient.GameCmsGetImage(emblem.Result.CommonData.DisplayPath.Media.MediaUrl.Path);
+                                    });
                                 }
 
                                 if (emblemData.Result != null && emblemData.Response.Code == 200)
@@ -377,7 +441,10 @@ namespace OpenSpartan.Workshop.Shared
 
                             if (!System.IO.File.Exists(qualifiedBackdropImagePath))
                             {
-                                var backdropData = await HaloClient.GameCmsGetImage(backdrop.Result.ImagePath.Media.MediaUrl.Path);
+                                var backdropData = await SafeAPICall(async () =>
+                                {
+                                    return await HaloClient.GameCmsGetImage(backdrop.Result.ImagePath.Media.MediaUrl.Path);
+                                });
 
                                 if (backdropData.Result != null && backdropData.Response.Code == 200)
                                 {
@@ -507,7 +574,10 @@ namespace OpenSpartan.Workshop.Shared
                     if (matchStatsAvailability.Item1 == false)
                     {
                         Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Getting match stats for {matchId}...");
-                        matchStats = await HaloClient.StatsGetMatchStats(matchId.ToString());
+                        matchStats = await SafeAPICall(async () =>
+                        {
+                            return await HaloClient.StatsGetMatchStats(matchId.ToString());
+                        });
 
                         if (matchStats != null && matchStats.Result != null)
                         {
@@ -537,7 +607,10 @@ namespace OpenSpartan.Workshop.Shared
                     // PLAYER_STATS_AVAILABLE - if the value is zero, that means we do not have the match data.
                     if (matchStatsAvailability.Item2 == false)
                     {
-                        matchStats ??= await HaloClient.StatsGetMatchStats(matchId.ToString());
+                        matchStats ??= await SafeAPICall(async () =>
+                        {
+                            return await HaloClient.StatsGetMatchStats(matchId.ToString());
+                        });
 
                         if (matchStats != null && matchStats.Result != null && matchStats.Result.Players != null)
                         {
@@ -546,7 +619,10 @@ namespace OpenSpartan.Workshop.Shared
 
                             Debug.WriteLine($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Attempting to get player results for players for match {matchId}.");
 
-                            var playerStatsSnapshot = await HaloClient.SkillGetMatchPlayerResult(matchId.ToString(), targetPlayers!);
+                            var playerStatsSnapshot = await SafeAPICall(async () =>
+                            {
+                                return await HaloClient.SkillGetMatchPlayerResult(matchId.ToString(), targetPlayers!);
+                            });
 
                             if (playerStatsSnapshot != null && playerStatsSnapshot.Result != null && playerStatsSnapshot.Result.Value != null)
                             {
@@ -602,17 +678,12 @@ namespace OpenSpartan.Workshop.Shared
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var matches = await HaloClient.StatsGetMatchHistory($"xuid({xuid})", queryStart, queryCount, Den.Dev.Orion.Models.HaloInfinite.MatchType.All);
-                if (matches.Response.Code == 401)
+                var matches = await SafeAPICall(async () =>
                 {
-                    // Need to get new tokens.
-                    var tokenResult = await ReAcquireTokens();
-                    if (!tokenResult)
-                    {
-                        Debug.WriteLine("Could not reacquire tokens.");
-                    }
-                }
-                else if (matches != null && matches.Result != null && matches.Result.Results != null && matches.Result.ResultCount > 0)
+                    return await HaloClient.StatsGetMatchHistory($"xuid({xuid})", queryStart, queryCount, Den.Dev.Orion.Models.HaloInfinite.MatchType.All);
+                });
+
+                if (matches != null && matches.Result != null && matches.Result.Results != null && matches.Result.ResultCount > 0)
                 {
                     lastResultCount = matches.Result.ResultCount;
 
@@ -688,9 +759,12 @@ namespace OpenSpartan.Workshop.Shared
             try
             {
                 Debug.WriteLine("Getting medal metadata...");
-                var medalReferences = (await HaloClient.GameCmsGetMedalMetadata()).Result;
+                var medalData = await SafeAPICall(async () =>
+                {
+                    return await HaloClient.GameCmsGetMedalMetadata();
+                });
 
-                if (medalReferences.Medals != null && medalReferences.Medals.Count > 0)
+                if (medalData.Result.Medals != null && medalData.Result.Medals.Count > 0)
                 {
                     var medals = DataHandler.GetMedals();
 
@@ -698,7 +772,7 @@ namespace OpenSpartan.Workshop.Shared
                     {
                         // There is likely a delta in medals here because the end-result doesn't actually
                         // account for quite a few medals, such as the ones from Infection game modes.
-                        var compoundMedals = medals.Join(medalReferences.Medals, earned => earned.NameId, references => references.NameId, (earned, references) => new Medal()
+                        var compoundMedals = medals.Join(medalData.Result.Medals, earned => earned.NameId, references => references.NameId, (earned, references) => new Medal()
                         {
                             Count = earned.Count,
                             Description = references.Description,
@@ -721,7 +795,31 @@ namespace OpenSpartan.Workshop.Shared
 
                         string qualifiedMedalPath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", "medals");
 
-                        var spriteContent = (await HaloClient.GameCmsGetGenericWaypointFile(medalReferences.Sprites.ExtraLarge.Path)).Result;
+                        var spriteRequestResult = await SafeAPICall(async () =>
+                        {
+                            return await HaloClient.GameCmsGetGenericWaypointFile(medalData.Result.Sprites.ExtraLarge.Path);
+                        });
+
+                        if (spriteRequestResult.Response.Code == 401)
+                        {
+                            // Need to get new tokens.
+                            var tokenResult = await ReAcquireTokens();
+
+                            if (!tokenResult)
+                            {
+                                Debug.WriteLine("Could not reacquire tokens.");
+
+                                // Return because this is a failure in token reacquisition and there is likely a bigger problem.
+                                return false;
+                            }
+
+                            spriteRequestResult = await SafeAPICall(async () =>
+                            {
+                                return await HaloClient.GameCmsGetGenericWaypointFile(medalData.Result.Sprites.ExtraLarge.Path);
+                            });
+                        }
+
+                        var spriteContent = spriteRequestResult.Result;
                         using MemoryStream ms = new(spriteContent);
                         SkiaSharp.SKBitmap bmp = SkiaSharp.SKBitmap.Decode(ms);
                         using var pixmap = bmp.PeekPixels();
@@ -764,12 +862,18 @@ namespace OpenSpartan.Workshop.Shared
 
         public static async Task<OperationRewardTrackSnapshot> GetOperations()
         {
-            return (await HaloClient.EconomyPlayerOperations($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})", HaloClient.ClearanceToken)).Result;
+            return (await SafeAPICall(async () =>
+            {
+                return await HaloClient.EconomyPlayerOperations($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})", HaloClient.ClearanceToken);
+            })).Result;
         }
 
         public static async Task<CurrencyDefinition> GetInGameCurrency(string currencyId)
         {
-            return (await HaloClient.GameCmsGetCurrency(currencyId, HaloClient.ClearanceToken)).Result;
+            return (await SafeAPICall(async () =>
+            {
+                return await HaloClient.GameCmsGetCurrency(currencyId, HaloClient.ClearanceToken);
+            })).Result;
         }
 
         public static async Task<bool> PopulateBattlePassData()
@@ -798,7 +902,10 @@ namespace OpenSpartan.Workshop.Shared
                     // Check to see if there is a local copy. If there isn't, store the data.
                     if (!DataHandler.IsOperationRewardTrackAvailable(operation.RewardTrackPath))
                     {
-                        var operationDetails = await HaloClient.GameCmsGetEvent(operation.RewardTrackPath, HaloClient.ClearanceToken);
+                        var operationDetails = await SafeAPICall(async () =>
+                        {
+                            return await HaloClient.GameCmsGetEvent(operation.RewardTrackPath, HaloClient.ClearanceToken);
+                        });
 
                         if (operationDetails != null && operationDetails.Result != null && operationDetails.Response.Code == 200)
                         {
@@ -842,7 +949,11 @@ namespace OpenSpartan.Workshop.Shared
 
         internal static async Task<bool> PopulateUserInventory()
         {
-            var result = await HaloClient.EconomyGetInventoryItems($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})");
+            var result = await SafeAPICall(async () =>
+            {
+                return await HaloClient.EconomyGetInventoryItems($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})");
+            });
+
             if (result != null && result.Result != null && result.Response.Code == 200)
             {
                 var insertionResult = DataHandler.InsertOwnedInventoryItems(result.Result);
@@ -915,7 +1026,11 @@ namespace OpenSpartan.Workshop.Shared
 
                     if (!System.IO.File.Exists(qualifiedImagePath))
                     {
-                        var rankImage = await HaloClient.GameCmsGetImage(currencyImageLocation);
+                        var rankImage = await SafeAPICall(async () =>
+                        {
+                            return await HaloClient.GameCmsGetImage(currencyImageLocation);
+                        });
+
                         if (rankImage.Result != null && rankImage.Response.Code == 200)
                         {
                             System.IO.File.WriteAllBytes(qualifiedImagePath, rankImage.Result);
@@ -971,7 +1086,11 @@ namespace OpenSpartan.Workshop.Shared
                 }
                 else
                 {
-                    var item = await HaloClient.GameCmsGetItem(inventoryReward.InventoryItemPath, HaloClient.ClearanceToken);
+                    var item = await SafeAPICall(async () =>
+                    {
+                        return await HaloClient.GameCmsGetItem(inventoryReward.InventoryItemPath, HaloClient.ClearanceToken);
+                    });
+
                     if (item != null && item.Result != null)
                     {
                         Debug.WriteLine($"Trying to get local image for {item.Result.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
@@ -1018,7 +1137,11 @@ namespace OpenSpartan.Workshop.Shared
 
             if (!System.IO.File.Exists(qualifiedImagePath))
             {
-                var rankImage = await HaloClient.GameCmsGetImage(imagePath);
+                var rankImage = await SafeAPICall(async () =>
+                {
+                    return await HaloClient.GameCmsGetImage(imagePath);
+                });
+
                 if (rankImage.Result != null && rankImage.Response.Code == 200)
                 {
                     System.IO.File.WriteAllBytes(qualifiedImagePath, rankImage.Result);
