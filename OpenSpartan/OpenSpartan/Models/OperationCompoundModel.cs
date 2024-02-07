@@ -1,5 +1,4 @@
 ﻿using Den.Dev.Orion.Models.HaloInfinite;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 

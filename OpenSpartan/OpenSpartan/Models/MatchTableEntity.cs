@@ -1,5 +1,4 @@
-﻿using Den.Dev.Orion.Converters;
-using Den.Dev.Orion.Models.HaloInfinite;
+﻿using Den.Dev.Orion.Models.HaloInfinite;
 using System;
 using System.Collections.Generic;
 
