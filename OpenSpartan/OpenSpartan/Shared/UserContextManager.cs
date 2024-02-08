@@ -758,7 +758,7 @@ namespace OpenSpartan.Workshop.Shared
             })).Result;
         }
 
-        public static async Task<bool> PopulateBattlePassData()
+        public static async Task<bool> PopulateBattlePassData(CancellationToken cancellationToken)
         {
             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
             {
@@ -771,7 +771,7 @@ namespace OpenSpartan.Workshop.Shared
             {
                 foreach (var operation in operations.OperationRewardTracks)
                 {
-                    BattlePassLoadingCancellationTracker.Token.ThrowIfCancellationRequested();
+                    cancellationToken.ThrowIfCancellationRequested();
 
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                     {
@@ -1102,7 +1102,7 @@ namespace OpenSpartan.Workshop.Shared
                         {
                             try
                             {
-                                await PopulateBattlePassData();
+                                await PopulateBattlePassData(BattlePassLoadingCancellationTracker.Token);
 
                                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                                 {

@@ -1,10 +1,14 @@
 using CommunityToolkit.WinUI;
+using Den.Dev.Orion.Models.HaloInfinite;
 using Microsoft.UI.Xaml.Controls;
+using OpenSpartan.Workshop.Data;
+using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -42,6 +46,11 @@ namespace OpenSpartan.Workshop.Views
                         // Reset the player details.
                         HomeViewModel.Instance.Xuid = null;
                         HomeViewModel.Instance.Gamertag = null;
+
+                        // Clear out the user's previous data.
+                        BattlePassViewModel.Instance.BattlePasses = null;
+                        MatchesViewModel.Instance.MatchList = null;
+                        MedalsViewModel.Instance.Medals = null;
                     });
 
                     var authResult = await UserContextManager.InitializeAllDataOnLaunch();
