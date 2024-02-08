@@ -18,6 +18,7 @@ namespace OpenSpartan.Workshop.Views
 
         private async void btnRefreshMedals_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
         {
+            await UserContextManager.PopulateServiceRecordData();
             await UserContextManager.PopulateMedalData();
         }
     }

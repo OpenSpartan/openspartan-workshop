@@ -6,8 +6,13 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    xmlns:viewmodels="using:OpenSpartan.Workshop.ViewModels"
+    DataContext="{x:Bind viewmodels:SettingsViewModel.Instance}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
+    <Page.Resources>
+        
+    </Page.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="64"></RowDefinition>
@@ -54,11 +59,25 @@
                 </Grid>
                 
                 <StackPanel Margin="0,4,0,0">
-                    <StackPanel Orientation="Horizontal">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100"></ColumnDefinition>
+                            <ColumnDefinition Width="200"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="24"></RowDefinition>
+                            <RowDefinition Height="24"></RowDefinition>
+                        </Grid.RowDefinitions>
+
                         <TextBlock>Logged in as:</TextBlock>
-                        <TextBlock Margin="4,0,0,0">ZeBond (XUID)</TextBlock>
-                    </StackPanel>
-                    <Button Margin="0,8,0,0" Width="100">Log Out</Button>
+                        <TextBlock Margin="4,0,0,0" Text="{Binding Gamertag}" Grid.Column="1"></TextBlock>
+
+                        <TextBlock Grid.Row="1">XUID:</TextBlock>
+                        <TextBlock Margin="4,0,0,0" Text="{Binding Xuid}" Grid.Row="1" Grid.Column="1"></TextBlock>
+                    </Grid>
+                    
+                    <Button Margin="0,8,0,0" Width="100" x:Name="btnLogOut" Click="btnLogOut_Click">Log Out</Button>
                 </StackPanel>
             </StackPanel>
 

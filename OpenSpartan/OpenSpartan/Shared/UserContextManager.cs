@@ -24,7 +24,8 @@ namespace OpenSpartan.Workshop.Shared
 {
     internal static class UserContextManager
     {
-        internal static CancellationTokenSource CancellationTracker = new();
+        internal static CancellationTokenSource MatchLoadingCancellationTracker = new();
+        internal static CancellationTokenSource BattlePassLoadingCancellationTracker = new();
 
         internal static MainWindow DispatcherWindow = ((Application.Current as App)?.MainWindow) as MainWindow;
 
@@ -68,9 +69,17 @@ namespace OpenSpartan.Workshop.Shared
             }
             catch (MsalUiRequiredException)
             {
-                authResult = await pca.AcquireTokenInteractive(Core.Configuration.Scopes)
-                                            .WithAccount(accountToLogin)
-                                            .ExecuteAsync();
+                try
+                {
+                    authResult = await pca.AcquireTokenInteractive(Core.Configuration.Scopes)
+                                                .WithAccount(accountToLogin)
+                                                .ExecuteAsync();
+                }
+                catch (MsalClientException)
+                {
+                    // Authentication was not successsful, we have no token.
+                    Debug.WriteLine("Authentication was not successful.");
+                }
             }
 
             return authResult;
@@ -373,14 +382,14 @@ namespace OpenSpartan.Workshop.Shared
                 MatchesViewModel.Instance.MatchLoadingState = Models.MetadataLoadingState.Calculating;
             });
 
-            CancellationTracker.Cancel();
-            CancellationTracker = new CancellationTokenSource();
+            MatchLoadingCancellationTracker.Cancel();
+            MatchLoadingCancellationTracker = new CancellationTokenSource();
 
             try
             {
                 //var currentMatchmadeRecords = DataHandler.GetCountOfMatchRecords();
 
-                List<Guid> ids = await GetPlayerMatchIds(XboxUserContext.DisplayClaims.Xui[0].XUID, CancellationTracker.Token);
+                List<Guid> ids = await GetPlayerMatchIds(XboxUserContext.DisplayClaims.Xui[0].XUID);
 
                 if (ids != null && ids.Count > 0)
                 {
@@ -398,7 +407,7 @@ namespace OpenSpartan.Workshop.Shared
                                 MatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Loading;
                             });
 
-                            var result = await UpdateMatchRecords(matchesToProcess, CancellationTracker.Token);
+                            var result = await UpdateMatchRecords(matchesToProcess);
 
                             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                             {
@@ -416,7 +425,7 @@ namespace OpenSpartan.Workshop.Shared
                     {
                         Debug.WriteLine("No matches found locally, so need to re-hydrate the database.");
 
-                        var result = await UpdateMatchRecords(distinctMatchIds, CancellationTracker.Token);
+                        var result = await UpdateMatchRecords(distinctMatchIds);
 
                         await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                         {
@@ -441,7 +450,7 @@ namespace OpenSpartan.Workshop.Shared
             }
         }
 
-        internal static async Task<bool> UpdateMatchRecords(IEnumerable<Guid> matchIds, CancellationToken cancellationToken)
+        internal static async Task<bool> UpdateMatchRecords(IEnumerable<Guid> matchIds)
         {
             try
             {
@@ -455,7 +464,7 @@ namespace OpenSpartan.Workshop.Shared
 
                 foreach (var matchId in matchIds)
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
+                    MatchLoadingCancellationTracker.Token.ThrowIfCancellationRequested();
 
                     double completionProgress = (matchCounter++ / (double)matchesTotal) * 100.0;
 
@@ -549,7 +558,7 @@ namespace OpenSpartan.Workshop.Shared
             return playerStatsSnapshot;
         }
 
-        private static async Task<List<Guid>> GetPlayerMatchIds(string xuid, CancellationToken cancellationToken)
+        private static async Task<List<Guid>> GetPlayerMatchIds(string xuid)
         {
             List<Guid> matchIds = new();
 
@@ -561,7 +570,7 @@ namespace OpenSpartan.Workshop.Shared
 
             while (lastResultCount > 0)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                MatchLoadingCancellationTracker.Token.ThrowIfCancellationRequested();
 
                 var matches = await SafeAPICall(async () =>
                 {
@@ -754,6 +763,8 @@ namespace OpenSpartan.Workshop.Shared
             {
                 foreach (var operation in operations.OperationRewardTracks)
                 {
+                    BattlePassLoadingCancellationTracker.Token.ThrowIfCancellationRequested();
+
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                     {
                         BattlePassViewModel.Instance.BattlePassLoadingParameter = operation.RewardTrackPath;
@@ -810,6 +821,7 @@ namespace OpenSpartan.Workshop.Shared
             {
                 return false;
             }
+
         }
 
         internal static async Task<bool> PopulateUserInventory()
@@ -1020,6 +1032,81 @@ namespace OpenSpartan.Workshop.Shared
                 // File already exists, so we can safely return true.
                 return true;
             }
+        }
+
+        internal static async Task<bool> InitializeAllDataOnLaunch()
+        {
+            var authResult = await InitializePublicClientApplication();
+            if (authResult != null)
+            {
+                var instantiationResult = InitializeHaloClient(authResult);
+                SplashScreenViewModel.Instance.IsBlocking = false;
+
+                // Reset all collections to make sure that left-over data is not displayed.
+                BattlePassViewModel.Instance.BattlePasses = new System.Collections.ObjectModel.ObservableCollection<OperationCompoundModel>();
+                MatchesViewModel.Instance.MatchList = new IncrementalLoadingCollection<MatchesSource, MatchTableEntity>();
+                MedalsViewModel.Instance.Medals = new System.Collections.ObjectModel.ObservableCollection<IGrouping<int, Medal>>();
+
+                if (instantiationResult)
+                {
+                    // Only create the database and handle the initialization if we are able to
+                    // properly authenticate and create a Halo client.
+                    DataHandler.PlayerXuid = HaloClient.Xuid;
+
+                    var databaseBootstrapResult = DataHandler.BootstrapDatabase();
+                    var journalingMode = DataHandler.SetWALJournalingMode();
+
+                    if (journalingMode.ToLower() == "wal")
+                    {
+                        Debug.WriteLine("Successfully set WAL journaling mode.");
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Could not set WAL journaling mode.");
+                    }
+
+                    Parallel.Invoke(async () => await PopulateServiceRecordData(),
+                        async () => await PopulateCareerData(),
+                        async () => await PopulateUserInventory(),
+                        async () => await PopulateCustomizationData(),
+                        async () => await PopulateDecorationData(),
+                        async () => await PopulateMedalData(),
+                        async () =>
+                        {
+                            var matchRecordsOutcome = await PopulateMatchRecordsData();
+
+                            if (matchRecordsOutcome)
+                            {
+                                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                                {
+                                    MatchesViewModel.Instance.MatchLoadingState = Models.MetadataLoadingState.Completed;
+                                    MatchesViewModel.Instance.MatchLoadingParameter = string.Empty;
+                                });
+                            }
+                        },
+                        async () =>
+                        {
+                            try
+                            {
+                                await PopulateBattlePassData();
+
+                                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                                {
+                                    BattlePassViewModel.Instance.BattlePassLoadingState = Models.MetadataLoadingState.Completed;
+                                });
+                            }
+                            catch
+                            {
+                                BattlePassLoadingCancellationTracker = new CancellationTokenSource();
+                            }
+                        });
+
+                    return true;
+                }
+
+                return false;
+            }
+            return false;
         }
     }
 }

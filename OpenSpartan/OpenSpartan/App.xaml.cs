@@ -31,60 +31,7 @@ namespace OpenSpartan.Workshop
             m_window = new MainWindow();
             m_window.Activate();
 
-            var authResult = await UserContextManager.InitializePublicClientApplication();
-            if (authResult != null)
-            {
-                var instantiationResult = UserContextManager.InitializeHaloClient(authResult);
-                SplashScreenViewModel.Instance.IsBlocking = false;
-
-                if (instantiationResult)
-                {
-                    // Only create the database and handle the initialization if we are able to
-                    // properly authenticate and create a Halo client.
-                    DataHandler.PlayerXuid = UserContextManager.HaloClient.Xuid;
-
-                    var databaseBootstrapResult = DataHandler.BootstrapDatabase();
-                    var journalingMode = DataHandler.SetWALJournalingMode();
-
-                    if (journalingMode.ToLower() == "wal")
-                    {
-                        Debug.WriteLine("Successfully set WAL journaling mode.");
-                    }
-                    else
-                    {
-                        Debug.WriteLine("Could not set WAL journaling mode.");
-                    }
-
-                    Parallel.Invoke(async () => await UserContextManager.PopulateServiceRecordData(),
-                        async () => await UserContextManager.PopulateCareerData(),
-                        async () => await UserContextManager.PopulateUserInventory(),
-                        async () => await UserContextManager.PopulateCustomizationData(),
-                        async () => await UserContextManager.PopulateDecorationData(),
-                        async () => await UserContextManager.PopulateMedalData(),
-                        async () =>
-                        {
-                            var matchRecordsOutcome = await UserContextManager.PopulateMatchRecordsData();
-
-                            if (matchRecordsOutcome)
-                            {
-                                await (MainWindow as MainWindow).DispatcherQueue.EnqueueAsync(() =>
-                                {
-                                    MatchesViewModel.Instance.MatchLoadingState = Models.MetadataLoadingState.Completed;
-                                    MatchesViewModel.Instance.MatchLoadingParameter = string.Empty;
-                                });
-                            }
-                        },
-                        async () =>
-                        {
-                            await UserContextManager.PopulateBattlePassData();
-
-                            await (MainWindow as MainWindow).DispatcherQueue.EnqueueAsync(() =>
-                            {
-                                BattlePassViewModel.Instance.BattlePassLoadingState = Models.MetadataLoadingState.Completed;
-                            });
-                        });
-                }
-            }
+            var authResult = await UserContextManager.InitializeAllDataOnLaunch();
         }
 
         internal Window m_window;
