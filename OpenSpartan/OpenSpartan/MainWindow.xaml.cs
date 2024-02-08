@@ -14,6 +14,8 @@ namespace OpenSpartan.Workshop
             this.InitializeComponent();
             this.ExtendsContentIntoTitleBar = true;
 
+            this.AppWindow.SetIcon("CustomImages/OpenSpartan.Workshop.ico");
+
             nvRoot.SelectedItem = nvRoot.MenuItems.OfType<NavigationViewItem>().First();
             ContentFrame.Navigate(typeof(Views.HomeView), null, new EntranceNavigationTransitionInfo());
 

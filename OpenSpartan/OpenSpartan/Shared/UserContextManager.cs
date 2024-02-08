@@ -32,11 +32,26 @@ namespace OpenSpartan.Workshop.Shared
 
         internal static XboxTicket XboxUserContext { get; set; }
 
+        internal static IntPtr GetMainWindowHandle()
+        {
+            return WinRT.Interop.WindowNative.GetWindowHandle(DispatcherWindow);
+        }
+
         internal static async Task<AuthenticationResult> InitializePublicClientApplication()
         {
+            BrokerOptions options = new(BrokerOptions.OperatingSystems.Windows)
+            {
+                Title = "OpenSpartan Workshop"
+            };
+
             var storageProperties = new StorageCreationPropertiesBuilder(Core.Configuration.CacheFileName, Core.Configuration.AppDataDirectory).Build();
 
-            var pca = PublicClientApplicationBuilder.Create(Core.Configuration.ClientID).WithAuthority(AadAuthorityAudience.PersonalMicrosoftAccount).Build();
+            var pca = PublicClientApplicationBuilder
+                .Create(Core.Configuration.ClientID)
+                .WithAuthority(AadAuthorityAudience.PersonalMicrosoftAccount)
+                .WithParentActivityOrWindow(GetMainWindowHandle)
+                .WithBroker(options)
+                .Build();
 
             // This hooks up the cross-platform cache into MSAL
             var cacheHelper = await MsalCacheHelper.CreateAsync(storageProperties);
