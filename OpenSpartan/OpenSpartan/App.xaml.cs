@@ -70,6 +70,7 @@ namespace OpenSpartan.Workshop
                                 await (MainWindow as MainWindow).DispatcherQueue.EnqueueAsync(() =>
                                 {
                                     MatchesViewModel.Instance.MatchLoadingState = Models.MetadataLoadingState.Completed;
+                                    MatchesViewModel.Instance.MatchLoadingParameter = string.Empty;
                                 });
                             }
                         },

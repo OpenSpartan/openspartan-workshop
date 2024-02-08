@@ -72,6 +72,7 @@
                            HorizontalScrollBarVisibility="Disabled"
                            PointerReleased="dgdMatches_PointerReleased">
             <controls:DataGrid.Columns>
+                <controls:DataGridTextColumn Header="Start Time" Width="*" Binding="{Binding StartTime}"></controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Match ID" Width="*" Binding="{Binding MatchId}"></controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Outcome" Width="120" Binding="{Binding Outcome}">
                     <controls:DataGridTextColumn.CellStyle>
@@ -82,6 +83,7 @@
                         </Style>
                     </controls:DataGridTextColumn.CellStyle>
                 </controls:DataGridTextColumn>
+                <controls:DataGridTextColumn Header="TeamMmr" Width="*" Binding="{Binding TeamMmr}"></controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Duration" Width="*" Binding="{Binding Duration}"></controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Rank" Width="*" Binding="{Binding Rank}"></controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Category" Width="*" Binding="{Binding Category}"></controls:DataGridTextColumn>

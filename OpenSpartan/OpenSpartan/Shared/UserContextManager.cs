@@ -416,6 +416,11 @@ namespace OpenSpartan.Workshop.Shared
             }
             catch (Exception ex)
             {
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                {
+                    MatchesViewModel.Instance.MatchLoadingParameter = "0";
+                });
+
                 Debug.WriteLine(ex.Message);
                 return false;
             }
@@ -866,8 +871,7 @@ namespace OpenSpartan.Workshop.Shared
                     string qualifiedImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", currencyImageLocation);
 
                     // Let's make sure that we create the directory if it does not exist.
-                    FileInfo file = new(qualifiedImagePath);
-                    file.Directory.Create();
+                    EnsureDirectoryExists(qualifiedImagePath);
 
                     if (!System.IO.File.Exists(qualifiedImagePath))
                     {
@@ -977,8 +981,7 @@ namespace OpenSpartan.Workshop.Shared
             string qualifiedImagePath = Path.Join(Core.Configuration.AppDataDirectory, subDirectoryName, imagePath);
 
             // Let's make sure that we create the directory if it does not exist.
-            FileInfo file = new(qualifiedImagePath);
-            file.Directory.Create();
+            EnsureDirectoryExists(qualifiedImagePath);
 
             if (!System.IO.File.Exists(qualifiedImagePath))
             {

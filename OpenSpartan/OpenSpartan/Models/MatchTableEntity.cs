@@ -31,5 +31,7 @@ namespace OpenSpartan.Workshop.Models
         public ParticipationInfo ParticipationInfo { get; set; }
 
         public List<PlayerTeamStat> PlayerTeamStats { get; set; }
+
+        public float? TeamMmr { get; set; }
     }
 }
