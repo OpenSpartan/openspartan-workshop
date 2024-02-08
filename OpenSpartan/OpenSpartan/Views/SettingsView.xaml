@@ -40,23 +40,16 @@
                         <TextBlock>Version:</TextBlock>
                         <TextBlock Margin="4,0,0,0" Text="{Binding Version}"></TextBlock>
                     </StackPanel>
+                    <TextBlock>Report issues or request features <Hyperlink x:Name="lnkGitHub">on GitHub</Hyperlink>.</TextBlock>
+                    <TextBlock>Built with ❤️ by <Hyperlink NavigateUri="https://den.dev">Den Delimarsky</Hyperlink> as an unofficial Halo Infinite companion app.</TextBlock>
                 </StackPanel>
             </StackPanel>
 
             <!--Application details-->
             <StackPanel Margin="0,12,0,0">
                 <TextBlock Text="User Details" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
-                
-                <Grid Margin="0,8,0,0" Background="#404040" BorderThickness="2" CornerRadius="4" Height="36" Width="400" HorizontalAlignment="Left">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="36"></ColumnDefinition>
-                        <ColumnDefinition Width="*"></ColumnDefinition>
-                    </Grid.ColumnDefinitions>
 
-                    <FontIcon FontSize="14" Glyph="&#xE946;"/>
-
-                    <TextBlock Grid.Column="1" Text="Logging out does not delete your existing data." VerticalAlignment="Center"></TextBlock>
-                </Grid>
+                <InfoBar IsClosable="False" Margin="0,4,0,4" IsOpen="True" Width="400" HorizontalAlignment="Left" Severity="Warning" Message="Logging out does not delete your existing data."></InfoBar>
                 
                 <StackPanel Margin="0,4,0,0">
                     <Grid>
@@ -70,13 +63,13 @@
                             <RowDefinition Height="24"></RowDefinition>
                         </Grid.RowDefinitions>
 
-                        <TextBlock>Logged in as:</TextBlock>
+                        <TextBlock>Gamertag:</TextBlock>
                         <TextBlock Margin="4,0,0,0" Text="{Binding Gamertag}" Grid.Column="1"></TextBlock>
 
                         <TextBlock Grid.Row="1">XUID:</TextBlock>
                         <TextBlock Margin="4,0,0,0" Text="{Binding Xuid}" Grid.Row="1" Grid.Column="1"></TextBlock>
                     </Grid>
-                    
+
                     <Button Margin="0,8,0,0" Width="100" x:Name="btnLogOut" Click="btnLogOut_Click">Log Out</Button>
                 </StackPanel>
             </StackPanel>
@@ -91,19 +84,10 @@
             <StackPanel Margin="0,12,0,0">
                 <TextBlock Text="API Settings" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
 
-                <Grid Margin="0,8,0,0" Background="#404040" BorderThickness="2" CornerRadius="4" Height="72" Width="400" HorizontalAlignment="Left">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="36"></ColumnDefinition>
-                        <ColumnDefinition Width="*"></ColumnDefinition>
-                    </Grid.ColumnDefinitions>
+                <InfoBar IsClosable="False"  Margin="0,4,0,4" IsOpen="True" Width="400" HorizontalAlignment="Left" Severity="Warning" Message="Make sure you know what you're doing. Setting bad values may result in failure to acquire new data."></InfoBar>
 
-                    <FontIcon FontSize="14" Glyph="&#xE7BA;"/>
-
-                    <TextBlock Grid.Column="1" Text="Make sure you know what you're doing This may result in failure to acquire new data." TextWrapping="Wrap" Margin="0,0,8,0" VerticalAlignment="Center"></TextBlock>
-                </Grid>
-                
                 <StackPanel Margin="0,4,0,0">
-                    <RadioButton>Sync with OpenSpartan Workshop settings</RadioButton>
+                    <RadioButton IsChecked="{Binding Settings.SyncSettings}">Sync with OpenSpartan Workshop API settings</RadioButton>
                     <RadioButton>Set directly</RadioButton>
 
                     <Grid Margin="0,8,0,0">
@@ -130,6 +114,14 @@
                         <TextBox VerticalAlignment="Center" Grid.Column="1" Grid.Row="3" Width="320" Margin="4,0,0,0" Text="{Binding Settings.Release}"></TextBox>
                     </Grid>
                 </StackPanel>
+            </StackPanel>
+
+            <StackPanel Margin="0,12,0,0">
+                <TextBlock Text="Disclaimers" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
+                <TextBlock>This application is not an official Halo Infinite client. Use at your own risk.</TextBlock>
+                <TextBlock>The author of this application is not liable for any damages, including the termination or banning of Xbox Live/Microsoft accounts.</TextBlock>
+                <TextBlock>Halo, Halo Infinite, and related game concepts or assets are registered trademarks and/or property of Microsoft Corporation.</TextBlock>
+                <TextBlock>This application is not endorsed, supported, or maintained by 343 Industries and/or Microsoft Corporation.</TextBlock>
             </StackPanel>
         </StackPanel>
     </Grid>
