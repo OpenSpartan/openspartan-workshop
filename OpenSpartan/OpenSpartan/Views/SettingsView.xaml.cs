@@ -1,3 +1,4 @@
+using CommunityToolkit.WinUI;
 using Microsoft.UI.Xaml.Controls;
 using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
@@ -29,13 +30,19 @@ namespace OpenSpartan.Workshop.Views
             {
                 try
                 {
-                    File.Delete(Path.Combine(Core.Configuration.AppDataDirectory, Core.Configuration.CacheFileName));
+                    System.IO.File.Delete(Path.Combine(Core.Configuration.AppDataDirectory, Core.Configuration.CacheFileName));
 
                     // Make sure that we stop loading matches, if any are currently in progress.
                     UserContextManager.MatchLoadingCancellationTracker.Cancel();
 
-                    // Block the screen again.
-                    SplashScreenViewModel.Instance.IsBlocking = true;
+                    await UserContextManager.DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    {
+                        SplashScreenViewModel.Instance.IsBlocking = true;
+
+                        // Reset the player details.
+                        HomeViewModel.Instance.Xuid = null;
+                        HomeViewModel.Instance.Gamertag = null;
+                    });
 
                     var authResult = await UserContextManager.InitializeAllDataOnLaunch();
                 }

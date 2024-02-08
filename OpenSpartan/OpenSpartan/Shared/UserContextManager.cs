@@ -87,23 +87,31 @@ namespace OpenSpartan.Workshop.Shared
 
         public static async Task<HaloApiResultContainer<T, RawResponseContainer>> SafeAPICall<T>(Func<Task<HaloApiResultContainer<T, RawResponseContainer>>> orionAPICall)
         {
-            var result = await orionAPICall();
-
-            if (result.Response.Code == 401)
+            try
             {
-                var tokenResult = await ReAcquireTokens();
+                var result = await orionAPICall();
 
-                if (!tokenResult)
+                if (result.Response.Code == 401)
                 {
-                    Debug.WriteLine("Could not reacquire tokens.");
+                    var tokenResult = await ReAcquireTokens();
 
-                    return default;
+                    if (!tokenResult)
+                    {
+                        Debug.WriteLine("Could not reacquire tokens.");
+
+                        return default;
+                    }
+
+                    return await orionAPICall();
                 }
 
-                return await orionAPICall();
+                return result;
             }
-
-            return result;
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to make Halo Infinite API call. {ex.Message}");
+                return null;
+            }
         }
 
         internal static bool InitializeHaloClient(AuthenticationResult authResult)
@@ -262,9 +270,6 @@ namespace OpenSpartan.Workshop.Shared
         {
             try
             {
-                HomeViewModel.Instance.Gamertag = XboxUserContext.DisplayClaims.Xui[0].Gamertag;
-                HomeViewModel.Instance.Xuid = XboxUserContext.DisplayClaims.Xui[0].XUID;
-
                 // Get initial service record details
                 var serviceRecordResult = await SafeAPICall(async () =>
                 {
@@ -389,7 +394,7 @@ namespace OpenSpartan.Workshop.Shared
             {
                 //var currentMatchmadeRecords = DataHandler.GetCountOfMatchRecords();
 
-                List<Guid> ids = await GetPlayerMatchIds(XboxUserContext.DisplayClaims.Xui[0].XUID);
+                List<Guid> ids = await GetPlayerMatchIds(XboxUserContext.DisplayClaims.Xui[0].XUID, MatchLoadingCancellationTracker.Token);
 
                 if (ids != null && ids.Count > 0)
                 {
@@ -407,7 +412,7 @@ namespace OpenSpartan.Workshop.Shared
                                 MatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Loading;
                             });
 
-                            var result = await UpdateMatchRecords(matchesToProcess);
+                            var result = await UpdateMatchRecords(matchesToProcess, MatchLoadingCancellationTracker.Token);
 
                             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                             {
@@ -425,7 +430,7 @@ namespace OpenSpartan.Workshop.Shared
                     {
                         Debug.WriteLine("No matches found locally, so need to re-hydrate the database.");
 
-                        var result = await UpdateMatchRecords(distinctMatchIds);
+                        var result = await UpdateMatchRecords(distinctMatchIds, MatchLoadingCancellationTracker.Token);
 
                         await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                         {
@@ -450,7 +455,7 @@ namespace OpenSpartan.Workshop.Shared
             }
         }
 
-        internal static async Task<bool> UpdateMatchRecords(IEnumerable<Guid> matchIds)
+        internal static async Task<bool> UpdateMatchRecords(IEnumerable<Guid> matchIds, CancellationToken cancellationToken)
         {
             try
             {
@@ -464,7 +469,7 @@ namespace OpenSpartan.Workshop.Shared
 
                 foreach (var matchId in matchIds)
                 {
-                    MatchLoadingCancellationTracker.Token.ThrowIfCancellationRequested();
+                    cancellationToken.ThrowIfCancellationRequested();
 
                     double completionProgress = (matchCounter++ / (double)matchesTotal) * 100.0;
 
@@ -558,7 +563,7 @@ namespace OpenSpartan.Workshop.Shared
             return playerStatsSnapshot;
         }
 
-        private static async Task<List<Guid>> GetPlayerMatchIds(string xuid)
+        private static async Task<List<Guid>> GetPlayerMatchIds(string xuid, CancellationToken cancellationToken)
         {
             List<Guid> matchIds = new();
 
@@ -570,7 +575,7 @@ namespace OpenSpartan.Workshop.Shared
 
             while (lastResultCount > 0)
             {
-                MatchLoadingCancellationTracker.Token.ThrowIfCancellationRequested();
+                cancellationToken.ThrowIfCancellationRequested();
 
                 var matches = await SafeAPICall(async () =>
                 {
@@ -621,30 +626,33 @@ namespace OpenSpartan.Workshop.Shared
 
         internal static async void GetPlayerMatches()
         {
-            List<MatchTableEntity> matches = null;
-            string date = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture);
+            if (HomeViewModel.Instance.Xuid != null)
+            {
+                List<MatchTableEntity> matches = null;
+                string date = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture);
 
-            if (MatchesViewModel.Instance.MatchList.Count == 0)
-            {
-                matches = DataHandler.GetMatches($"xuid({HomeViewModel.Instance.Xuid})", date, 100);
-            }
-            else
-            {
-                date = MatchesViewModel.Instance.MatchList.Min(a => a.StartTime).ToString("o", CultureInfo.InvariantCulture);
-                matches = DataHandler.GetMatches($"xuid({HomeViewModel.Instance.Xuid})", date, 10);
-            }
-
-            if (matches != null)
-            {
-                var dispatcherWindow = ((Application.Current as App)?.MainWindow) as MainWindow;
-                await dispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                if (MatchesViewModel.Instance.MatchList.Count == 0)
                 {
-                    MatchesViewModel.Instance.MatchList.AddRange(matches);
-                });
-            }
-            else
-            {
-                Debug.WriteLine("Could not get the list of matches for the specified parameters.");
+                    matches = DataHandler.GetMatches($"xuid({HomeViewModel.Instance.Xuid})", date, 100);
+                }
+                else
+                {
+                    date = MatchesViewModel.Instance.MatchList.Min(a => a.StartTime).ToString("o", CultureInfo.InvariantCulture);
+                    matches = DataHandler.GetMatches($"xuid({HomeViewModel.Instance.Xuid})", date, 10);
+                }
+
+                if (matches != null)
+                {
+                    var dispatcherWindow = ((Application.Current as App)?.MainWindow) as MainWindow;
+                    await dispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    {
+                        MatchesViewModel.Instance.MatchList.AddRange(matches);
+                    });
+                }
+                else
+                {
+                    Debug.WriteLine("Could not get the list of matches for the specified parameters.");
+                }
             }
         }
 
@@ -1040,18 +1048,16 @@ namespace OpenSpartan.Workshop.Shared
             if (authResult != null)
             {
                 var instantiationResult = InitializeHaloClient(authResult);
-                SplashScreenViewModel.Instance.IsBlocking = false;
 
-                // Reset all collections to make sure that left-over data is not displayed.
-                BattlePassViewModel.Instance.BattlePasses = new System.Collections.ObjectModel.ObservableCollection<OperationCompoundModel>();
-                MatchesViewModel.Instance.MatchList = new IncrementalLoadingCollection<MatchesSource, MatchTableEntity>();
-                MedalsViewModel.Instance.Medals = new System.Collections.ObjectModel.ObservableCollection<IGrouping<int, Medal>>();
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                {
+                    SplashScreenViewModel.Instance.IsBlocking = false;
+                });
 
                 if (instantiationResult)
                 {
-                    // Only create the database and handle the initialization if we are able to
-                    // properly authenticate and create a Halo client.
-                    DataHandler.PlayerXuid = HaloClient.Xuid;
+                    HomeViewModel.Instance.Gamertag = XboxUserContext.DisplayClaims.Xui[0].Gamertag;
+                    HomeViewModel.Instance.Xuid = XboxUserContext.DisplayClaims.Xui[0].XUID;
 
                     var databaseBootstrapResult = DataHandler.BootstrapDatabase();
                     var journalingMode = DataHandler.SetWALJournalingMode();
@@ -1064,6 +1070,14 @@ namespace OpenSpartan.Workshop.Shared
                     {
                         Debug.WriteLine("Could not set WAL journaling mode.");
                     }
+
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    {
+                        // Reset all collections to make sure that left-over data is not displayed.
+                        BattlePassViewModel.Instance.BattlePasses = BattlePassViewModel.Instance.BattlePasses ?? new System.Collections.ObjectModel.ObservableCollection<OperationCompoundModel>();
+                        MatchesViewModel.Instance.MatchList = MatchesViewModel.Instance.MatchList ?? new IncrementalLoadingCollection<MatchesSource, MatchTableEntity>();
+                        MedalsViewModel.Instance.Medals = MedalsViewModel.Instance.Medals ?? new System.Collections.ObjectModel.ObservableCollection<IGrouping<int, Medal>>();
+                    });
 
                     Parallel.Invoke(async () => await PopulateServiceRecordData(),
                         async () => await PopulateCareerData(),

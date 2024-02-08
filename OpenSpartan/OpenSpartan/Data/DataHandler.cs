@@ -3,6 +3,7 @@ using Den.Dev.Orion.Models.HaloInfinite;
 using Microsoft.Data.Sqlite;
 using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.Shared;
+using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,9 +19,7 @@ namespace OpenSpartan.Workshop.Data
 {
     internal class DataHandler
     {
-        internal static string PlayerXuid { get; set; }
-
-        internal static string DatabasePath => Path.Combine(Core.Configuration.AppDataDirectory, "data", $"{PlayerXuid}.db");
+        internal static string DatabasePath => Path.Combine(Core.Configuration.AppDataDirectory, "data", $"{HomeViewModel.Instance.Xuid}.db");
 
         private static readonly JsonSerializerOptions serializerOptions = new()
         {
