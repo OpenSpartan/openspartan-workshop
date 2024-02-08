@@ -156,7 +156,7 @@ namespace OpenSpartan.Workshop.Shared
                 string localClearance = string.Empty;
                 Task.Run(async () =>
                 {
-                    var clearance = (await SafeAPICall(async () => { return await HaloClient.SettingsGetClearance("RETAIL", "UNUSED", "254001.23.12.19.2223-2", "1.6"); })).Result;
+                    var clearance = (await SafeAPICall(async () => { return await HaloClient.SettingsGetClearance(SettingsViewModel.Instance.Settings.Audience, SettingsViewModel.Instance.Settings.Sandbox, SettingsViewModel.Instance.Settings.Build, SettingsViewModel.Instance.Settings.Release); })).Result;
                     if (clearance != null)
                     {
                         localClearance = clearance.FlightConfigurationId;
@@ -246,7 +246,7 @@ namespace OpenSpartan.Workshop.Shared
             }
         }
 
-        private static void EnsureDirectoryExists(string path)
+        internal static void EnsureDirectoryExists(string path)
         {
             var file = new FileInfo(path);
             file.Directory.Create();
@@ -295,7 +295,8 @@ namespace OpenSpartan.Workshop.Shared
         {
             try
             {
-                string backgroundPath = "progression/Switcher/Season_Switcher_S6_SOF.png";
+                string backgroundPath = SettingsViewModel.Instance.Settings.HeaderImagePath;
+
                 // Get initial service record details
                 string qualifiedBackgroundImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", backgroundPath);
 

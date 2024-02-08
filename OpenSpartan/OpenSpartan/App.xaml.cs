@@ -1,10 +1,8 @@
-﻿using CommunityToolkit.WinUI;
-using Microsoft.UI.Xaml;
-using OpenSpartan.Workshop.Data;
+﻿using Microsoft.UI.Xaml;
+using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
-using System.Diagnostics;
-using System.Threading.Tasks;
+using System.IO;
 
 namespace OpenSpartan.Workshop
 {
@@ -30,8 +28,32 @@ namespace OpenSpartan.Workshop
         {
             m_window = new MainWindow();
             m_window.Activate();
+            
+            LoadSettings();
 
             var authResult = await UserContextManager.InitializeAllDataOnLaunch();
+        }
+
+        private void LoadSettings()
+        {
+            var settingsPath = Path.Combine(Configuration.AppDataDirectory, Configuration.SettingsFileName);
+            if (File.Exists(settingsPath))
+            {
+                SettingsViewModel.Instance.Settings = SettingsManager.LoadSettings();
+            }
+            else
+            {
+                SettingsViewModel.Instance.Settings = new Models.WorkshopSettings
+                {
+                    APIVersion = Configuration.DefaultAPIVersion,
+                    Audience = Configuration.DefaultAudience,
+                    Build = Configuration.DefaultBuild,
+                    HeaderImagePath = Configuration.DefaultHeaderImage,
+                    Release = Configuration.DefaultRelease,
+                    SyncSettings = true,
+                    Sandbox = Configuration.DefaultSandbox,
+                };
+            }
         }
 
         internal Window m_window;

@@ -38,7 +38,7 @@
                     <TextBlock>OpenSpartan Workshop</TextBlock>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock>Version:</TextBlock>
-                        <TextBlock Margin="4,0,0,0">1.0.0</TextBlock>
+                        <TextBlock Margin="4,0,0,0" Text="{Binding Version}"></TextBlock>
                     </StackPanel>
                 </StackPanel>
             </StackPanel>
@@ -84,7 +84,7 @@
             <!--Data details-->
             <StackPanel Margin="0,12,0,0">
                 <TextBlock Text="Data" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
-                <Button Margin="0,8,0,0" Width="100">View Files</Button>
+                <Button Margin="0,8,0,0" Width="100" x:Name="btnViewFiles" Click="btnViewFiles_Click">View Files</Button>
             </StackPanel>
 
             <!--API Settings-->
@@ -116,15 +116,18 @@
                             <RowDefinition Height="40"></RowDefinition>
                             <RowDefinition Height="40"></RowDefinition>
                             <RowDefinition Height="40"></RowDefinition>
+                            <RowDefinition Height="40"></RowDefinition>
                         </Grid.RowDefinitions>
 
-                        <TextBlock VerticalAlignment="Center" Grid.Column="0" Grid.Row="0">Sandbox:</TextBlock>
-                        <TextBlock VerticalAlignment="Center"  Grid.Column="0" Grid.Row="1">Build:</TextBlock>
-                        <TextBlock VerticalAlignment="Center" Grid.Column="0" Grid.Row="2">Release:</TextBlock>
+                        <TextBlock VerticalAlignment="Center" Grid.Column="0" Grid.Row="0">Audience:</TextBlock>
+                        <TextBlock VerticalAlignment="Center" Grid.Column="0" Grid.Row="1">Sandbox:</TextBlock>
+                        <TextBlock VerticalAlignment="Center" Grid.Column="0" Grid.Row="2">Build:</TextBlock>
+                        <TextBlock VerticalAlignment="Center" Grid.Column="0" Grid.Row="3">Release:</TextBlock>
 
-                        <TextBox VerticalAlignment="Center" Grid.Column="1" Grid.Row="0" Width="320" Margin="4,0,0,0"></TextBox>
-                        <TextBox VerticalAlignment="Center" Grid.Column="1" Grid.Row="1" Width="320" Margin="4,0,0,0"></TextBox>
-                        <TextBox VerticalAlignment="Center" Grid.Column="1" Grid.Row="2" Width="320" Margin="4,0,0,0"></TextBox>
+                        <TextBox VerticalAlignment="Center" Grid.Column="1" Grid.Row="0" Width="320" Margin="4,0,0,0" Text="{Binding Settings.Audience}"></TextBox>
+                        <TextBox VerticalAlignment="Center" Grid.Column="1" Grid.Row="1" Width="320" Margin="4,0,0,0" Text="{Binding Settings.Sandbox}"></TextBox>
+                        <TextBox VerticalAlignment="Center" Grid.Column="1" Grid.Row="2" Width="320" Margin="4,0,0,0" Text="{Binding Settings.Build}"></TextBox>
+                        <TextBox VerticalAlignment="Center" Grid.Column="1" Grid.Row="3" Width="320" Margin="4,0,0,0" Text="{Binding Settings.Release}"></TextBox>
                     </Grid>
                 </StackPanel>
             </StackPanel>

@@ -8,15 +8,15 @@
   IgnorableNamespaces="uap rescap">
 
   <Identity
-    Name="6b225ec5-7223-4b99-a1d3-8a84b234dec7"
+    Name="OpenSpartan.Workshop"
     Publisher="CN=mbua"
     Version="1.0.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="6b225ec5-7223-4b99-a1d3-8a84b234dec7" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>OpenSpartan</DisplayName>
-    <PublisherDisplayName>mbua</PublisherDisplayName>
+    <DisplayName>OpenSpartan.Workshop</DisplayName>
+    <PublisherDisplayName>Den Delimarsky</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 

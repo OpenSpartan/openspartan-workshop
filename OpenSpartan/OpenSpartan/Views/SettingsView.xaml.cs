@@ -1,14 +1,11 @@
 using CommunityToolkit.WinUI;
-using Den.Dev.Orion.Models.HaloInfinite;
 using Microsoft.UI.Xaml.Controls;
-using OpenSpartan.Workshop.Data;
-using OpenSpartan.Workshop.Models;
+using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Windows.Forms;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -60,6 +57,16 @@ namespace OpenSpartan.Workshop.Views
                     Debug.WriteLine($"Could not log out by deleting the credential cache file. {ex.Message}");
                 }
             }
+        }
+
+        private void btnViewFiles_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo()
+            {
+                FileName = Path.Combine(Windows.Storage.ApplicationData.Current.LocalCacheFolder.Path, "Local", "OpenSpartan.Workshop"),
+                UseShellExecute = true,
+                Verb = "open"
+            });
         }
     }
 }

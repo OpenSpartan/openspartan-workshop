@@ -1,4 +1,6 @@
-﻿using OpenSpartan.Workshop.Shared;
+﻿using OpenSpartan.Workshop.Core;
+using OpenSpartan.Workshop.Models;
+using OpenSpartan.Workshop.Shared;
 using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.ViewModels
@@ -17,65 +19,32 @@ namespace OpenSpartan.Workshop.ViewModels
             get => HomeViewModel.Instance.Xuid;
         }
 
-        public bool IsSyncedWithService
+        public WorkshopSettings Settings
         {
-            get => _isSyncedWithService;
+            get => _settings;
             set
             {
-                if (_isSyncedWithService != value)
+                if (_settings != value)
                 {
-                    _isSyncedWithService = value;
+                    _settings = value;
                     NotifyPropertyChanged();
                 }
             }
         }
 
-        public string Sandbox
+        public string Version
         {
-            get => _sandbox;
-            set
-            {
-                if (_sandbox != value)
-                {
-                    _sandbox = value;
-                    NotifyPropertyChanged();
-                }
-            }
+            get => $"{Configuration.Version}-{Configuration.BuildId}";
         }
 
-        public string BuildId
-        {
-            get => _buildId;
-            set
-            {
-                if (_buildId != value)
-                {
-                    _buildId = value;
-                    NotifyPropertyChanged();
-                }
-            }
-        }
-
-        public string Release
-        {
-            get => _release;
-            set
-            {
-                if (_release != value)
-                {
-                    _release = value;
-                    NotifyPropertyChanged();
-                }
-            }
-        }
-
-        private bool _isSyncedWithService;
-        private string _sandbox;
-        private string _buildId;
-        private string _release;
+        private WorkshopSettings _settings;
 
         public void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
         {
+            if (propertyName == nameof(Settings))
+            {
+                SettingsManager.StoreSettings(Settings);
+            }
             OnPropertyChanged(propertyName);
         }
     }
