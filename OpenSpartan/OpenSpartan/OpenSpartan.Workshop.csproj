@@ -12,7 +12,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-    <RootNamespace>OpenSpartan.Workshop.Workshop</RootNamespace>
+    <RootNamespace>OpenSpartan.Workshop</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>x86;x64;ARM64</Platforms>
     <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
@@ -23,6 +23,7 @@
   <ItemGroup>
     <None Remove="Controls\HeaderTile.xaml" />
     <None Remove="CustomImages\logo-icon.png" />
+    <None Remove="CustomImages\OpenSpartan.Workshop.ico" />
     <None Remove="Queries\Bootstrap\InventoryItems.sql" />
     <None Remove="Queries\Bootstrap\SetWALJournalingMode.sql" />
     <None Remove="Queries\Insert\InventoryItems.sql" />
@@ -42,6 +43,10 @@
     <EmbeddedResource Include="CustomImages\logo-icon.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="CustomImages\OpenSpartan.Workshop.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <Content Include="CustomImages\OpenSpartan.Workshop.ico" />
     <Content Include="Queries\Bootstrap\SetWALJournalingMode.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -76,7 +81,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
-    <PackageReference Include="Den.Dev.Orion" Version="1.0.44" />
+    <PackageReference Include="Den.Dev.Orion" Version="1.0.45" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.1" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.59.0" />
     <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="4.59.0" />
@@ -223,6 +228,7 @@
   <PropertyGroup>
     <SsdtUnitTestVersion>3.1</SsdtUnitTestVersion>
     <Nullable>disable</Nullable>
+    <ApplicationIcon>CustomImages\OpenSpartan.Workshop.ico</ApplicationIcon>
   </PropertyGroup>
   <Import Project="$(SQLDBExtensionsRefPath)\Microsoft.Data.Tools.Schema.Sql.UnitTesting.targets" Condition="$(VisualStudioVersion) != '15.0' And '$(SQLDBExtensionsRefPath)' != ''" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.Sql.UnitTesting.targets" Condition="$(VisualStudioVersion) != '15.0' And '$(SQLDBExtensionsRefPath)' == ''" />
