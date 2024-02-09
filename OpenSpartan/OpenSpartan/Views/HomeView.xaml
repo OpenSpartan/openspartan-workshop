@@ -164,10 +164,10 @@
             <StackPanel Orientation="Vertical">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Margin="24,8,0,8" Text="Career" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
-                    <Button Height="36" VerticalAlignment="Center" Margin="4" x:Name="btnRefreshServiceRecord">
+                    <Button Height="36" VerticalAlignment="Center" Margin="4" x:Name="btnRefreshServiceRecord" Click="btnRefreshServiceRecord_Click">
                         <FontIcon FontSize="14" Glyph="&#xE72C;"/>
                     </Button>
-                    <Button Height="36" VerticalAlignment="Center" Margin="4" x:Name="btnOpenHaloWaypoint">
+                    <Button Height="36" VerticalAlignment="Center" Margin="4" x:Name="btnOpenHaloWaypoint" Click="btnOpenHaloWaypoint_Click">
                         <StackPanel Orientation="Horizontal">
                             <FontIcon FontSize="14" Glyph="&#xE774;"/>
                             <TextBlock Margin="8,0,0,0">Open on Halo Waypoint</TextBlock>

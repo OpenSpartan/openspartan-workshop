@@ -198,7 +198,7 @@ namespace OpenSpartan.Workshop.Shared
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => HomeViewModel.Instance.CareerSnapshot = careerTrackResult.Result);
                 }
 
-                if (careerTrackContainerResult.Result != null && careerTrackContainerResult.Response.Code == 200)
+                if (careerTrackContainerResult.Result != null && (careerTrackContainerResult.Response.Code == 200 || careerTrackContainerResult.Response.Code == 304))
                 {
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => HomeViewModel.Instance.MaxRank = careerTrackContainerResult.Result.Ranks.Count);
 
