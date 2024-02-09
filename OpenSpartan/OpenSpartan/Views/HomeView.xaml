@@ -162,8 +162,19 @@
 
             <!--Career-->
             <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Horizontal">
                     <TextBlock Margin="24,8,0,8" Text="Career" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
-                    <VariableSizedWrapGrid Orientation="Horizontal" ItemWidth="250" Margin="24,0,24,0">
+                    <Button Height="36" VerticalAlignment="Center" Margin="4" x:Name="btnRefreshServiceRecord">
+                        <FontIcon FontSize="14" Glyph="&#xE72C;"/>
+                    </Button>
+                    <Button Height="36" VerticalAlignment="Center" Margin="4" x:Name="btnOpenHaloWaypoint">
+                        <StackPanel Orientation="Horizontal">
+                            <FontIcon FontSize="14" Glyph="&#xE774;"/>
+                            <TextBlock Margin="8,0,0,0">Open on Halo Waypoint</TextBlock>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                <VariableSizedWrapGrid Orientation="Horizontal" ItemWidth="250" Margin="24,0,24,0">
                         <StackPanel Background="#404040" Orientation="Vertical" BorderThickness="2" Padding="12" CornerRadius="4">
                             <Grid>
                                 <ProgressRing Background="#2F2F2F" Height="160" Width="160" IsIndeterminate="False" Value="{Binding RankProgress}" Maximum="1" Minimum="0" HorizontalAlignment="Center" VerticalAlignment="Center"></ProgressRing>

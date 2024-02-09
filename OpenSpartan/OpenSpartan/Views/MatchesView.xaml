@@ -35,7 +35,7 @@
 
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Match History" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
-                <Button VerticalAlignment="Center" Margin="4" x:Name="btnRefreshMatches" Click="btnRefreshMatches_Click">
+                <Button Height="36" VerticalAlignment="Center" Margin="4" x:Name="btnRefreshMatches" Click="btnRefreshMatches_Click">
                     <FontIcon FontSize="14" Glyph="&#xE72C;"/>
                 </Button>
             </StackPanel>

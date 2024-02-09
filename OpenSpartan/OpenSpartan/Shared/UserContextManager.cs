@@ -8,6 +8,7 @@ using Den.Dev.Orion.Models.Security;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
 using Microsoft.UI.Xaml;
+using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Data;
 using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.ViewModels;
@@ -151,7 +152,7 @@ namespace OpenSpartan.Workshop.Shared
             {
                 XboxUserContext = extendedTicket;
 
-                HaloClient = new(haloToken.Token, extendedTicket.DisplayClaims.Xui[0].XUID);
+                HaloClient = new(haloToken.Token, extendedTicket.DisplayClaims.Xui[0].XUID, userAgent: $"{Configuration.PackageName}\\{Configuration.Version}-{Configuration.BuildId}");
 
                 string localClearance = string.Empty;
                 Task.Run(async () =>
