@@ -19,6 +19,40 @@ namespace OpenSpartan.Workshop.ViewModels
             get => HomeViewModel.Instance.Xuid;
         }
 
+        public bool SyncSettings
+        {
+            get
+            {
+                return Settings.SyncSettings;
+            }
+            set
+            {
+                if (Settings.SyncSettings != value)
+                {
+                    Settings.SyncSettings = value;
+                    SettingsManager.StoreSettings(Settings);
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public string Release
+        {
+            get
+            {
+                return Settings.Release;
+            }
+            set
+            {
+                if (Settings.Release != value)
+                {
+                    Settings.Release = value;
+                    SettingsManager.StoreSettings(Settings);
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
         public WorkshopSettings Settings
         {
             get => _settings;
@@ -41,10 +75,6 @@ namespace OpenSpartan.Workshop.ViewModels
 
         public void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
         {
-            if (propertyName == nameof(Settings))
-            {
-                SettingsManager.StoreSettings(Settings);
-            }
             OnPropertyChanged(propertyName);
         }
     }

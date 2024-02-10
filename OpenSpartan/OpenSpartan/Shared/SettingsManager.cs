@@ -13,7 +13,7 @@ namespace OpenSpartan.Workshop.Shared
         {
             try
             {
-                return JsonSerializer.Deserialize<WorkshopSettings>(File.ReadAllText(Path.Combine(Configuration.AppDataDirectory, Configuration.SettingsFileName)));
+                return JsonSerializer.Deserialize<WorkshopSettings>(File.ReadAllText(Path.Combine(Configuration.AppDataDirectory, Configuration.SettingsFileName)), UserContextManager.SerializerOptions);
             }
             catch (Exception ex)
             {

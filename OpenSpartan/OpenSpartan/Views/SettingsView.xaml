@@ -6,13 +6,16 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    xmlns:converters="using:OpenSpartan.Workshop.Converters"
     xmlns:viewmodels="using:OpenSpartan.Workshop.ViewModels"
     DataContext="{x:Bind viewmodels:SettingsViewModel.Instance}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Page.Resources>
-        
+        <converters:BoolNegativeConverter x:Key="BoolNegativeConverter"></converters:BoolNegativeConverter>
+        <converters:BoolToDisabledBrushConverter x:Key="BoolToDisabledBrushConverter"></converters:BoolToDisabledBrushConverter>
     </Page.Resources>
+    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="64"></RowDefinition>
@@ -87,8 +90,8 @@
                 <InfoBar IsClosable="False"  Margin="0,4,0,4" IsOpen="True" Width="400" HorizontalAlignment="Left" Severity="Warning" Message="Make sure you know what you're doing. Setting bad values may result in failure to acquire new data."></InfoBar>
 
                 <StackPanel Margin="0,4,0,0">
-                    <RadioButton IsChecked="{Binding Settings.SyncSettings}">Sync with OpenSpartan Workshop API settings</RadioButton>
-                    <RadioButton>Set directly</RadioButton>
+                    <RadioButton IsChecked="{Binding SyncSettings, Mode=TwoWay}">Sync with OpenSpartan Workshop API settings</RadioButton>
+                    <RadioButton IsChecked="{Binding SyncSettings, Converter={StaticResource BoolNegativeConverter}, Mode=TwoWay}">Set directly</RadioButton>
 
                     <Grid Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
@@ -98,20 +101,11 @@
 
                         <Grid.RowDefinitions>
                             <RowDefinition Height="40"></RowDefinition>
-                            <RowDefinition Height="40"></RowDefinition>
-                            <RowDefinition Height="40"></RowDefinition>
-                            <RowDefinition Height="40"></RowDefinition>
                         </Grid.RowDefinitions>
 
-                        <TextBlock VerticalAlignment="Center" Grid.Column="0" Grid.Row="0">Audience:</TextBlock>
-                        <TextBlock VerticalAlignment="Center" Grid.Column="0" Grid.Row="1">Sandbox:</TextBlock>
-                        <TextBlock VerticalAlignment="Center" Grid.Column="0" Grid.Row="2">Build:</TextBlock>
-                        <TextBlock VerticalAlignment="Center" Grid.Column="0" Grid.Row="3">Release:</TextBlock>
+                        <TextBlock VerticalAlignment="Center" Grid.Column="0" Grid.Row="0" Foreground="{Binding SyncSettings, Converter={StaticResource BoolToDisabledBrushConverter}}">Release:</TextBlock>
 
-                        <TextBox VerticalAlignment="Center" Grid.Column="1" Grid.Row="0" Width="320" Margin="4,0,0,0" Text="{Binding Settings.Audience}"></TextBox>
-                        <TextBox VerticalAlignment="Center" Grid.Column="1" Grid.Row="1" Width="320" Margin="4,0,0,0" Text="{Binding Settings.Sandbox}"></TextBox>
-                        <TextBox VerticalAlignment="Center" Grid.Column="1" Grid.Row="2" Width="320" Margin="4,0,0,0" Text="{Binding Settings.Build}"></TextBox>
-                        <TextBox VerticalAlignment="Center" Grid.Column="1" Grid.Row="3" Width="320" Margin="4,0,0,0" Text="{Binding Settings.Release}"></TextBox>
+                        <TextBox VerticalAlignment="Center" Grid.Column="1" Grid.Row="0" Width="320" Margin="4,0,0,0" Text="{Binding Release, Mode=TwoWay}" IsEnabled="{Binding SyncSettings, Converter={StaticResource BoolNegativeConverter}}"></TextBox>
                     </Grid>
                 </StackPanel>
             </StackPanel>

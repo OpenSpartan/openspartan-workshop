@@ -48,14 +48,18 @@ namespace OpenSpartan.Workshop.Views
 
         private void dgdMatches_PointerReleased(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
-            DataGridRow t = FindParent<DataGridRow>((UIElement)e.OriginalSource);
-            if (t.DetailsVisibility == Visibility.Visible)
+            DataGridRow row = FindParent<DataGridRow>((UIElement)e.OriginalSource);
+
+            if (row != null)
             {
-                t.DetailsVisibility = Visibility.Collapsed;
-            }
-            else
-            {
-                t.DetailsVisibility = Visibility.Visible;
+                if (row.DetailsVisibility == Visibility.Visible)
+                {
+                    row.DetailsVisibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    row.DetailsVisibility = Visibility.Visible;
+                }
             }
         }
 

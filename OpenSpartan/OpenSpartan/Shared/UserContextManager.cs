@@ -18,6 +18,9 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -25,6 +28,15 @@ namespace OpenSpartan.Workshop.Shared
 {
     internal static class UserContextManager
     {
+        private static readonly HttpClient WorkshopHttpClient = new() 
+        { 
+            BaseAddress = new Uri(Configuration.SettingsEndpoint),
+            DefaultRequestHeaders =
+            {
+                UserAgent = { ProductInfoHeaderValue.Parse($"{Configuration.PackageName}/{Configuration.Version}-{Configuration.BuildId}") }
+            }
+        };
+
         internal static CancellationTokenSource MatchLoadingCancellationTracker = new();
         internal static CancellationTokenSource BattlePassLoadingCancellationTracker = new();
 
@@ -33,6 +45,11 @@ namespace OpenSpartan.Workshop.Shared
         internal static HaloInfiniteClient HaloClient { get; set; }
 
         internal static XboxTicket XboxUserContext { get; set; }
+
+        internal static readonly JsonSerializerOptions SerializerOptions = new()
+        {
+            PropertyNameCaseInsensitive = true,
+        };
 
         internal static IntPtr GetMainWindowHandle()
         {
@@ -84,6 +101,25 @@ namespace OpenSpartan.Workshop.Shared
             }
 
             return authResult;
+        }
+
+        public static async Task<WorkshopSettings> GetWorkshopSettings()
+        {
+            string apiEndpoint = "clientsettings";
+
+            WorkshopHttpClient.DefaultRequestHeaders.Clear();
+            WorkshopHttpClient.DefaultRequestHeaders.Add("X-API-Version", Configuration.DefaultAPIVersion);
+
+            HttpResponseMessage response = await WorkshopHttpClient.GetAsync(apiEndpoint);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return JsonSerializer.Deserialize<WorkshopSettings>(await response.Content.ReadAsStringAsync(), SerializerOptions);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public static async Task<HaloApiResultContainer<T, RawResponseContainer>> SafeAPICall<T>(Func<Task<HaloApiResultContainer<T, RawResponseContainer>>> orionAPICall)
@@ -152,12 +188,12 @@ namespace OpenSpartan.Workshop.Shared
             {
                 XboxUserContext = extendedTicket;
 
-                HaloClient = new(haloToken.Token, extendedTicket.DisplayClaims.Xui[0].XUID, userAgent: $"{Configuration.PackageName}\\{Configuration.Version}-{Configuration.BuildId}");
+                HaloClient = new(haloToken.Token, extendedTicket.DisplayClaims.Xui[0].XUID, userAgent: $"{Configuration.PackageName}/{Configuration.Version}-{Configuration.BuildId}");
 
                 string localClearance = string.Empty;
                 Task.Run(async () =>
                 {
-                    var clearance = (await SafeAPICall(async () => { return await HaloClient.SettingsGetClearance(SettingsViewModel.Instance.Settings.Audience, SettingsViewModel.Instance.Settings.Sandbox, SettingsViewModel.Instance.Settings.Build, SettingsViewModel.Instance.Settings.Release); })).Result;
+                    var clearance = (await SafeAPICall(async () => { return await HaloClient.SettingsActiveClearance(SettingsViewModel.Instance.Settings.Release); })).Result;
                     if (clearance != null)
                     {
                         localClearance = clearance.FlightConfigurationId;

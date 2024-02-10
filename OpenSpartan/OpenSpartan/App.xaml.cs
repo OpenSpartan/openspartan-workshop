@@ -2,6 +2,8 @@
 using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
+using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace OpenSpartan.Workshop
@@ -34,24 +36,39 @@ namespace OpenSpartan.Workshop
             var authResult = await UserContextManager.InitializeAllDataOnLaunch();
         }
 
-        private void LoadSettings()
+        private async void LoadSettings()
         {
             var settingsPath = Path.Combine(Configuration.AppDataDirectory, Configuration.SettingsFileName);
             if (File.Exists(settingsPath))
             {
                 SettingsViewModel.Instance.Settings = SettingsManager.LoadSettings();
+                if (SettingsViewModel.Instance.Settings.SyncSettings)
+                {
+                    try
+                    {
+                        var settings = await UserContextManager.GetWorkshopSettings();
+                        if (settings != null)
+                        {
+                            // For now, we only have two settings that are returned by the API, so
+                            // no need to overwrite the entire object.
+                            SettingsViewModel.Instance.Settings.Release = settings.Release;
+                            SettingsViewModel.Instance.Settings.HeaderImagePath = settings.HeaderImagePath;
+                        }    
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Could not load settings remotely. {ex.Message}\nWill use previously-configured settings..");
+                    }
+                }
             }
             else
             {
                 SettingsViewModel.Instance.Settings = new Models.WorkshopSettings
                 {
                     APIVersion = Configuration.DefaultAPIVersion,
-                    Audience = Configuration.DefaultAudience,
-                    Build = Configuration.DefaultBuild,
                     HeaderImagePath = Configuration.DefaultHeaderImage,
                     Release = Configuration.DefaultRelease,
                     SyncSettings = true,
-                    Sandbox = Configuration.DefaultSandbox,
                 };
             }
         }
