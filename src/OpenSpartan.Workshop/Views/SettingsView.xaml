@@ -43,7 +43,7 @@
                         <TextBlock>Version:</TextBlock>
                         <TextBlock Margin="4,0,0,0" Text="{Binding Version}"></TextBlock>
                     </StackPanel>
-                    <TextBlock>Report issues or request features <Hyperlink x:Name="lnkGitHub">on GitHub</Hyperlink>.</TextBlock>
+                    <TextBlock>Report issues or request features <Hyperlink NavigateUri="https://github.com/OpenSpartan/openspartan-workshop/issues" x:Name="lnkGitHub">on GitHub</Hyperlink>.</TextBlock>
                     <TextBlock>Built with ❤️ by <Hyperlink NavigateUri="https://den.dev">Den Delimarsky</Hyperlink> as an unofficial Halo Infinite companion app.</TextBlock>
                 </StackPanel>
             </StackPanel>
