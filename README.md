@@ -21,7 +21,7 @@ You can download the application from this repository, in the **Releases** secti
 
 <img alt="Download for Windows button" src="media/windows-download.gif" width="200">
 
->**Note**
+>[!NOTE]
 >Requires Windows 10 (Redstone 5 - `10.0.17763.0`) or later and the [latest Windows App SDK](https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads).
 
 This application is not available through Microsoft Store at this time. Any version there is **not maintained by me**.
