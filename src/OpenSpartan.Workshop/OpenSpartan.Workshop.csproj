@@ -1,8 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
-  </PropertyGroup>
-  <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
@@ -20,13 +17,6 @@
     <None Remove="Controls\HeaderTile.xaml" />
     <None Remove="CustomImages\logo-icon.png" />
     <None Remove="CustomImages\OpenSpartan.Workshop.ico" />
-    <None Remove="Queries\Bootstrap\InventoryItems.sql" />
-    <None Remove="Queries\Bootstrap\SetWALJournalingMode.sql" />
-    <None Remove="Queries\Insert\InventoryItems.sql" />
-    <None Remove="Queries\Insert\OperationRewardTracks.sql" />
-    <None Remove="Queries\Select\InventoryItem.sql" />
-    <None Remove="Queries\Select\MatchStatsAvailability.sql" />
-    <None Remove="Queries\Select\OperationResponseBody.sql" />
     <None Remove="Views\BattlePassDetailView.xaml" />
     <None Remove="Views\BattlePassView.xaml" />
     <None Remove="Views\HomeView.xaml" />
@@ -42,20 +32,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <Content Include="CustomImages\OpenSpartan.Workshop.ico" />
-    <Content Include="Queries\Bootstrap\SetWALJournalingMode.sql">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Queries\Insert\InventoryItems.sql">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Queries\Select\InventoryItem.sql">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Queries\Bootstrap\InventoryItems.sql">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -64,15 +40,6 @@
     <Content Include="Assets\Square44x44Logo.scale-200.png" />
     <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
-    <Content Include="Queries\Insert\OperationRewardTracks.sql">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Queries\Select\MatchStatsAvailability.sql">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Queries\Select\OperationResponseBody.sql">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
@@ -103,6 +70,9 @@
     <None Update="Queries\Bootstrap\Indexes.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Queries\Bootstrap\InventoryItems.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Queries\Bootstrap\Maps.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -127,16 +97,25 @@
     <None Update="Queries\Bootstrap\ServiceRecordSnapshots.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Queries\Bootstrap\SetWALJournalingMode.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Queries\Insert\EngineGameVariants.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Queries\Insert\GameVariants.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Queries\Insert\InventoryItems.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Queries\Insert\Maps.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Queries\Insert\MatchStats.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Queries\Insert\OperationRewardTracks.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Queries\Insert\OwnedInventoryItems.sql">
@@ -157,9 +136,18 @@
     <None Update="Queries\Select\DistinctMatchIds.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Queries\Select\InventoryItem.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Queries\Select\LatestMedalsSnapshot.sql">
       <Generator>
       </Generator>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Queries\Select\MatchStatsAvailability.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Queries\Select\OperationResponseBody.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Queries\Select\PlayerMatches.sql">
