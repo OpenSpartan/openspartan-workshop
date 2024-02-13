@@ -2,7 +2,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\OpenSpartan.Workshop\OpenSpartan.Workshop.csproj" />
 	</ItemGroup>
-
 	<PropertyGroup>
 		<TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
 		<DefineConstants>$(DefineConstants);TargetFramework=$(ApplicationFilesPath);</DefineConstants>
@@ -12,6 +11,8 @@
 		<DefineConstants>$(DefineConstants);ResourcesDirectory=$(ResourcesDirectory);</DefineConstants>
 		<ImageResourcesDirectory>$(ResourcesDirectory)/Images</ImageResourcesDirectory>
 		<DefineConstants>$(DefineConstants);ImageResourcesDirectory=$(ImageResourcesDirectory);</DefineConstants>
+		<DocumentsResourcesDirectory>$(ResourcesDirectory)/Documents</DocumentsResourcesDirectory>
+		<DefineConstants>$(DefineConstants);DocumentsResourcesDirectory=$(DocumentsResourcesDirectory);</DefineConstants>
 	</PropertyGroup>
 	<ItemGroup>
 		<HarvestDirectory Include="$(ApplicationFilesPath)">
@@ -29,5 +30,11 @@
 		<PackageReference Include="WixToolset.Heat" Version="4.0.4" />
 		<PackageReference Include="WixToolset.Netfx.wixext" Version="4.0.4" />
 		<PackageReference Include="WixToolset.UI.wixext" Version="4.0.4" />
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="Resources\Documents\" />
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="resources\documents\license.rtf" />
 	</ItemGroup>
 </Project>
