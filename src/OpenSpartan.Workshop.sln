@@ -5,6 +5,8 @@ VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenSpartan.Workshop", "OpenSpartan.Workshop\OpenSpartan.Workshop.csproj", "{8AE56AFC-602F-44D1-8177-881C6EF2D3DF}"
 EndProject
+Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "OpenSpartan.Workshop.Installer", "OpenSpartan.Workshop.Installer\OpenSpartan.Workshop.Installer.wixproj", "{EE053EE9-8845-4F9E-9417-8FE088173B75}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -33,6 +35,18 @@ Global
 		{8AE56AFC-602F-44D1-8177-881C6EF2D3DF}.Release|x86.ActiveCfg = Release|x86
 		{8AE56AFC-602F-44D1-8177-881C6EF2D3DF}.Release|x86.Build.0 = Release|x86
 		{8AE56AFC-602F-44D1-8177-881C6EF2D3DF}.Release|x86.Deploy.0 = Release|x86
+		{EE053EE9-8845-4F9E-9417-8FE088173B75}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{EE053EE9-8845-4F9E-9417-8FE088173B75}.Debug|ARM64.Build.0 = Debug|ARM64
+		{EE053EE9-8845-4F9E-9417-8FE088173B75}.Debug|x64.ActiveCfg = Debug|x64
+		{EE053EE9-8845-4F9E-9417-8FE088173B75}.Debug|x64.Build.0 = Debug|x64
+		{EE053EE9-8845-4F9E-9417-8FE088173B75}.Debug|x86.ActiveCfg = Debug|x86
+		{EE053EE9-8845-4F9E-9417-8FE088173B75}.Debug|x86.Build.0 = Debug|x86
+		{EE053EE9-8845-4F9E-9417-8FE088173B75}.Release|ARM64.ActiveCfg = Release|ARM64
+		{EE053EE9-8845-4F9E-9417-8FE088173B75}.Release|ARM64.Build.0 = Release|ARM64
+		{EE053EE9-8845-4F9E-9417-8FE088173B75}.Release|x64.ActiveCfg = Release|x64
+		{EE053EE9-8845-4F9E-9417-8FE088173B75}.Release|x64.Build.0 = Release|x64
+		{EE053EE9-8845-4F9E-9417-8FE088173B75}.Release|x86.ActiveCfg = Release|x86
+		{EE053EE9-8845-4F9E-9417-8FE088173B75}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

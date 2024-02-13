@@ -18,7 +18,7 @@
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
     <UseWinUI>true</UseWinUI>
-    <EnableMsixTooling>true</EnableMsixTooling>
+    <EnableMsixTooling>false</EnableMsixTooling>
     <WindowsPackageType>None</WindowsPackageType>
   </PropertyGroup>
   <ItemGroup>
@@ -30,7 +30,6 @@
     <None Remove="Queries\Insert\InventoryItems.sql" />
     <None Remove="Queries\Insert\OperationRewardTracks.sql" />
     <None Remove="Queries\Select\InventoryItem.sql" />
-    <None Remove="Queries\Select\LatestMedalsSnapshot.sql" />
     <None Remove="Queries\Select\MatchStatsAvailability.sql" />
     <None Remove="Queries\Select\OperationResponseBody.sql" />
     <None Remove="Views\BattlePassDetailView.xaml" />
@@ -100,13 +99,6 @@
     <ProjectCapability Include="Msix" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Queries\Select\LatestMedalsSnapshot.sql">
-      <Generator>
-      </Generator>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <None Update="Queries\Bootstrap\EngineGameVariants.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -168,6 +160,11 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Queries\Select\DistinctMatchIds.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Queries\Select\LatestMedalsSnapshot.sql">
+      <Generator>
+      </Generator>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Queries\Select\PlayerMatches.sql">
