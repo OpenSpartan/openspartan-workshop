@@ -1,5 +1,5 @@
 <div align="center">
-	<img src="src/CustomImages/logo-icon.png" width="200" height="200">
+	<img src="src/OpenSpartan.Workshop/CustomImages/logo-icon.png" width="200" height="200">
 	<h1>OpenSpartan Workshop</h1>
 	<p>
 		<b>Analyze all your Halo Infinite stats in any way you want</b>
