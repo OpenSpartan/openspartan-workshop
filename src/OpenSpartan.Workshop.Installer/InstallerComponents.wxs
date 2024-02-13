@@ -1,9 +1,21 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <Fragment>
-    <ComponentGroup Id="InstallerComponents" Directory="INSTALLFOLDER">
-		<Component>
-			<File Source="OpenSpartan.Workshop.exe" />
-		</Component>
-    </ComponentGroup>
-  </Fragment>
+	<Fragment>
+		<ComponentGroup Id="InstallerComponents" Directory="INSTALLFOLDER">
+			<Component Id="DesktopShortcut" Directory="INSTALLFOLDER" Guid="49c95a81-4f7b-42aa-bfcd-0acc8b61964f">
+				<RegistryValue Id="RegShortcutDesktop"
+					Root="HKCU"
+					Key="Software\!(bind.Property.Manufacturer)\!(bind.Property.ProductName)"
+					Name="DesktopSC"
+					Value="1"
+					Type="integer"
+					KeyPath="yes" />
+
+				<Shortcut Id="DesktopSC" Name="OpenSpartan Workshop" Target="[INSTALLFOLDER]OpenSpartan.Workshop.exe"  Directory="DesktopFolder"
+					Advertise="no" Icon="icon.ico" WorkingDirectory="INSTALLFOLDER" />
+
+				<Shortcut Id="ProgramMenuSC" Name="OpenSpartan Workshop" Target="[INSTALLFOLDER]OpenSpartan.Workshop.exe" Directory="ProgramMenuFolder"
+					Advertise="no" Icon="icon.ico" WorkingDirectory="INSTALLFOLDER" />
+			</Component>
+		</ComponentGroup>
+	</Fragment>
 </Wix>

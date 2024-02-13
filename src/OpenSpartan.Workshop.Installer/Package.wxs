@@ -26,6 +26,7 @@
 
 		<Feature Id="Main" AllowAbsent="no" AllowAdvertise="no" ConfigurableDirectory="INSTALLFOLDER">
 			<ComponentGroupRef Id="ApplicationFiles"/>
+			<ComponentGroupRef Id="InstallerComponents"/>
 		</Feature>
 
 		<ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
