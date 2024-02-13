@@ -51,6 +51,28 @@ See what battle pass rewards are coming up, and how far along you are on the lev
 
 ![Screenshot showing battle pass details](media/battle-pass-overview.png)
 
+## FAQ
+
+### Are you planning to support `{INSERT_PLATFORM_HERE}`?
+
+At this time, my focus is on the Windows app - I want it to be robust, reliable, and stable. Maybe later.
+
+### Can I contribute to localizing the app?
+
+There are no plans to localize the app at this time.
+
+### Why is this app free?
+
+Yes - I [love Halo](https://den.dev/halo), I love writing code, and I wanted to build something for myself to analyze my match stats. This is my way of sharing something good with the Halo community.
+
+### Can I download it somewhere else?
+
+No. If you downloaded the app from somewhere outside this repository, you downloaded the wrong thing. Only downloading from this repository guarantees that your app came from me with no modifications.
+
+### I downloaded the source code but can't build it - why?
+
+You're likely running into dependency issues because the project depends on some of my packages that I didn't make open-source. I currently have no plans on making those open-source. The source code here is for reference only and is not intended for you to build out-of-the-box.
+
 ## Disclaimer
 
 This application is **not maintained** and is **not endorsed** by Microsoft, 343 Industries, or any of their subsidiaries. Use at your own risk.
@@ -60,3 +82,5 @@ While the application does not abuse any APIs and doesn't interfere in any capac
 ## Contribution
 
 This project is **open-source, not open-contribution** (similar to how SQLite structured [their contribution model](https://www.sqlite.org/copyright.html)). Small bug fixes and issue reports are appreciated, but I very much see this as my own passion project, on my own terms and time.
+
+If you found a bug or have a feature request, [open an issue](/OpenSpartan/openspartan-workshop/issues).
