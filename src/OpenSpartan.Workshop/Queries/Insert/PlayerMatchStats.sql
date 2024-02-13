@@ -1,0 +1,1 @@
+﻿INSERT OR REPLACE INTO PlayerMatchStats (MatchId, ResponseBody) VALUES($MatchId, $ResponseBody)

@@ -1,0 +1,1 @@
+﻿INSERT OR REPLACE INTO EngineGameVariants (ResponseBody) VALUES($ResponseBody)

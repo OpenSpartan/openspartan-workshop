@@ -1,0 +1,1 @@
+﻿INSERT OR REPLACE INTO PlaylistMapModePairs (ResponseBody) VALUES($ResponseBody)
