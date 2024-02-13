@@ -29,9 +29,19 @@ This application is not available through Microsoft Store at this time. Any vers
 
 ### Career overview
 
+![](media/career-overview.png)
+
 ### Match metadata
 
+![](media/match-stats.png)
+
+### Medals
+
+![](media/medal-overview.png)
+
 ### Battlepass details
+
+![](media/battle-pass-overview.png)
 
 ## Contribution
 
