@@ -1,1 +1,0 @@
-﻿INSERT OR REPLACE INTO InventoryItems (ResponseBody, Path, LastUpdated) VALUES($ResponseBody, $Path, $LastUpdated)

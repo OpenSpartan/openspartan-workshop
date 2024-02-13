@@ -1,1 +1,0 @@
-﻿SELECT DISTINCT MatchId FROM MatchStats

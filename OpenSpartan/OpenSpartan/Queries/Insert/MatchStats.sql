@@ -1,1 +1,0 @@
-﻿INSERT OR REPLACE INTO MatchStats (ResponseBody) VALUES($ResponseBody)
