@@ -18,16 +18,14 @@ namespace OpenSpartan.Workshop.Data
             command.Parameters.AddWithValue("$id", tableName);
 
             // Service record table
-            using (var reader = command.ExecuteReader())
+            using var reader = command.ExecuteReader();
+            if (reader.HasRows)
             {
-                if (reader.HasRows)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 

@@ -8,7 +8,7 @@ namespace OpenSpartan.Workshop.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            var medalPath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", "medals", $"{value.ToString()}.png");
+            var medalPath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", "medals", $"{value}.png");
             return medalPath;
         }
 

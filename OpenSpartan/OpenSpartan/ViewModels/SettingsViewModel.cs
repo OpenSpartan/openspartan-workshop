@@ -9,15 +9,9 @@ namespace OpenSpartan.Workshop.ViewModels
     {
         public static SettingsViewModel Instance { get; } = new SettingsViewModel();
 
-        public string Gamertag
-        {
-            get => HomeViewModel.Instance.Gamertag;
-        }
+        public string Gamertag => HomeViewModel.Instance.Gamertag;
 
-        public string Xuid
-        {
-            get => HomeViewModel.Instance.Xuid;
-        }
+        public string Xuid => HomeViewModel.Instance.Xuid;
 
         public bool SyncSettings
         {

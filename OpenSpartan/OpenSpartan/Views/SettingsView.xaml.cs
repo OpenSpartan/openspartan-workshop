@@ -1,6 +1,5 @@
 using CommunityToolkit.WinUI;
 using Microsoft.UI.Xaml.Controls;
-using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
 using System;
@@ -20,7 +19,7 @@ namespace OpenSpartan.Workshop.Views
     {
         public SettingsView()
         {
-            this.InitializeComponent();
+            InitializeComponent();
         }
 
         private async void btnLogOut_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
@@ -31,7 +30,7 @@ namespace OpenSpartan.Workshop.Views
             {
                 try
                 {
-                    System.IO.File.Delete(Path.Combine(Core.Configuration.AppDataDirectory, Core.Configuration.CacheFileName));
+                    File.Delete(Path.Combine(Core.Configuration.AppDataDirectory, Core.Configuration.CacheFileName));
 
                     // Make sure that we stop loading matches, if any are currently in progress.
                     UserContextManager.MatchLoadingCancellationTracker.Cancel();

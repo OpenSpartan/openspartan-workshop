@@ -7,7 +7,7 @@ namespace OpenSpartan.Workshop.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            return String.Format("{0:n0}", value);
+            return string.Format("{0:n0}", value);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

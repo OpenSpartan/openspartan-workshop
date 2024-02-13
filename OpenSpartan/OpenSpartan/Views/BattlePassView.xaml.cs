@@ -1,6 +1,5 @@
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Animation;
-using Microsoft.UI.Xaml.Navigation;
 using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.ViewModels;
 using System;
@@ -11,22 +10,8 @@ namespace OpenSpartan.Workshop.Views
     {
         public BattlePassView()
         {
-            this.InitializeComponent();
-
-            //nvBattlePassDetails.SelectedItem = nvBattlePassDetails.MenuItems.OfType<NavigationViewItem>().First();
-            //ContentFrame.Navigate(typeof(Views.BattlePassView), null, new EntranceNavigationTransitionInfo());
-
-            ContentFrame.Navigated += On_Navigated;
+            InitializeComponent();
         }
-
-        private void On_Navigated(object sender, NavigationEventArgs e)
-        {
-                // Select the nav view item that corresponds to the page being navigated to.
-                //nvBattlePassDetails.SelectedItem = nvBattlePassDetails.MenuItems
-                //            .OfType<NavigationViewItem>()
-                //            .First(i => i.Tag.Equals(ContentFrame.SourcePageType.FullName.ToString()));
-        }
-
 
         private void NavView_Navigate(Type navPageType, NavigationTransitionInfo transitionInfo, string argument)
         {

@@ -7,6 +7,7 @@ namespace OpenSpartan.Workshop.Core
     {
         // Endpoints
         internal static readonly string SettingsEndpoint = "https://wokrshop.api.openspartan.com/clientsettings";
+        internal static readonly string HaloWaypointPlayerEndpoint = "https://www.halowaypoint.com/halo-infinite/players";
 
         // Build-related metadata.
         internal static readonly string Version = "1.0.0";

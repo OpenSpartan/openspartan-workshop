@@ -347,7 +347,7 @@ namespace OpenSpartan.Workshop.Shared
                     if (backgroundImageResult.Result != null && backgroundImageResult.Response.Code == 200)
                     {
                         // Let's make sure that we create the directory if it does not exist.
-                        System.IO.FileInfo file = new System.IO.FileInfo(qualifiedBackgroundImagePath);
+                        FileInfo file = new System.IO.FileInfo(qualifiedBackgroundImagePath);
                         file.Directory.Create();
 
                         System.IO.File.WriteAllBytes(qualifiedBackgroundImagePath, backgroundImageResult.Result);

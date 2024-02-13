@@ -11,10 +11,10 @@ namespace OpenSpartan.Workshop
     {
         public MainWindow()
         {
-            this.InitializeComponent();
-            this.ExtendsContentIntoTitleBar = true;
+            InitializeComponent();
+            ExtendsContentIntoTitleBar = true;
 
-            this.AppWindow.SetIcon("CustomImages/OpenSpartan.Workshop.ico");
+            AppWindow.SetIcon("CustomImages/OpenSpartan.Workshop.ico");
 
             nvRoot.SelectedItem = nvRoot.MenuItems.OfType<NavigationViewItem>().First();
             ContentFrame.Navigate(typeof(Views.HomeView), null, new EntranceNavigationTransitionInfo());

@@ -6,7 +6,6 @@ using Microsoft.UI.Xaml.Media;
 using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
-using System.Threading.Tasks;
 
 namespace OpenSpartan.Workshop.Views
 {
@@ -14,23 +13,7 @@ namespace OpenSpartan.Workshop.Views
     {
         public MatchesView()
         {
-            this.InitializeComponent();
-        }
-
-        private void ScrollViewer_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
-        {
-            var sv = sender as ScrollViewer;
-
-            if (sv != null)
-            {
-                if (sv.ScrollableHeight - sv.VerticalOffset == 0)
-                {
-                    Task.Run(() =>
-                    {
-                        UserContextManager.GetPlayerMatches();
-                    });
-                }
-            }
+            InitializeComponent();
         }
 
         private async void btnRefreshMatches_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)

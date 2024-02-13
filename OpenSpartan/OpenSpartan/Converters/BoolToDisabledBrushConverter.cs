@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Media;
+using System;
+using Windows.UI;
 
 namespace OpenSpartan.Workshop.Converters
 {
-    using Microsoft.UI.Xaml.Data;
-    using Microsoft.UI.Xaml.Media;
-    using Windows.UI;
-
     public class BoolToDisabledBrushConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)

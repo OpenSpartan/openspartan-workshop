@@ -7,7 +7,7 @@ namespace OpenSpartan.Workshop.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            return String.Format("{0:P02}", System.Convert.ToDouble(value) / 100.0);
+            return string.Format("{0:P02}", System.Convert.ToDouble(value) / 100.0);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
