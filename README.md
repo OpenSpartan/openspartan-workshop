@@ -29,20 +29,34 @@ This application is not available through Microsoft Store at this time. Any vers
 
 ### Career overview
 
-![](media/career-overview.png)
+Get a quick glance at your overall career performance. This includes the current career rank and how far you are from the [Hero rank](https://www.halowaypoint.com/news/career-rank-overview-season-4).
+
+![Screenshot showing the career overview](media/career-overview.png)
 
 ### Match metadata
 
-![](media/match-stats.png)
+Get an overview of all the matches you've ever played. Click on a match to see details. One of my favorite pieces here is seeing the MMR of your team across all of the matches you've been a part of.
+
+![Screenshot showing match metadata](media/match-stats.png)
 
 ### Medals
 
-![](media/medal-overview.png)
+An easy way to look at all the medals you've earned, across all of your matches.
 
-### Battlepass details
+![Screenshot showing medal metadata](media/medal-overview.png)
 
-![](media/battle-pass-overview.png)
+### Battle pass details
+
+See what battle pass rewards are coming up, and how far along you are on the level ladder.
+
+![Screenshot showing battle pass details](media/battle-pass-overview.png)
+
+## Disclaimer
+
+This application is **not maintained** and is **not endorsed** by Microsoft, 343 Industries, or any of their subsidiaries. Use at your own risk.
+
+While the application does not abuse any APIs and doesn't interfere in any capacity with any of the Halo games, I **cannot** and **do not guarantee** that your account will not be flagged, suspended, or banned due to the use of this application. If you download, install, and log in, you take full responsibility for any potential future action against your account (if any).
 
 ## Contribution
 
-This project is **open-source, not open-contribution**.
+This project is **open-source, not open-contribution** (similar to how SQLite structured [their contribution model](https://www.sqlite.org/copyright.html)). Small bug fixes and issue reports are appreciated, but I very much see this as my own passion project, on my own terms and time.
