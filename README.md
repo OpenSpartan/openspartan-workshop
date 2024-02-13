@@ -19,7 +19,7 @@ The benefit of using OpenSpartan Workshop is that for any more complex analysis 
 
 You can download the application from this repository, in the **Releases** section.
 
-![Download for Windows button](media/windows-download.gif)
+<img alt="Download for Windows button" src="media/windows-download.gif" width="200">
 
 Requires Windows 10 (Redstone 5 - 10.0.17763.0) or later.
 
