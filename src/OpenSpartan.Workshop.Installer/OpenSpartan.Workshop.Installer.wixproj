@@ -1,30 +1,33 @@
 ﻿<Project Sdk="WixToolset.Sdk/4.0.4">
-  <PropertyGroup>
-    <ApplicationFilesPath>..\OpenSpartan.Workshop\bin\$(Platform)\$(Configuration)\$(RuntimeIdentifier)</ApplicationFilesPath>
-    <DefineConstants>$(DefineConstants);ApplicationFilesPath=$(ApplicationFilesPath);</DefineConstants>
-    <ResourcesDirectory>Resources</ResourcesDirectory>
-    <DefineConstants>$(DefineConstants);ResourcesDirectory=$(ResourcesDirectory);</DefineConstants>
-    <ImageResourcesDirectory>$(ResourcesDirectory)\Images</ImageResourcesDirectory>
-    <DefineConstants>$(DefineConstants);ImageResourcesDirectory=$(ImageResourcesDirectory);</DefineConstants>
-  </PropertyGroup>
-  <ItemGroup>
-    <HarvestDirectory Include="$(ApplicationFilesPath)">
-      <ComponentGroupName>ApplicationFiles</ComponentGroupName>
-      <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
-      <SuppressRootDirectory>true</SuppressRootDirectory>
-      <PreprocessorVariable>var.ApplicationFilesPath</PreprocessorVariable>
-    </HarvestDirectory>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Resources\Images\logo-icon.png" />
-    <Content Include="Resources\Images\OpenSpartan.Workshop.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="WixToolset.Heat" Version="4.0.4" />
-    <PackageReference Include="WixToolset.Netfx.wixext" Version="4.0.4" />
-    <PackageReference Include="WixToolset.UI.wixext" Version="4.0.4" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\OpenSpartan.Workshop\OpenSpartan.Workshop.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\OpenSpartan.Workshop\OpenSpartan.Workshop.csproj" />
+	</ItemGroup>
+
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+		<DefineConstants>$(DefineConstants);TargetFramework=$(ApplicationFilesPath);</DefineConstants>
+		<ApplicationFilesPath>../OpenSpartan.Workshop/bin/$(Platform)/$(Configuration)/$(TargetFramework)</ApplicationFilesPath>
+		<DefineConstants>$(DefineConstants);ApplicationFilesPath=$(ApplicationFilesPath);</DefineConstants>
+		<ResourcesDirectory>Resources</ResourcesDirectory>
+		<DefineConstants>$(DefineConstants);ResourcesDirectory=$(ResourcesDirectory);</DefineConstants>
+		<ImageResourcesDirectory>$(ResourcesDirectory)/Images</ImageResourcesDirectory>
+		<DefineConstants>$(DefineConstants);ImageResourcesDirectory=$(ImageResourcesDirectory);</DefineConstants>
+	</PropertyGroup>
+	<ItemGroup>
+		<HarvestDirectory Include="$(ApplicationFilesPath)">
+			<ComponentGroupName>ApplicationFiles</ComponentGroupName>
+			<DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
+			<SuppressRootDirectory>true</SuppressRootDirectory>
+			<PreprocessorVariable>var.ApplicationFilesPath</PreprocessorVariable>
+		</HarvestDirectory>
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="Resources\Images\logo-icon.png" />
+		<Content Include="Resources\Images\OpenSpartan.Workshop.ico" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="WixToolset.Heat" Version="4.0.4" />
+		<PackageReference Include="WixToolset.Netfx.wixext" Version="4.0.4" />
+		<PackageReference Include="WixToolset.UI.wixext" Version="4.0.4" />
+	</ItemGroup>
 </Project>
