@@ -21,6 +21,18 @@ You can download the application from this repository, in the **Releases** secti
 
 <img alt="Download for Windows button" src="media/windows-download.gif" width="200">
 
-Requires Windows 10 (Redstone 5 - 10.0.17763.0) or later.
+Requires Windows 10 (Redstone 5 - `10.0.17763.0`) or later.
 
 This application is not available through Microsoft Store at this time. Any version there is **not maintained by me**.
+
+## Features
+
+### Career overview
+
+### Match metadata
+
+### Battlepass details
+
+## Contribution
+
+This project is **open-source, not open-contribution**.
