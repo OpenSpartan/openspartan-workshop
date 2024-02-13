@@ -10,6 +10,14 @@
     <SplashScreenSource>V:\projects\openspartan\logo-icon.png</SplashScreenSource>
     <BadgeLogoSource>V:\projects\openspartan\logo-icon.png</BadgeLogoSource>
     <PackageLogoSource>V:\projects\openspartan\logo-icon.png</PackageLogoSource>
+    <UapAppxPackageBuildMode>SideloadOnly</UapAppxPackageBuildMode>
+    <AppxShowAllApps>False</AppxShowAllApps>
+    <AppxBuildConfigurationSelection>x86|x64|arm64</AppxBuildConfigurationSelection>
+    <PackageOptionalProjectsInIdeBuilds>False</PackageOptionalProjectsInIdeBuilds>
+    <ActiveDebugProfile>OpenSpartan (Unpackaged)</ActiveDebugProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <DebuggerFlavor>ProjectDebugger</DebuggerFlavor>
   </PropertyGroup>
   <ItemGroup>
     <None Update="App.xaml">

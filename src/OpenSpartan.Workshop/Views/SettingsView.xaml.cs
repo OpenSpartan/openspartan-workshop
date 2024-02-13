@@ -1,5 +1,6 @@
 using CommunityToolkit.WinUI;
 using Microsoft.UI.Xaml.Controls;
+using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
 using System;
@@ -62,7 +63,7 @@ namespace OpenSpartan.Workshop.Views
         {
             Process.Start(new ProcessStartInfo()
             {
-                FileName = Path.Combine(Windows.Storage.ApplicationData.Current.LocalCacheFolder.Path, "Local", "OpenSpartan.Workshop"),
+                FileName = Configuration.AppDataDirectory,
                 UseShellExecute = true,
                 Verb = "open"
             });
