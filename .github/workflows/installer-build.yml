@@ -52,4 +52,5 @@ jobs:
     - name: Install WiX
       run: dotnet tool install --global wix
     - name: Build WiX on Windows
-      run: wix build .\src\OpenSpartan.Workshop.Installer\OpenSpartan.Workshop.Installer.wix
+      working-directory: ./src/OpenSpartan.Workshop.Installer
+      run: wix build OpenSpartan.Workshop.Installer.wix
