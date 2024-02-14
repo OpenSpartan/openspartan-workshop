@@ -49,6 +49,8 @@ jobs:
     - name: Test
       working-directory: ./src/OpenSpartan.Workshop
       run: dotnet test --configuration Release --no-build
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.1
     - name: Install WiX
       run: dotnet tool install --global wix
     - name: Build WiX on Windows
