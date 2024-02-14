@@ -55,9 +55,6 @@ jobs:
       uses: microsoft/setup-msbuild@v1.1
     - name: Install WiX
       run: dotnet tool install --global wix
-    - name: MSBuild Restore
+    - name: Build installer file
       working-directory: ./src/OpenSpartan.Workshop.Installer
-      run: msbuild -restore
-    - name: Build installer
-      working-directory: ./src/OpenSpartan.Workshop.Installer
-      run: msbuild OpenSpartan.Workshop.Installer.wixproj
+      run: msbuild -restore -p:Configuration=Release
