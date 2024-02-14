@@ -1,4 +1,4 @@
-name: Publish In-Repo NuGet Package
+name: Build installer
 
 on:
   push:
