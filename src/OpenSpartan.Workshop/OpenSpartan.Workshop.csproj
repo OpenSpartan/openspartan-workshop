@@ -14,7 +14,6 @@
     <EnableMsixTooling>true</EnableMsixTooling>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="Controls\HeaderTile.xaml" />
     <None Remove="CustomImages\logo-icon.png" />
     <None Remove="CustomImages\OpenSpartan.Workshop.ico" />
     <None Remove="Views\BattlePassDetailView.xaml" />
@@ -44,12 +43,15 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
     <PackageReference Include="Den.Dev.Orion" Version="1.0.48" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.2" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.59.0" />
     <PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="4.59.0" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.4.231219000" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.4.240211001" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.2428" />
+    <PackageReference Include="NLog" Version="5.2.8" />
     <PackageReference Include="SkiaSharp" Version="2.88.7" />
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
   <!-- 
@@ -61,6 +63,9 @@
     <ProjectCapability Include="Msix" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="NLog.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Queries\Bootstrap\EngineGameVariants.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -176,11 +181,6 @@
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\SettingsView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Controls\HeaderTile.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

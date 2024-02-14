@@ -1,12 +1,12 @@
 ﻿using Den.Dev.Orion.Converters;
 using Den.Dev.Orion.Models.HaloInfinite;
 using Microsoft.Data.Sqlite;
+using NLog;
 using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
@@ -19,6 +19,8 @@ namespace OpenSpartan.Workshop.Data
 {
     internal class DataHandler
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         internal static string DatabasePath => Path.Combine(Core.Configuration.AppDataDirectory, "data", $"{HomeViewModel.Instance.Xuid}.db");
 
         private static readonly JsonSerializerOptions serializerOptions = new()
@@ -51,12 +53,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    Debug.WriteLine($"WAL journaling mode not set.");
+                    Logger.Error($"WAL journaling mode not set.");
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.Message);
+                Logger.Error($"Journaling mode modification exception: {ex.Message}");
             }
 
             return null;
@@ -89,7 +91,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.Message);
+                Logger.Error($"Database bootstrapping failure: {ex.Message}");
                 return false;
             }
         }
@@ -117,11 +119,11 @@ namespace OpenSpartan.Workshop.Data
 
             if (outcome > 0)
             {
-                Debug.WriteLine("Indices provisioned.");
+                Logger.Info("Indices provisioned.");
             }
             else
             {
-                Debug.WriteLine("Indices could not be set up. If this is not the first run, then those are likely already configured.");
+                Logger.Warn("Indices could not be set up. If this is not the first run, then those are likely already configured.");
             }
         }
 
@@ -149,7 +151,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.Message);
+                Logger.Error($"Error inserting service record entry. {ex.Message}");
                 return false;
             }
         }
@@ -177,12 +179,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    Debug.WriteLine($"No rows returned for distinct match IDs.");
+                    Logger.Warn($"No rows returned for distinct match IDs.");
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"An error occurred obtaining unique match IDs. {ex.Message}");
+                Logger.Error($"An error occurred obtaining unique match IDs. {ex.Message}");
             }
 
             return null;
@@ -213,12 +215,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    Debug.WriteLine($"No rows returned for distinct match IDs.");
+                    Logger.Warn($"No rows returned for operations.");
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"An error occurred obtaining unique match IDs. {ex.Message}");
+                Logger.Error($"An error occurred obtaining operations from database. {ex.Message}");
             }
 
             return null;
@@ -283,12 +285,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    Debug.WriteLine($"No rows returned for distinct match IDs.");
+                    Logger.Warn($"No rows returned for player match IDs.");
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"An error occurred obtaining unique match IDs. {ex.Message}");
+                Logger.Error($"An error occurred obtaining matches. {ex.Message}");
             }
 
             return null;
@@ -322,7 +324,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"An error occurred obtaining match and stats availability. {ex.Message}");
+                Logger.Error($"An error occurred obtaining match and stats availability. {ex.Message}");
             }
 
             return null;
@@ -349,7 +351,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"An error occurred inserting match and stats. {ex.Message}");
+                Logger.Error($"An error occurred inserting player match and stats. {ex.Message}");
             }
 
             return false;
@@ -375,7 +377,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"An error occurred inserting match and stats. {ex.Message}");
+                Logger.Error($"An error occurred inserting match and stats. {ex.Message}");
             }
 
             return false;
@@ -441,7 +443,7 @@ namespace OpenSpartan.Workshop.Data
 
                         if (insertionResult > 0)
                         {
-                            Debug.WriteLine($"Stored map: {result.MatchInfo.MapVariant.AssetId}/{result.MatchInfo.MapVariant.VersionId}");
+                            Logger.Info($"Stored map: {result.MatchInfo.MapVariant.AssetId}/{result.MatchInfo.MapVariant.VersionId}");
                         }
                     }
                 }
@@ -460,7 +462,7 @@ namespace OpenSpartan.Workshop.Data
 
                         if (insertionResult > 0)
                         {
-                            Debug.WriteLine($"Stored playlist: {result.MatchInfo.Playlist.AssetId}/{result.MatchInfo.Playlist.VersionId}");
+                            Logger.Info($"Stored playlist: {result.MatchInfo.Playlist.AssetId}/{result.MatchInfo.Playlist.VersionId}");
                         }
                     }
                 }
@@ -479,7 +481,7 @@ namespace OpenSpartan.Workshop.Data
 
                         if (insertionResult > 0)
                         {
-                            Debug.WriteLine($"Stored playlist + map mode pair: {result.MatchInfo.PlaylistMapModePair.AssetId}/{result.MatchInfo.PlaylistMapModePair.VersionId}");
+                            Logger.Info($"Stored playlist + map mode pair: {result.MatchInfo.PlaylistMapModePair.AssetId}/{result.MatchInfo.PlaylistMapModePair.VersionId}");
                         }
                     }
                 }
@@ -501,7 +503,7 @@ namespace OpenSpartan.Workshop.Data
 
                             if (insertionResult > 0)
                             {
-                                Debug.WriteLine($"Stored game variant: {result.MatchInfo.UgcGameVariant.AssetId}/{result.MatchInfo.UgcGameVariant.VersionId}");
+                                Logger.Info($"Stored game variant: {result.MatchInfo.UgcGameVariant.AssetId}/{result.MatchInfo.UgcGameVariant.VersionId}");
                             }
                         }
 
@@ -533,7 +535,7 @@ namespace OpenSpartan.Workshop.Data
 
                         if (insertionResult > 0)
                         {
-                            Debug.WriteLine($"Stored engine game variant: {engineGameVariant.Result.AssetId}/{engineGameVariant.Result.VersionId}");
+                            Logger.Info($"Stored engine game variant: {engineGameVariant.Result.AssetId}/{engineGameVariant.Result.VersionId}");
                         }
                     }
                 }
@@ -542,7 +544,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.Message);
+                Logger.Error($"Error updating match stats. {ex.Message}");
                 return false;
             }
         }
@@ -575,12 +577,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    Debug.WriteLine($"No rows returned for distinct match IDs.");
+                    Logger.Warn($"No rows returned for medals.");
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"An error occurred obtaining unique match IDs. {ex.Message}");
+                Logger.Error($"An error occurred obtaining medals from the database. {ex.Message}");
             }
 
             return null;
@@ -602,7 +604,7 @@ namespace OpenSpartan.Workshop.Data
 
             if (insertionResult > 0)
             {
-                Debug.WriteLine($"Stored reward track {path}.");
+                Logger.Info($"Stored reward track {path}.");
                 return true;
             }
             else
@@ -627,7 +629,7 @@ namespace OpenSpartan.Workshop.Data
 
             if (insertionResult > 0)
             {
-                Debug.WriteLine($"Stored inventory item {path}.");
+                Logger.Info($"Stored inventory item {path}.");
                 return true;
             }
             else
@@ -715,12 +717,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    Debug.WriteLine($"No rows returned for distinct match IDs.");
+                    Logger.Info($"No rows returned for inventory items query.");
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"An error occurred obtaining unique match IDs. {ex.Message}");
+                Logger.Error($"An error occurred obtaining inventory items. {ex.Message}");
             }
 
             return null;
@@ -746,11 +748,11 @@ namespace OpenSpartan.Workshop.Data
                 var insertionResult = insertionCommand.ExecuteNonQuery();
                 if (insertionResult > 0)
                 {
-                    Debug.WriteLine($"Stored owned inventory item {item.ItemId}.");
+                    Logger.Info($"Stored owned inventory item {item.ItemId}.");
                 }
                 else
                 {
-                    Debug.WriteLine($"Could not store owned inventory item {item.ItemId}.");
+                    Logger.Error($"Could not store owned inventory item {item.ItemId}.");
                 }
             }
 

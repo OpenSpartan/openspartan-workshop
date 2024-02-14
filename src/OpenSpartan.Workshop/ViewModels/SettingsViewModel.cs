@@ -47,6 +47,23 @@ namespace OpenSpartan.Workshop.ViewModels
             }
         }
 
+        public bool EnableLogging
+        {
+            get
+            {
+                return Settings.EnableLogging;
+            }
+            set
+            {
+                if (Settings.EnableLogging != value)
+                {
+                    Settings.EnableLogging = value;
+                    SettingsManager.StoreSettings(Settings);
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
         public WorkshopSettings Settings
         {
             get => _settings;

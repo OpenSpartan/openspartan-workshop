@@ -1,7 +1,8 @@
-﻿using OpenSpartan.Workshop.Core;
+﻿using NLog;
+using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Models;
+using OpenSpartan.Workshop.ViewModels;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 
@@ -9,6 +10,8 @@ namespace OpenSpartan.Workshop.Shared
 {
     internal class SettingsManager
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         internal static WorkshopSettings LoadSettings()
         {
             try
@@ -17,7 +20,7 @@ namespace OpenSpartan.Workshop.Shared
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Could not load settings. {ex.Message}");
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not load settings. {ex.Message}");
                 return null;
             }
         }
@@ -39,7 +42,7 @@ namespace OpenSpartan.Workshop.Shared
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Could not store settings. {ex.Message}");
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not store settings. {ex.Message}");
                 return false;
             }
         }

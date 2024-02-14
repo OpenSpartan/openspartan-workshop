@@ -8,9 +8,9 @@ namespace OpenSpartan.Workshop.Models
     {
         private string _release;
         private bool _syncSettings;
+        private bool _enableLogging;
         private string _apiVersion;
         private string _headerImagePath;
-
 
         [JsonPropertyName("release")]
         public string Release
@@ -35,6 +35,20 @@ namespace OpenSpartan.Workshop.Models
                 if (_syncSettings != value)
                 {
                     _syncSettings = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        [JsonPropertyName("enablelogging")]
+        public bool EnableLogging
+        {
+            get => _enableLogging;
+            set
+            {
+                if (_enableLogging != value)
+                {
+                    _enableLogging = value;
                     NotifyPropertyChanged();
                 }
             }

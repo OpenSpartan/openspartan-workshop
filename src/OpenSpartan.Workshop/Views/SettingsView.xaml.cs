@@ -1,5 +1,6 @@
 using CommunityToolkit.WinUI;
 using Microsoft.UI.Xaml.Controls;
+using NLog;
 using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
@@ -18,6 +19,8 @@ namespace OpenSpartan.Workshop.Views
     /// </summary>
     public sealed partial class SettingsView : Page
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         public SettingsView()
         {
             InitializeComponent();
@@ -54,7 +57,7 @@ namespace OpenSpartan.Workshop.Views
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"Could not log out by deleting the credential cache file. {ex.Message}");
+                    if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not log out by deleting the credential cache file. {ex.Message}");
                 }
             }
         }

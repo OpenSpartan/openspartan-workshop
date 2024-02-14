@@ -83,6 +83,14 @@
                 <Button Margin="0,8,0,0" Width="100" x:Name="btnViewFiles" Click="btnViewFiles_Click">View Files</Button>
             </StackPanel>
 
+            <!--Logging-->
+            <StackPanel Margin="0,12,0,0">
+                <TextBlock Text="Logging" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
+                <InfoBar IsClosable="False" Margin="0,4,0,4" IsOpen="True" Width="400" HorizontalAlignment="Left" Severity="Informational" Message="Logging is only needed for diagnostic purposes. It's generally OK to leave this off."></InfoBar>
+                <RadioButton IsChecked="{Binding EnableLogging, Mode=TwoWay}">Logging is enabled</RadioButton>
+                <RadioButton IsChecked="{Binding EnableLogging, Converter={StaticResource BoolNegativeConverter}, Mode=TwoWay}">Logging is disabled</RadioButton>
+            </StackPanel>
+
             <!--API Settings-->
             <StackPanel Margin="0,12,0,0">
                 <TextBlock Text="API Settings" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>

@@ -1,15 +1,17 @@
 ﻿using Microsoft.UI.Xaml;
+using NLog;
 using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
 using System;
-using System.Diagnostics;
 using System.IO;
 
 namespace OpenSpartan.Workshop
 {
     public partial class App : Application
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         public Window MainWindow { get => m_window; }
 
         /// <summary>
@@ -30,7 +32,9 @@ namespace OpenSpartan.Workshop
         {
             m_window = new MainWindow();
             m_window.Activate();
-            
+
+            LogManager.Setup().LoadConfigurationFromFile("NLog.config");
+
             LoadSettings();
 
             var authResult = await UserContextManager.InitializeAllDataOnLaunch();
@@ -57,7 +61,7 @@ namespace OpenSpartan.Workshop
                     }
                     catch (Exception ex)
                     {
-                        Debug.WriteLine($"Could not load settings remotely. {ex.Message}\nWill use previously-configured settings..");
+                        if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not load settings remotely. {ex.Message}\nWill use previously-configured settings..");
                     }
                 }
             }
@@ -69,6 +73,7 @@ namespace OpenSpartan.Workshop
                     HeaderImagePath = Configuration.DefaultHeaderImage,
                     Release = Configuration.DefaultRelease,
                     SyncSettings = true,
+                    EnableLogging = false,
                 };
             }
         }

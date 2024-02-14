@@ -1,15 +1,17 @@
 using Microsoft.UI.Xaml.Controls;
+using NLog;
 using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
 using System;
-using System.Diagnostics;
 using Windows.System;
 
 namespace OpenSpartan.Workshop.Views
 {
     public sealed partial class HomeView : Page
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         public HomeView()
         {
             InitializeComponent();
@@ -23,7 +25,7 @@ namespace OpenSpartan.Workshop.Views
 
             if (!success)
             {
-                Debug.WriteLine("Could not open the profile on Halo Waypoint.");
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Error("Could not open the profile on Halo Waypoint.");
             }
         }
 
