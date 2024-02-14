@@ -1,9 +1,9 @@
-name: Build
+name: Publish In-Repo NuGet Package
 
 on:
   push:
-    branches:
-      - master
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
     paths-ignore:
       - '**/*.md'
       - '**/*.gitignore'
@@ -19,10 +19,6 @@ on:
 permissions:
   contents: read
   packages: write
-env:
-  DOTNET_CLI_TELEMETRY_OPTOUT: true
-  DOTNET_NOLOGO: true
-  NUGET_URL: "https://nuget.pkg.github.com/dend/index.json"
 
 jobs:
   build:
@@ -41,9 +37,15 @@ jobs:
       run: |
         git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
         git branch --remote --contains | grep origin/master
+    - name: Set env
+      run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
     - name: Build
       working-directory: ./src/OpenSpartan.Workshop
       run: dotnet build --configuration Release
     - name: Test
       working-directory: ./src/OpenSpartan.Workshop
       run: dotnet test --configuration Release --no-build
+    - name: Install WiX
+      run: dotnet tool install --global wix
+    - name: Build WiX on Windows
+      run: wix build .\src\OpenSpartan.Workshop.Installer\OpenSpartan.Workshop.Installer.wix
