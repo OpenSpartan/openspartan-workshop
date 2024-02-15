@@ -57,7 +57,7 @@ jobs:
       working-directory: ./src/OpenSpartan.Workshop.Installer
       run: msbuild -restore -p:Configuration=Release
     - name: Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@master
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: ./src/OpenSpartan.Workshop.Installer/bin/Release/en-US/OpenSpartan.Workshop.Installer.msi
