@@ -54,12 +54,12 @@ jobs:
     - name: Install WiX
       run: dotnet tool install --global wix
     - name: Build installer file
-      working-directory: ./src/OpenSpartan.Workshop.Installer
+      working-directory: ./src/OpenSpartan.Workshop.Installer.Bundle
       run: msbuild -restore -p:Configuration=Release
     - name: Release
       uses: softprops/action-gh-release@master
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: ./src/OpenSpartan.Workshop.Installer/bin/Release/en-US/OpenSpartan.Workshop.Installer.msi
+        files: ./src/OpenSpartan.Workshop.Installer.Bundle/bin/x64/Release/OpenSpartan.Workshop.Installer.Bundle.msi
         body_path: ./CURRENTRELEASE.md
         token: ${{ secrets.RELEASE_TOKEN }}
