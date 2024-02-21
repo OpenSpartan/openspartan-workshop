@@ -1,0 +1,11 @@
+﻿<Project Sdk="WixToolset.Sdk/4.0.4">
+  <PropertyGroup>
+    <OutputType>Bundle</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="WixToolset.Bal.wixext" Version="4.0.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\OpenSpartan.Workshop.Installer\OpenSpartan.Workshop.Installer.wixproj" />
+  </ItemGroup>
+</Project>

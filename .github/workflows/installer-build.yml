@@ -62,4 +62,4 @@ jobs:
       with:
         files: ./src/OpenSpartan.Workshop.Installer/bin/Release/en-US/OpenSpartan.Workshop.Installer.msi
         body_path: ./CURRENTRELEASE.md
-        token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
+        token: ${{ secrets.RELEASE_TOKEN }}
