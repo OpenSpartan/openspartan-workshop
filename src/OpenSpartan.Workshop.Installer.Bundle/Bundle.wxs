@@ -1,13 +1,58 @@
-﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
-  <Bundle Name="OpenSpartan Workshop" Manufacturer="Den Delimarsky" Version="1.0.0.0" UpgradeCode="cf3576f5-2f23-4095-94b9-c6c44e6b4891">
-    <BootstrapperApplication>
-      <bal:WixStandardBootstrapperApplication LicenseUrl="https://www.example.com/license" Theme="hyperlinkLicense" />
-    </BootstrapperApplication>
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+	 xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
+	 xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx">
+	
+	<Bundle Name="OpenSpartan Workshop" Manufacturer="Den Delimarsky" Version="1.0.0.0" UpgradeCode="cf3576f5-2f23-4095-94b9-c6c44e6b4891">
+		<netfx:DotNetCoreSearchRef Id="SearchForDotNet8" />
 
-    <Chain>
-      <!-- TODO: Define the list of chained packages. -->
-      <!-- <MsiPackage SourceFile="path\to\your.msi" /> -->
-    </Chain>
+		<BootstrapperApplication>
+			<bal:WixStandardBootstrapperApplication LicenseUrl="https://raw.githubusercontent.com/OpenSpartan/openspartan-workshop/master/LICENSE" Theme="hyperlinkLicense" LogoFile="Resources\Images\logo-icon.png" />
+		</BootstrapperApplication>
 
-  </Bundle>
+		<Chain>
+			<PackageGroupRef Id="Prerequisites" />
+			<PackageGroupRef Id="OpenSpartanWorkshopPackages" />
+		</Chain>
+	</Bundle>
+
+	<Fragment>
+		<!-- Apps use .NET Core 8 -->
+		<netfx:DotNetCoreSearch
+			Id="SearchForDotNet8"
+			RuntimeType="desktop"
+			Platform="x64"
+			MajorVersion="8"
+			Variable="DotNetDesktopRuntimeVersion"
+            />
+		
+		<PackageGroup Id="Prerequisites">
+			<!-- .NET 8, latest preview as used by this installer and the projects -->
+			<ExePackage
+				DisplayName="Microsoft .NET 8 Desktop Runtime"
+				SourceFile="Dependencies\windowsdesktop-runtime-8.0.2-win-x64.exe"
+				Compressed="yes"
+				DetectCondition="DotNetDesktopRuntimeVersion &gt;= v8.0.0"
+				InstallArguments="/install /passive /norestart /log openspartan.workshop.net8install.log"
+				UninstallArguments="/uninstall /passive /norestart /quiet"
+                />
+			<ExePackage
+				DisplayName="Microsoft Windows App Runtime"
+				SourceFile="Dependencies\WindowsAppRuntimeInstall-x64.exe"
+				Compressed="yes"
+				InstallArguments="-q"
+				Permanent="true"
+                >
+			</ExePackage>
+		</PackageGroup>
+		
+		<PackageGroup Id="OpenSpartanWorkshopPackages">
+			<MsiPackage
+				Id="OpenSpartanWorkshopSetup"
+				Vital="yes"
+				Permanent="no"
+				Compressed="yes"
+				SourceFile="OpenSpartan.Workshop.Installer.msi">
+			</MsiPackage>
+		</PackageGroup>
+	</Fragment>
 </Wix>

@@ -26,7 +26,6 @@
 
 		<Feature Id="Main" AllowAbsent="no" AllowAdvertise="no" ConfigurableDirectory="INSTALLFOLDER">
 			<ComponentGroupRef Id="ApplicationFiles"/>
-			<ComponentGroupRef Id="PrerequisitesComponents"/>
 			<ComponentGroupRef Id="InstallerComponents"/>
 		</Feature>
 

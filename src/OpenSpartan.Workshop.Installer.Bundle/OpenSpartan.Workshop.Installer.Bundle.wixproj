@@ -3,9 +3,17 @@
     <OutputType>Bundle</OutputType>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="Resources\Images\logo-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="WixToolset.Bal.wixext" Version="4.0.4" />
+    <PackageReference Include="WixToolset.Netfx.wixext" Version="4.0.4" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\OpenSpartan.Workshop.Installer\OpenSpartan.Workshop.Installer.wixproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Dependencies\WindowsAppRuntimeInstall-x64.exe" />
+    <None Include="Dependencies\windowsdesktop-runtime-8.0.2-win-x64.exe" />
   </ItemGroup>
 </Project>
