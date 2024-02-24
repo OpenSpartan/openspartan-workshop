@@ -442,8 +442,6 @@ namespace OpenSpartan.Workshop.Shared
 
             try
             {
-                //var currentMatchmadeRecords = DataHandler.GetCountOfMatchRecords();
-
                 List<Guid> ids = await GetPlayerMatchIds(XboxUserContext.DisplayClaims.Xui[0].XUID, MatchLoadingCancellationTracker.Token);
 
                 if (ids != null && ids.Count > 0)

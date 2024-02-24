@@ -15,7 +15,7 @@ namespace OpenSpartan.Workshop.ViewModels
 
         private BattlePassViewModel()
         {
-            BattlePasses = new ObservableCollection<OperationCompoundModel>();
+            BattlePasses = [];
         }
 
         private ObservableCollection<OperationCompoundModel> _battlePasses;
@@ -50,13 +50,13 @@ namespace OpenSpartan.Workshop.ViewModels
         {
             get
             {
-                switch (BattlePassLoadingState)
+                return BattlePassLoadingState switch
                 {
-                    case MetadataLoadingState.Loading:
-                        return $"Loading battle pass details. Currently processing {BattlePassLoadingParameter}...";
-                    default:
-                        return "NOOP - Never Seen";
-                }
+                    MetadataLoadingState.Loading => $"Loading battle pass details. Currently processing {BattlePassLoadingParameter}...",
+                    MetadataLoadingState.Calculating => "NOOP - Never Seen",
+                    MetadataLoadingState.Completed => "NOOP - Never Seen",
+                    _ => "NOOP - Never Seen",
+                };
             }
         }
 
