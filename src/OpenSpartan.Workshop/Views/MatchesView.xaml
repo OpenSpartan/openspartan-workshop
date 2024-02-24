@@ -96,7 +96,7 @@
                                     <ColumnDefinition Width="*"></ColumnDefinition>
                                     <ColumnDefinition Width="50"></ColumnDefinition>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="8,0,0,0" Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Kills}"></TextBlock>
+                                <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="12,0,0,0" Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Kills}"></TextBlock>
                                 <FontIcon FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center" Margin="4" Glyph="{Binding KillPerformance, Converter={StaticResource PerformanceToGlyphConverter}}" Foreground="{Binding KillPerformance, Converter={StaticResource PerformanceToColorConverter}}"/>
                             </Grid>
                         </DataTemplate>
@@ -111,7 +111,7 @@
                                     <ColumnDefinition Width="*"></ColumnDefinition>
                                     <ColumnDefinition Width="50"></ColumnDefinition>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="8,0,0,0" Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Deaths}"></TextBlock>
+                                <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="12,0,0,0" Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Deaths}"></TextBlock>
                                 <FontIcon FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center" Margin="4" Glyph="{Binding DeathPerformance, Converter={StaticResource PerformanceToGlyphConverter}}" Foreground="{Binding DeathPerformance, Converter={StaticResource PerformanceToColorConverter}}"/>
                             </Grid>
                         </DataTemplate>
