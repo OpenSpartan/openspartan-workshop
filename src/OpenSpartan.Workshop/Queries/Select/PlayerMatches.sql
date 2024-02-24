@@ -1,37 +1,53 @@
 ﻿WITH RAW_MATCHES AS (
     SELECT
-        MatchId,
-        Teams,
-        json_extract(MatchInfo, '$.StartTime') StartTime,
-        json_extract(MatchInfo, '$.Duration') Duration,
-        json_extract(MatchInfo, '$.GameVariantCategory') GameVariantCategory,
-        json_extract(MatchInfo, '$.MapVariant.AssetId') Map,
-        json_extract(MatchInfo, '$.Playlist.AssetId') Playlist,
-        json_extract(MatchInfo, '$.UgcGameVariant.AssetId') UgcGameVariant,
-        json_extract(value, '$.Rank') "Rank",
-        json_extract(value, '$.Outcome') Outcome,
-        json_extract(value, '$.LastTeamId') LastTeamId,
-        json_extract(value, '$.ParticipationInfo') ParticipationInfo,
-        json_extract(value, '$.PlayerTeamStats') PlayerTeamStats
+        MS.MatchId,
+        MS.Teams,
+        json_extract(MS.MatchInfo, '$.StartTime') AS StartTime,
+        json_extract(MS.MatchInfo, '$.Duration') AS Duration,
+        json_extract(MS.MatchInfo, '$.GameVariantCategory') AS GameVariantCategory,
+        json_extract(MS.MatchInfo, '$.MapVariant.AssetId') AS Map,
+        json_extract(MS.MatchInfo, '$.Playlist.AssetId') AS Playlist,
+        json_extract(MS.MatchInfo, '$.UgcGameVariant.AssetId') AS UgcGameVariant,
+        json_extract(value, '$.Rank') AS "Rank",
+        json_extract(value, '$.Outcome') AS Outcome,
+        json_extract(value, '$.LastTeamId') AS LastTeamId,
+        json_extract(value, '$.ParticipationInfo') AS ParticipationInfo,
+        json_extract(value, '$.PlayerTeamStats') AS PlayerTeamStats
     FROM
-        MatchStats, json_each(Players)
+        MatchStats MS
+    JOIN
+        json_each(MS.Players) PE ON json_extract(PE.value, '$.PlayerId') = $PlayerXuid
     WHERE
-        json_extract(json_each.value, '$.PlayerId') = $PlayerXuid
+        MS.MatchInfo IS NOT NULL
     ORDER BY
         StartTime DESC
 ),
 MATCH_DETAILS AS (
     SELECT
-        MatchId,
-        json_extract(value, '$.Result.TeamMmr') TeamMmr
+        PMS.MatchId,
+        json_extract(PE.value, '$.Result.TeamMmr') AS TeamMmr
     FROM
-        PlayerMatchStats, json_each(PlayerStats)
+        PlayerMatchStats PMS
+    JOIN
+        json_each(PMS.PlayerStats) PE ON json_extract(PE.value, '$.Id') = $PlayerXuid
     WHERE
-        json_extract(json_each.value, '$.Id') = $PlayerXuid
+        PMS.PlayerStats IS NOT NULL
 ),
 SELECTIVE_MATCHES AS (
     SELECT
-        *
+        MatchId,
+        Teams,
+        StartTime,
+        Duration,
+        "Rank",
+        Outcome,
+        LastTeamId,
+        ParticipationInfo,
+        PlayerTeamStats,
+        GameVariantCategory,
+        Map,
+        Playlist,
+        UgcGameVariant
     FROM
         RAW_MATCHES
     WHERE
@@ -41,19 +57,19 @@ SELECTIVE_MATCHES AS (
 )
 SELECT
     SM.MatchId,
-    Teams,
-    StartTime,
-    Duration,
-    "Rank",
-    Outcome,
-    LastTeamId,
-    ParticipationInfo,
-    PlayerTeamStats,
-    GameVariantCategory,
-    M.PublicName Map,
-    P.PublicName Playlist,
-    GV.PublicName GameVariant,
-    MD.TeamMmr TeamMmr
+    SM.Teams,
+    SM.StartTime,
+    SM.Duration,
+    SM."Rank",
+    SM.Outcome,
+    SM.LastTeamId,
+    SM.ParticipationInfo,
+    SM.PlayerTeamStats,
+    SM.GameVariantCategory,
+    M.PublicName AS Map,
+    P.PublicName AS Playlist,
+    GV.PublicName AS GameVariant,
+    MD.TeamMmr AS TeamMmr
 FROM
     SELECTIVE_MATCHES SM
 LEFT JOIN
