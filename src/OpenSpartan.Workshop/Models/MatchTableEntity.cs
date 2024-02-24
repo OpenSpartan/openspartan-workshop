@@ -37,5 +37,25 @@ namespace OpenSpartan.Workshop.Models
         public float? ExpectedDeaths { get; set; }
 
         public float? ExpectedKills { get; set; }
+
+        public PerformanceMeasure? KillPerformance
+        {
+            get
+            {
+                return ExpectedKills == PlayerTeamStats[0].Stats.CoreStats.Kills
+                    ? PerformanceMeasure.MetExpectations
+                    : (ExpectedKills > PlayerTeamStats[0].Stats.CoreStats.Kills ? PerformanceMeasure.Underperformed : PerformanceMeasure.Outperformed);
+            }
+        }
+
+        public PerformanceMeasure? DeathPerformance
+        {
+            get
+            {
+                return ExpectedDeaths == PlayerTeamStats[0].Stats.CoreStats.Deaths
+                    ? PerformanceMeasure.MetExpectations
+                    : (ExpectedDeaths > PlayerTeamStats[0].Stats.CoreStats.Deaths ? PerformanceMeasure.Outperformed : PerformanceMeasure.Underperformed);
+            }
+        }
     }
 }

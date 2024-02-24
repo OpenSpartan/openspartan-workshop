@@ -9,6 +9,7 @@
     xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
     xmlns:converters="using:OpenSpartan.Workshop.Converters"
     xmlns:viewmodels="using:OpenSpartan.Workshop.ViewModels"
+    xmlns:models="using:OpenSpartan.Workshop.Models"
     xmlns:shared="using:OpenSpartan.Workshop.Shared"
     DataContext="{x:Bind viewmodels:MatchesViewModel.Instance}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
@@ -18,6 +19,8 @@
         <converters:MetadataLoadingStateToVisibilityConverter x:Key="MetadataLoadingStateToVisibilityConverter"></converters:MetadataLoadingStateToVisibilityConverter>
         <converters:OutcomeToBackgroundConverter x:Key="OutcomeToBackgroundConverter"></converters:OutcomeToBackgroundConverter>
         <converters:OutcomeToForegroundConverter x:Key="OutcomeToForegroundConverter"></converters:OutcomeToForegroundConverter>
+        <converters:PerformanceToGlyphConverter x:Key="PerformanceToGlyphConverter"></converters:PerformanceToGlyphConverter>
+        <converters:PerformanceToColorConverter x:Key="PerformanceToColorConverter"></converters:PerformanceToColorConverter>
     </Page.Resources>
 
     <Grid>
@@ -85,9 +88,35 @@
                 </controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Team MMR" Width="*" Binding="{Binding TeamMmr}"></controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Duration" Width="*" Binding="{Binding Duration}"></controls:DataGridTextColumn>
-                <controls:DataGridTextColumn Header="Kills" Width="*" Binding="{Binding PlayerTeamStats[0].Stats.CoreStats.Kills}"></controls:DataGridTextColumn>
+                <controls:DataGridTemplateColumn Header="Kills" Width="*">
+                    <controls:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="models:MatchTableEntity">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"></ColumnDefinition>
+                                    <ColumnDefinition Width="50"></ColumnDefinition>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="8,0,0,0" Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Kills}"></TextBlock>
+                                <FontIcon FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center" Margin="4" Glyph="{Binding KillPerformance, Converter={StaticResource PerformanceToGlyphConverter}}" Foreground="{Binding KillPerformance, Converter={StaticResource PerformanceToColorConverter}}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </controls:DataGridTemplateColumn.CellTemplate>
+                </controls:DataGridTemplateColumn>
                 <controls:DataGridTextColumn Header="Expected Kills" Width="*" Binding="{Binding ExpectedKills}"></controls:DataGridTextColumn>
-                <controls:DataGridTextColumn Header="Deaths" Width="*" Binding="{Binding PlayerTeamStats[0].Stats.CoreStats.Deaths}"></controls:DataGridTextColumn>
+                <controls:DataGridTemplateColumn Header="Deaths" Width="*">
+                    <controls:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="models:MatchTableEntity">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"></ColumnDefinition>
+                                    <ColumnDefinition Width="50"></ColumnDefinition>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="8,0,0,0" Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Deaths}"></TextBlock>
+                                <FontIcon FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center" Margin="4" Glyph="{Binding DeathPerformance, Converter={StaticResource PerformanceToGlyphConverter}}" Foreground="{Binding DeathPerformance, Converter={StaticResource PerformanceToColorConverter}}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </controls:DataGridTemplateColumn.CellTemplate>
+                </controls:DataGridTemplateColumn>
                 <controls:DataGridTextColumn Header="Expected Deaths" Width="*" Binding="{Binding ExpectedDeaths}"></controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Rank" Width="*" Binding="{Binding Rank}"></controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Category" Width="*" Binding="{Binding Category}"></controls:DataGridTextColumn>
