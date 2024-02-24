@@ -33,5 +33,9 @@ namespace OpenSpartan.Workshop.Models
         public List<PlayerTeamStat> PlayerTeamStats { get; set; }
 
         public float? TeamMmr { get; set; }
+
+        public float? ExpectedDeaths { get; set; }
+
+        public float? ExpectedKills { get; set; }
     }
 }

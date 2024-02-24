@@ -259,6 +259,8 @@ namespace OpenSpartan.Workshop.Data
                         var participationInfoOrdinal = reader.GetOrdinal("ParticipationInfo");
                         var playerTeamStatsOrdinal = reader.GetOrdinal("PlayerTeamStats");
                         var teamMmrOrdinal = reader.GetOrdinal("TeamMmr");
+                        var expectedDeathsOrdinal = reader.GetOrdinal("ExpectedDeaths");
+                        var expectedKillsOrdinal = reader.GetOrdinal("ExpectedKills");
 
                         MatchTableEntity entity = new()
                         {
@@ -276,6 +278,8 @@ namespace OpenSpartan.Workshop.Data
                             ParticipationInfo = reader.IsDBNull(teamsOrdinal) ? null : JsonSerializer.Deserialize<ParticipationInfo>(reader.GetFieldValue<string>(participationInfoOrdinal), serializerOptions),
                             PlayerTeamStats = reader.IsDBNull(teamsOrdinal) ? null : JsonSerializer.Deserialize<List<PlayerTeamStat>>(reader.GetFieldValue<string>(playerTeamStatsOrdinal), serializerOptions),
                             TeamMmr = reader.IsDBNull(teamMmrOrdinal) ? null : reader.GetFieldValue<float>(teamMmrOrdinal),
+                            ExpectedDeaths = reader.IsDBNull(expectedDeathsOrdinal) ? null : reader.GetFieldValue<float>(expectedDeathsOrdinal),
+                            ExpectedKills = reader.IsDBNull(expectedKillsOrdinal) ? null : reader.GetFieldValue<float>(expectedKillsOrdinal),
                         };
 
                         matches.Add(entity);

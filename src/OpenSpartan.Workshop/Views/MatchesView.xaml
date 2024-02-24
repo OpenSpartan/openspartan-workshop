@@ -85,6 +85,10 @@
                 </controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Team MMR" Width="*" Binding="{Binding TeamMmr}"></controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Duration" Width="*" Binding="{Binding Duration}"></controls:DataGridTextColumn>
+                <controls:DataGridTextColumn Header="Kills" Width="*" Binding="{Binding PlayerTeamStats[0].Stats.CoreStats.Kills}"></controls:DataGridTextColumn>
+                <controls:DataGridTextColumn Header="Expected Kills" Width="*" Binding="{Binding ExpectedKills}"></controls:DataGridTextColumn>
+                <controls:DataGridTextColumn Header="Deaths" Width="*" Binding="{Binding PlayerTeamStats[0].Stats.CoreStats.Deaths}"></controls:DataGridTextColumn>
+                <controls:DataGridTextColumn Header="Expected Deaths" Width="*" Binding="{Binding ExpectedDeaths}"></controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Rank" Width="*" Binding="{Binding Rank}"></controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Category" Width="*" Binding="{Binding Category}"></controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Map" Width="*" Binding="{Binding Map}"></controls:DataGridTextColumn>

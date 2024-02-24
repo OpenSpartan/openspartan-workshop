@@ -25,7 +25,9 @@
 MATCH_DETAILS AS (
     SELECT
         PMS.MatchId,
-        json_extract(PE.value, '$.Result.TeamMmr') AS TeamMmr
+        json_extract(PE.value, '$.Result.TeamMmr') AS TeamMmr,
+        json_extract(PE.value, '$.Result.Counterfactuals.SelfCounterfactuals.Deaths') AS ExpectedDeaths,
+        json_extract(PE.value, '$.Result.Counterfactuals.SelfCounterfactuals.Kills') AS ExpectedKills
     FROM
         PlayerMatchStats PMS
     JOIN
@@ -69,7 +71,9 @@ SELECT
     M.PublicName AS Map,
     P.PublicName AS Playlist,
     GV.PublicName AS GameVariant,
-    MD.TeamMmr AS TeamMmr
+    MD.TeamMmr AS TeamMmr,
+    MD.ExpectedDeaths AS ExpectedDeaths,
+    MD.ExpectedKills AS ExpectedKills
 FROM
     SELECTIVE_MATCHES SM
 LEFT JOIN
