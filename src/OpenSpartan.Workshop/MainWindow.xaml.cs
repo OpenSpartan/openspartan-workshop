@@ -2,6 +2,8 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
+using OpenSpartan.Workshop.ViewModels;
+using OpenSpartan.Workshop.Views;
 using System;
 using System.Linq;
 
@@ -34,9 +36,12 @@ namespace OpenSpartan.Workshop
             else if (ContentFrame.SourcePageType != null)
             {
                 // Select the nav view item that corresponds to the page being navigated to.
-                nvRoot.SelectedItem = nvRoot.MenuItems
-                            .OfType<NavigationViewItem>()
-                            .First(i => i.Tag.Equals(ContentFrame.SourcePageType.FullName.ToString()));
+                if (ContentFrame.SourcePageType != typeof(MedalMatchesView))
+                {
+                    nvRoot.SelectedItem = nvRoot.MenuItems
+                                .OfType<NavigationViewItem>()
+                                .First(i => i.Tag.Equals(ContentFrame.SourcePageType.FullName.ToString()));
+                }
             }
         }
 

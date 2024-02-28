@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    x:Name="MedalsViewPage"
     xmlns:converters="using:OpenSpartan.Workshop.Converters"
     xmlns:viewmodels="using:OpenSpartan.Workshop.ViewModels"
     DataContext="{x:Bind viewmodels:MedalsViewModel.Instance}"
@@ -43,7 +44,7 @@
         <GridView Margin="12,0,8,0" Grid.Row="1" ItemsSource="{Binding Source={StaticResource cvsMedals}}">
             <GridView.ItemTemplate>
                 <DataTemplate>
-                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4" Tapped="MedalGridItem_Tapped">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="36"></RowDefinition>
                             <RowDefinition Height="*"></RowDefinition>
@@ -66,6 +67,16 @@
                         <Grid Grid.Row="1" Padding="8" Background="{Binding DifficultyIndex, Converter={StaticResource MedalDifficultyToBrushConverter}}">
                             <Image Height="128" Width="192" Source="{Binding NameId, Converter={StaticResource MedalNameIdToPathConverter}}"/>
                         </Grid>
+
+                        <TeachingTip Title="{Binding Name.Value}"
+                                     Subtitle="{Binding Description.Value}"
+                                     PreferredPlacement="Bottom"
+                                     IsLightDismissEnabled="True"
+                                     ActionButtonContent="Browse Matches"
+                                     ActionButtonCommand="{Binding DataContext.NavigateCommand, ElementName=MedalsViewPage}"
+                                     ActionButtonCommandParameter="{Binding NameId}"
+                                     Target="{Binding RelativeSource={RelativeSource TemplatedParent}}">
+                        </TeachingTip>
                     </Grid>
                 </DataTemplate>
             </GridView.ItemTemplate>

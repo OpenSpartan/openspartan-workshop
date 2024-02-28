@@ -53,12 +53,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    Logger.Error($"WAL journaling mode not set.");
+                    if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"WAL journaling mode not set.");
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error($"Journaling mode modification exception: {ex.Message}");
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Journaling mode modification exception: {ex.Message}");
             }
 
             return null;
@@ -91,7 +91,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                Logger.Error($"Database bootstrapping failure: {ex.Message}");
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Database bootstrapping failure: {ex.Message}");
                 return false;
             }
         }
@@ -119,11 +119,11 @@ namespace OpenSpartan.Workshop.Data
 
             if (outcome > 0)
             {
-                Logger.Info("Indices provisioned.");
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Info("Indices provisioned.");
             }
             else
             {
-                Logger.Warn("Indices could not be set up. If this is not the first run, then those are likely already configured.");
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Warn("Indices could not be set up. If this is not the first run, then those are likely already configured.");
             }
         }
 
@@ -151,7 +151,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                Logger.Error($"Error inserting service record entry. {ex.Message}");
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Error inserting service record entry. {ex.Message}");
                 return false;
             }
         }
@@ -179,12 +179,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    Logger.Warn($"No rows returned for distinct match IDs.");
+                    if (SettingsViewModel.Instance.EnableLogging) Logger.Warn($"No rows returned for distinct match IDs.");
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error($"An error occurred obtaining unique match IDs. {ex.Message}");
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining unique match IDs. {ex.Message}");
             }
 
             return null;
@@ -215,12 +215,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    Logger.Warn($"No rows returned for operations.");
+                    if (SettingsViewModel.Instance.EnableLogging) Logger.Warn($"No rows returned for operations.");
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error($"An error occurred obtaining operations from database. {ex.Message}");
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining operations from database. {ex.Message}");
             }
 
             return null;
@@ -228,13 +228,32 @@ namespace OpenSpartan.Workshop.Data
 
         internal static List<MatchTableEntity> GetMatches(string playerXuid, string boundaryTime, int boundaryLimit)
         {
+            return GetMatchesInternal(playerXuid, null, boundaryTime, boundaryLimit);
+        }
+
+        internal static List<MatchTableEntity> GetMatchesWithMedal(string playerXuid, long medalNameId, string boundaryTime, int boundaryLimit)
+        {
+            return GetMatchesInternal(playerXuid, medalNameId, boundaryTime, boundaryLimit);
+        }
+
+        private static List<MatchTableEntity> GetMatchesInternal(string playerXuid, long? medalNameId, string boundaryTime, int boundaryLimit)
+        {
             try
             {
                 using var connection = new SqliteConnection($"Data Source={DatabasePath}");
                 connection.Open();
 
                 using var command = connection.CreateCommand();
-                command.CommandText = GetQuery("Select", "PlayerMatches");
+                if (medalNameId.HasValue)
+                {
+                    command.CommandText = GetQuery("Select", "PlayerMatchesBasedOnMedal");
+                    command.Parameters.AddWithValue("MedalNameId", medalNameId.Value);
+                }
+                else
+                {
+                    command.CommandText = GetQuery("Select", "PlayerMatches");
+                }
+
                 command.Parameters.AddWithValue("PlayerXuid", playerXuid);
                 command.Parameters.AddWithValue("BoundaryTime", boundaryTime);
                 command.Parameters.AddWithValue("BoundaryLimit", boundaryLimit);
@@ -242,63 +261,67 @@ namespace OpenSpartan.Workshop.Data
                 using var reader = command.ExecuteReader();
                 if (reader.HasRows)
                 {
-                    List<MatchTableEntity> matches = new();
+                    List<MatchTableEntity> matches = new List<MatchTableEntity>();
                     while (reader.Read())
                     {
-                        var matchOrdinal = reader.GetOrdinal("MatchId");
-                        var startTimeOrdinal = reader.GetOrdinal("StartTime");
-                        var rankOrdinal = reader.GetOrdinal("Rank");
-                        var outcomeOrdinal = reader.GetOrdinal("Outcome");
-                        var gameVariantCategoryOrdinal = reader.GetOrdinal("GameVariantCategory");
-                        var mapOrdinal = reader.GetOrdinal("Map");
-                        var playlistOrdinal = reader.GetOrdinal("Playlist");
-                        var gameVariantOrdinal = reader.GetOrdinal("GameVariant");
-                        var durationOrdinal = reader.GetOrdinal("Duration");
-                        var lastTeamIdOrdinal = reader.GetOrdinal("LastTeamId");
-                        var teamsOrdinal = reader.GetOrdinal("Teams");
-                        var participationInfoOrdinal = reader.GetOrdinal("ParticipationInfo");
-                        var playerTeamStatsOrdinal = reader.GetOrdinal("PlayerTeamStats");
-                        var teamMmrOrdinal = reader.GetOrdinal("TeamMmr");
-                        var expectedDeathsOrdinal = reader.GetOrdinal("ExpectedDeaths");
-                        var expectedKillsOrdinal = reader.GetOrdinal("ExpectedKills");
-
-                        MatchTableEntity entity = new()
-                        {
-                            MatchId = reader.IsDBNull(matchOrdinal) ? string.Empty : reader.GetFieldValue<string>(matchOrdinal),
-                            StartTime = reader.IsDBNull(startTimeOrdinal) ? DateTimeOffset.UnixEpoch : reader.GetFieldValue<DateTimeOffset>(startTimeOrdinal).ToLocalTime(),
-                            Rank = reader.IsDBNull(rankOrdinal) ? 0 : reader.GetFieldValue<int>(rankOrdinal),
-                            Outcome = reader.IsDBNull(outcomeOrdinal) ? Outcome.DidNotFinish : reader.GetFieldValue<Outcome>(outcomeOrdinal),
-                            Category = reader.IsDBNull(gameVariantCategoryOrdinal) ? GameVariantCategory.None : reader.GetFieldValue<GameVariantCategory>(gameVariantCategoryOrdinal),
-                            Map = reader.IsDBNull(mapOrdinal) ? string.Empty : reader.GetFieldValue<string>(mapOrdinal),
-                            Playlist = reader.IsDBNull(playlistOrdinal) ? string.Empty : reader.GetFieldValue<string>(playlistOrdinal),
-                            GameVariant = reader.IsDBNull(gameVariantOrdinal) ? string.Empty : reader.GetFieldValue<string>(gameVariantOrdinal),
-                            Duration = reader.IsDBNull(durationOrdinal) ? TimeSpan.Zero : XmlConvert.ToTimeSpan(reader.GetFieldValue<string>(durationOrdinal)),
-                            LastTeamId = reader.IsDBNull(durationOrdinal) ? null : reader.GetFieldValue<int>(lastTeamIdOrdinal),
-                            Teams = reader.IsDBNull(teamsOrdinal) ? null : JsonSerializer.Deserialize<List<Team>>(reader.GetFieldValue<string>(teamsOrdinal), serializerOptions),
-                            ParticipationInfo = reader.IsDBNull(teamsOrdinal) ? null : JsonSerializer.Deserialize<ParticipationInfo>(reader.GetFieldValue<string>(participationInfoOrdinal), serializerOptions),
-                            PlayerTeamStats = reader.IsDBNull(teamsOrdinal) ? null : JsonSerializer.Deserialize<List<PlayerTeamStat>>(reader.GetFieldValue<string>(playerTeamStatsOrdinal), serializerOptions),
-                            TeamMmr = reader.IsDBNull(teamMmrOrdinal) ? null : reader.GetFieldValue<float>(teamMmrOrdinal),
-                            ExpectedDeaths = reader.IsDBNull(expectedDeathsOrdinal) ? null : reader.GetFieldValue<float>(expectedDeathsOrdinal),
-                            ExpectedKills = reader.IsDBNull(expectedKillsOrdinal) ? null : reader.GetFieldValue<float>(expectedKillsOrdinal),
-                        };
-
-                        matches.Add(entity);
+                        matches.Add(ReadMatchTableEntity(reader));
                     }
 
                     return matches;
                 }
                 else
                 {
-                    Logger.Warn($"No rows returned for player match IDs.");
+                    if (SettingsViewModel.Instance.EnableLogging) Logger.Warn($"No rows returned for player match IDs.");
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error($"An error occurred obtaining matches. {ex.Message}");
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining matches. {ex.Message}");
             }
 
             return null;
         }
+
+        private static MatchTableEntity ReadMatchTableEntity(SqliteDataReader reader)
+        {
+            var matchOrdinal = reader.GetOrdinal("MatchId");
+            var startTimeOrdinal = reader.GetOrdinal("StartTime");
+            var rankOrdinal = reader.GetOrdinal("Rank");
+            var outcomeOrdinal = reader.GetOrdinal("Outcome");
+            var gameVariantCategoryOrdinal = reader.GetOrdinal("GameVariantCategory");
+            var mapOrdinal = reader.GetOrdinal("Map");
+            var playlistOrdinal = reader.GetOrdinal("Playlist");
+            var gameVariantOrdinal = reader.GetOrdinal("GameVariant");
+            var durationOrdinal = reader.GetOrdinal("Duration");
+            var lastTeamIdOrdinal = reader.GetOrdinal("LastTeamId");
+            var teamsOrdinal = reader.GetOrdinal("Teams");
+            var participationInfoOrdinal = reader.GetOrdinal("ParticipationInfo");
+            var playerTeamStatsOrdinal = reader.GetOrdinal("PlayerTeamStats");
+            var teamMmrOrdinal = reader.GetOrdinal("TeamMmr");
+            var expectedDeathsOrdinal = reader.GetOrdinal("ExpectedDeaths");
+            var expectedKillsOrdinal = reader.GetOrdinal("ExpectedKills");
+
+            return new MatchTableEntity
+            {
+                MatchId = reader.IsDBNull(matchOrdinal) ? string.Empty : reader.GetFieldValue<string>(matchOrdinal),
+                StartTime = reader.IsDBNull(startTimeOrdinal) ? DateTimeOffset.UnixEpoch : reader.GetFieldValue<DateTimeOffset>(startTimeOrdinal).ToLocalTime(),
+                Rank = reader.IsDBNull(rankOrdinal) ? 0 : reader.GetFieldValue<int>(rankOrdinal),
+                Outcome = reader.IsDBNull(outcomeOrdinal) ? Outcome.DidNotFinish : reader.GetFieldValue<Outcome>(outcomeOrdinal),
+                Category = reader.IsDBNull(gameVariantCategoryOrdinal) ? GameVariantCategory.None : reader.GetFieldValue<GameVariantCategory>(gameVariantCategoryOrdinal),
+                Map = reader.IsDBNull(mapOrdinal) ? string.Empty : reader.GetFieldValue<string>(mapOrdinal),
+                Playlist = reader.IsDBNull(playlistOrdinal) ? string.Empty : reader.GetFieldValue<string>(playlistOrdinal),
+                GameVariant = reader.IsDBNull(gameVariantOrdinal) ? string.Empty : reader.GetFieldValue<string>(gameVariantOrdinal),
+                Duration = reader.IsDBNull(durationOrdinal) ? TimeSpan.Zero : XmlConvert.ToTimeSpan(reader.GetFieldValue<string>(durationOrdinal)),
+                LastTeamId = reader.IsDBNull(durationOrdinal) ? null : reader.GetFieldValue<int>(lastTeamIdOrdinal),
+                Teams = reader.IsDBNull(teamsOrdinal) ? null : JsonSerializer.Deserialize<List<Team>>(reader.GetFieldValue<string>(teamsOrdinal), serializerOptions),
+                ParticipationInfo = reader.IsDBNull(teamsOrdinal) ? null : JsonSerializer.Deserialize<ParticipationInfo>(reader.GetFieldValue<string>(participationInfoOrdinal), serializerOptions),
+                PlayerTeamStats = reader.IsDBNull(teamsOrdinal) ? null : JsonSerializer.Deserialize<List<PlayerTeamStat>>(reader.GetFieldValue<string>(playerTeamStatsOrdinal), serializerOptions),
+                TeamMmr = reader.IsDBNull(teamMmrOrdinal) ? null : reader.GetFieldValue<float>(teamMmrOrdinal),
+                ExpectedDeaths = reader.IsDBNull(expectedDeathsOrdinal) ? null : reader.GetFieldValue<float>(expectedDeathsOrdinal),
+                ExpectedKills = reader.IsDBNull(expectedKillsOrdinal) ? null : reader.GetFieldValue<float>(expectedKillsOrdinal),
+            };
+        }
+
 
         internal static Tuple<bool, bool> GetMatchStatsAvailability(string matchId)
         {
@@ -328,7 +351,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                Logger.Error($"An error occurred obtaining match and stats availability. {ex.Message}");
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining match and stats availability. {ex.Message}");
             }
 
             return null;
@@ -355,7 +378,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                Logger.Error($"An error occurred inserting player match and stats. {ex.Message}");
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred inserting player match and stats. {ex.Message}");
             }
 
             return false;
@@ -381,7 +404,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                Logger.Error($"An error occurred inserting match and stats. {ex.Message}");
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred inserting match and stats. {ex.Message}");
             }
 
             return false;
@@ -447,7 +470,7 @@ namespace OpenSpartan.Workshop.Data
 
                         if (insertionResult > 0)
                         {
-                            Logger.Info($"Stored map: {result.MatchInfo.MapVariant.AssetId}/{result.MatchInfo.MapVariant.VersionId}");
+                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored map: {result.MatchInfo.MapVariant.AssetId}/{result.MatchInfo.MapVariant.VersionId}");
                         }
                     }
                 }
@@ -466,7 +489,7 @@ namespace OpenSpartan.Workshop.Data
 
                         if (insertionResult > 0)
                         {
-                            Logger.Info($"Stored playlist: {result.MatchInfo.Playlist.AssetId}/{result.MatchInfo.Playlist.VersionId}");
+                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored playlist: {result.MatchInfo.Playlist.AssetId}/{result.MatchInfo.Playlist.VersionId}");
                         }
                     }
                 }
@@ -485,7 +508,7 @@ namespace OpenSpartan.Workshop.Data
 
                         if (insertionResult > 0)
                         {
-                            Logger.Info($"Stored playlist + map mode pair: {result.MatchInfo.PlaylistMapModePair.AssetId}/{result.MatchInfo.PlaylistMapModePair.VersionId}");
+                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored playlist + map mode pair: {result.MatchInfo.PlaylistMapModePair.AssetId}/{result.MatchInfo.PlaylistMapModePair.VersionId}");
                         }
                     }
                 }
@@ -507,7 +530,7 @@ namespace OpenSpartan.Workshop.Data
 
                             if (insertionResult > 0)
                             {
-                                Logger.Info($"Stored game variant: {result.MatchInfo.UgcGameVariant.AssetId}/{result.MatchInfo.UgcGameVariant.VersionId}");
+                                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored game variant: {result.MatchInfo.UgcGameVariant.AssetId}/{result.MatchInfo.UgcGameVariant.VersionId}");
                             }
                         }
 
@@ -539,7 +562,7 @@ namespace OpenSpartan.Workshop.Data
 
                         if (insertionResult > 0)
                         {
-                            Logger.Info($"Stored engine game variant: {engineGameVariant.Result.AssetId}/{engineGameVariant.Result.VersionId}");
+                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored engine game variant: {engineGameVariant.Result.AssetId}/{engineGameVariant.Result.VersionId}");
                         }
                     }
                 }
@@ -548,7 +571,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                Logger.Error($"Error updating match stats. {ex.Message}");
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Error updating match stats. {ex.Message}");
                 return false;
             }
         }
@@ -571,7 +594,7 @@ namespace OpenSpartan.Workshop.Data
                 using var reader = command.ExecuteReader();
                 if (reader.HasRows)
                 {
-                    List<Medal> matchIds = new();
+                    List<Medal> matchIds = [];
                     while (reader.Read())
                     {
                         matchIds.AddRange(JsonSerializer.Deserialize<List<Medal>>(reader.GetString(0)));
@@ -581,12 +604,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    Logger.Warn($"No rows returned for medals.");
+                    if (SettingsViewModel.Instance.EnableLogging) Logger.Warn($"No rows returned for medals.");
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error($"An error occurred obtaining medals from the database. {ex.Message}");
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining medals from the database. {ex.Message}");
             }
 
             return null;
@@ -608,7 +631,7 @@ namespace OpenSpartan.Workshop.Data
 
             if (insertionResult > 0)
             {
-                Logger.Info($"Stored reward track {path}.");
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored reward track {path}.");
                 return true;
             }
             else
@@ -633,7 +656,7 @@ namespace OpenSpartan.Workshop.Data
 
             if (insertionResult > 0)
             {
-                Logger.Info($"Stored inventory item {path}.");
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored inventory item {path}.");
                 return true;
             }
             else
@@ -721,12 +744,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    Logger.Info($"No rows returned for inventory items query.");
+                    if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"No rows returned for inventory items query.");
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error($"An error occurred obtaining inventory items. {ex.Message}");
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining inventory items. {ex.Message}");
             }
 
             return null;
@@ -752,11 +775,11 @@ namespace OpenSpartan.Workshop.Data
                 var insertionResult = insertionCommand.ExecuteNonQuery();
                 if (insertionResult > 0)
                 {
-                    Logger.Info($"Stored owned inventory item {item.ItemId}.");
+                    if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored owned inventory item {item.ItemId}.");
                 }
                 else
                 {
-                    Logger.Error($"Could not store owned inventory item {item.ItemId}.");
+                    if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not store owned inventory item {item.ItemId}.");
                 }
             }
 

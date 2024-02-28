@@ -14,12 +14,14 @@
     <EnableMsixTooling>true</EnableMsixTooling>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Controls\MatchesGridControl.xaml" />
     <None Remove="CustomImages\logo-icon.png" />
     <None Remove="CustomImages\OpenSpartan.Workshop.ico" />
     <None Remove="Views\BattlePassDetailView.xaml" />
     <None Remove="Views\BattlePassView.xaml" />
     <None Remove="Views\HomeView.xaml" />
     <None Remove="Views\MatchesView.xaml" />
+    <None Remove="Views\MedalMatchesView.xaml" />
     <None Remove="Views\MedalsView.xaml" />
     <None Remove="Views\SettingsView.xaml" />
   </ItemGroup>
@@ -63,6 +65,9 @@
     <ProjectCapability Include="Msix" />
   </ItemGroup>
   <ItemGroup>
+    <Page Update="Controls\MatchesGridControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <None Update="NLog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -158,9 +163,15 @@
     <None Update="Queries\Select\PlayerMatches.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Queries\Select\PlayerMatchesBasedOnMedal.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Queries\VerifyTableAvailability.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <Page Update="Views\MedalMatchesView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Views\BattlePassDetailView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

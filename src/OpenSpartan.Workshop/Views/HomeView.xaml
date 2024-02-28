@@ -14,18 +14,6 @@
     <Grid>
         <Grid.Resources>
             <ResourceDictionary>
-                <!--<ResourceDictionary.ThemeDictionaries>
-                    <ResourceDictionary x:Key="Light">
-                        <ImageSource x:Key="StoreIcon">/Assets/HomeHeaderTiles/Header-Store.light.png</ImageSource>
-                    </ResourceDictionary>
-                    <ResourceDictionary x:Key="Dark">
-                        <ImageSource x:Key="StoreIcon">/Assets/HomeHeaderTiles/Header-Store.dark.png</ImageSource>
-                    </ResourceDictionary>
-                    <ResourceDictionary x:Key="HighContrast">
-                        <ImageSource x:Key="StoreIcon">/Assets/HomeHeaderTiles/Header-Store.dark.png</ImageSource>
-                    </ResourceDictionary>
-                </ResourceDictionary.ThemeDictionaries>-->
-
                 <Style x:Key="ScrollButtonStyle" TargetType="Button">
                     <Setter Property="Background" Value="{ThemeResource FlipViewNextPreviousButtonBackground}" />
                     <Setter Property="BackgroundSizing" Value="InnerBorderEdge" />
@@ -249,10 +237,10 @@
                                 <StackPanel>
                                     <TextBlock Text="Earned To Date" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
                                     <TextBlock Text="{Binding ExperienceEarnedToDate, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
-                                    <TextBlock Text="Total Required" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                                    <TextBlock Text="{Binding ExperienceTotalRequired, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
                                     <TextBlock Text="Remaining" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
                                     <TextBlock Text="{Binding ExperienceRemaining, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                                    <TextBlock Text="Total Required" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                    <TextBlock Text="{Binding ExperienceTotalRequired, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
                                 </StackPanel>
                             </Grid>
                         </Grid>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="OpenSpartan.Workshop.Views.MedalMatchesView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:OpenSpartan.Workshop.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:localcontrols="using:OpenSpartan.Workshop.Controls"
+    xmlns:viewmodels="using:OpenSpartan.Workshop.ViewModels"
+    xmlns:converters="using:OpenSpartan.Workshop.Converters"
+    mc:Ignorable="d"
+    DataContext="{x:Bind viewmodels:MedalMatchesViewModel.Instance}"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Page.Resources>
+        <converters:MedalNameIdToPathConverter x:Key="MedalNameIdToPathConverter"></converters:MedalNameIdToPathConverter>
+    </Page.Resources>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="100"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <Image Source="{Binding Medal.NameId, Converter={StaticResource MedalNameIdToPathConverter}}"></Image>
+            <TextBlock Text="{Binding Medal.Name}"></TextBlock>
+            <TextBlock Text="{Binding Medal.Description}"></TextBlock>
+        </Grid>
+        
+        <localcontrols:MatchesGridControl Grid.Row="1" MatchSource="{Binding MatchList}" />
+    </Grid>
+</Page>

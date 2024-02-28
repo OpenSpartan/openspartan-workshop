@@ -704,6 +704,38 @@ namespace OpenSpartan.Workshop.Shared
             }
         }
 
+        internal static async void PopulateMedalMatchData(long medalNameId)
+        {
+            if (HomeViewModel.Instance.Xuid != null)
+            {
+                List<MatchTableEntity> matches = null;
+                string date = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture);
+
+                if (MedalMatchesViewModel.Instance.MatchList.Count == 0)
+                {
+                    matches = DataHandler.GetMatchesWithMedal($"xuid({HomeViewModel.Instance.Xuid})", medalNameId, date, 100);
+                }
+                else
+                {
+                    date = MedalMatchesViewModel.Instance.MatchList.Min(a => a.StartTime).ToString("o", CultureInfo.InvariantCulture);
+                    matches = DataHandler.GetMatchesWithMedal($"xuid({HomeViewModel.Instance.Xuid})", medalNameId, date, 10);
+                }
+
+                if (matches != null)
+                {
+                    var dispatcherWindow = ((Application.Current as App)?.MainWindow) as MainWindow;
+                    await dispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    {
+                        MedalMatchesViewModel.Instance.MatchList.AddRange(matches);
+                    });
+                }
+                else
+                {
+                    if (SettingsViewModel.Instance.EnableLogging) Logger.Error("Could not get the list of matches for the specified parameters.");
+                }
+            }
+        }
+
         internal static async Task<bool> PopulateMedalData()
         {
             try

@@ -1,5 +1,8 @@
 ﻿using Den.Dev.Orion.Models.HaloInfinite;
+using Microsoft.UI.Xaml.Controls;
 using OpenSpartan.Workshop.Shared;
+using OpenSpartan.Workshop.Views;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -10,9 +13,16 @@ namespace OpenSpartan.Workshop.ViewModels
     {
         public static MedalsViewModel Instance { get; } = new MedalsViewModel();
 
-        private MedalsViewModel() { }
+        private MedalsViewModel()
+        {
+            NavigateCommand = new RelayCommand<long>(NavigateToAnotherView);
+        }
 
         private ObservableCollection<IGrouping<int, Medal>> _medals;
+
+        public RelayCommand<long> NavigateCommand { get; }
+
+        public event EventHandler<long> NavigationRequested;
 
         public ObservableCollection<IGrouping<int, Medal>> Medals
         {
@@ -25,6 +35,11 @@ namespace OpenSpartan.Workshop.ViewModels
                     NotifyPropertyChanged();
                 }
             }
+        }
+
+        private void NavigateToAnotherView(long parameter)
+        {
+            NavigationRequested?.Invoke(this, parameter);
         }
 
         public void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
