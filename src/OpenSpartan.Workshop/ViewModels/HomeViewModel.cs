@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.ViewModels
 {
-    internal class HomeViewModel : Observable
+    internal sealed class HomeViewModel : Observable
     {
         public static HomeViewModel Instance { get; } = new HomeViewModel();
 

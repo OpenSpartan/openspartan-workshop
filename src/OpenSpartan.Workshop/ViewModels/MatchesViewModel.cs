@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.ViewModels
 {
-    internal class MatchesViewModel : Observable
+    internal sealed class MatchesViewModel : Observable
     {
         private MetadataLoadingState _matchLoadingState;
         private string _matchLoadingParameter;

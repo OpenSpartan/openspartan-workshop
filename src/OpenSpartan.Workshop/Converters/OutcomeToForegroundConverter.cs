@@ -5,7 +5,7 @@ using System;
 
 namespace OpenSpartan.Workshop.Converters
 {
-    internal class OutcomeToForegroundConverter : IValueConverter
+    internal sealed class OutcomeToForegroundConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

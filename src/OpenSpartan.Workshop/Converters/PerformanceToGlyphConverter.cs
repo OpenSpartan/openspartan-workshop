@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace OpenSpartan.Workshop.Converters
 {
-    class PerformanceToGlyphConverter : IValueConverter
+    internal sealed class PerformanceToGlyphConverter : IValueConverter
     {
         private readonly Dictionary<PerformanceMeasure, string> performanceGlyphMap = new()
         {

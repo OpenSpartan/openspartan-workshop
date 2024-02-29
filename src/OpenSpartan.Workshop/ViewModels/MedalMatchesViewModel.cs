@@ -3,11 +3,12 @@ using Den.Dev.Orion.Models.HaloInfinite;
 using OpenSpartan.Workshop.Data;
 using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.Shared;
+using System;
 using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.ViewModels
 {
-    internal class MedalMatchesViewModel : Observable
+    internal class MedalMatchesViewModel : Observable, IDisposable
     {
         public static MedalMatchesViewModel Instance { get; } = new MedalMatchesViewModel();
 
@@ -76,6 +77,32 @@ namespace OpenSpartan.Workshop.ViewModels
         public void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
         {
             OnPropertyChanged(propertyName);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                CleanupManagedResources();
+            }
+        }
+
+        private void CleanupManagedResources()
+        { 
+            this.MatchList.Clear();
+            this.MatchList = null;
+            this.Medal = null;
+        }
+
+        ~MedalMatchesViewModel()
+        {
+            Dispose(false);
         }
     }
 }

@@ -3,28 +3,21 @@ using System;
 
 namespace OpenSpartan.Workshop.Converters
 {
-    internal class MedalTypeIndexToStringConverter : IValueConverter
+    internal sealed class MedalTypeIndexToStringConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             int typeIndex = System.Convert.ToInt32(value);
-            switch (typeIndex)
+            return typeIndex switch
             {
-                case 0:
-                    return "Spree";
-                case 1:
-                    return "Mode";
-                case 2:
-                    return "Multikill";
-                case 3:
-                    return "Proficiency";
-                case 4:
-                    return "Skill";
-                case 5:
-                    return "Style";
-                default:
-                    return "N/A";
-            }
+                0 => "Spree",
+                1 => "Mode",
+                2 => "Multikill",
+                3 => "Proficiency",
+                4 => "Skill",
+                5 => "Style",
+                _ => "N/A",
+            };
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

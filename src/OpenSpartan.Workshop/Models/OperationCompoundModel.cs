@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace OpenSpartan.Workshop.Models
 {
-    internal class OperationCompoundModel
+    internal sealed class OperationCompoundModel
     {
         public OperationCompoundModel()
         {

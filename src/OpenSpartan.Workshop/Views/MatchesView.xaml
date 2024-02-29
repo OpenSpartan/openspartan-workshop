@@ -6,15 +6,12 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
     xmlns:converters="using:OpenSpartan.Workshop.Converters"
     xmlns:viewmodels="using:OpenSpartan.Workshop.ViewModels"
-    xmlns:models="using:OpenSpartan.Workshop.Models"
-    xmlns:shared="using:OpenSpartan.Workshop.Shared"
+    NavigationCacheMode="Enabled"
     xmlns:localcontrols="using:OpenSpartan.Workshop.Controls"
     DataContext="{x:Bind viewmodels:MatchesViewModel.Instance}"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
-    NavigationCacheMode="Disabled">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Page.Resources>
         <converters:MetadataLoadingStateToVisibilityConverter x:Key="MetadataLoadingStateToVisibilityConverter"></converters:MetadataLoadingStateToVisibilityConverter>

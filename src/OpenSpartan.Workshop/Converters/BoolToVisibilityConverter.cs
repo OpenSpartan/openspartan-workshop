@@ -4,7 +4,7 @@ using System;
 
 namespace OpenSpartan.Workshop.Converters
 {
-    internal class BoolToVisibilityConverter : IValueConverter
+    internal sealed class BoolToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

@@ -7,6 +7,7 @@ using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
@@ -17,7 +18,7 @@ using System.Xml;
 
 namespace OpenSpartan.Workshop.Data
 {
-    internal class DataHandler
+    internal sealed class DataHandler
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -411,47 +412,58 @@ namespace OpenSpartan.Workshop.Data
                 bool gameVariantAvailable = false;
                 bool engineGameVariantAvailable = false;
 
-                // These values are defaulted to 1 because it's possible for a match to not
-                // have an associated playlist
                 bool playlistAvailable = true;
                 bool playlistMapModePairAvailable = true;
 
                 UGCGameVariant targetGameVariant = null;
 
                 using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                connection.Open();
+                await connection.OpenAsync();
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = $"SELECT EXISTS(SELECT 1 FROM Maps WHERE AssetId='{result.MatchInfo.MapVariant.AssetId}' AND VersionId='{result.MatchInfo.MapVariant.VersionId}') AS MAP_AVAILABLE," +
-                                          $"EXISTS(SELECT 1 FROM GameVariants WHERE AssetId='{result.MatchInfo.UgcGameVariant.AssetId}' AND VersionId='{result.MatchInfo.UgcGameVariant.VersionId}') AS GAMEVARIANT_AVAILABLE";
+                    command.CommandText = "SELECT EXISTS(SELECT 1 FROM Maps WHERE AssetId=@MapAssetId AND VersionId=@MapVersionId) AS MAP_AVAILABLE, " +
+                                          "EXISTS(SELECT 1 FROM GameVariants WHERE AssetId=@GameVariantAssetId AND VersionId=@GameVariantVersionId) AS GAMEVARIANT_AVAILABLE";
 
                     if (result.MatchInfo.Playlist != null)
                     {
-                        command.CommandText += $",EXISTS(SELECT 1 FROM Playlists WHERE AssetId='{result.MatchInfo.Playlist.AssetId}' AND VersionId='{result.MatchInfo.Playlist.VersionId}') AS PLAYLIST_AVAILABLE";
+                        command.CommandText += ", EXISTS(SELECT 1 FROM Playlists WHERE AssetId=@PlaylistAssetId AND VersionId=@PlaylistVersionId) AS PLAYLIST_AVAILABLE";
                     }
 
                     if (result.MatchInfo.PlaylistMapModePair != null)
                     {
-                        command.CommandText += $",EXISTS(SELECT 1 FROM PlaylistMapModePairs WHERE AssetId='{result.MatchInfo.PlaylistMapModePair.AssetId}' AND VersionId='{result.MatchInfo.PlaylistMapModePair.VersionId}') AS PLAYLISTMAPMODEPAIR_AVAILABLE";
+                        command.CommandText += ", EXISTS(SELECT 1 FROM PlaylistMapModePairs WHERE AssetId=@PlaylistMapModePairAssetId AND VersionId=@PlaylistMapModePairVersionId) AS PLAYLISTMAPMODEPAIR_AVAILABLE";
                     }
 
-                    using var reader = command.ExecuteReader();
-                    if (reader.HasRows)
+                    command.Parameters.AddWithValue("@MapAssetId", result.MatchInfo.MapVariant.AssetId);
+                    command.Parameters.AddWithValue("@MapVersionId", result.MatchInfo.MapVariant.VersionId);
+                    command.Parameters.AddWithValue("@GameVariantAssetId", result.MatchInfo.UgcGameVariant.AssetId);
+                    command.Parameters.AddWithValue("@GameVariantVersionId", result.MatchInfo.UgcGameVariant.VersionId);
+
+                    if (result.MatchInfo.Playlist != null)
                     {
-                        while (reader.Read())
-                        {
-                            mapAvailable = Convert.ToBoolean(reader.GetFieldValue<int>(reader.GetOrdinal("MAP_AVAILABLE")));
-                            playlistAvailable = result.MatchInfo.Playlist != null ? Convert.ToBoolean(reader.GetFieldValue<int>(reader.GetOrdinal("PLAYLIST_AVAILABLE"))) : true;
-                            playlistMapModePairAvailable = result.MatchInfo.PlaylistMapModePair != null ? Convert.ToBoolean(reader.GetFieldValue<int>(reader.GetOrdinal("PLAYLISTMAPMODEPAIR_AVAILABLE"))) : true;
-                            gameVariantAvailable = Convert.ToBoolean(reader.GetFieldValue<int>(reader.GetOrdinal("GAMEVARIANT_AVAILABLE")));
-                        }
+                        command.Parameters.AddWithValue("@PlaylistAssetId", result.MatchInfo.Playlist.AssetId);
+                        command.Parameters.AddWithValue("@PlaylistVersionId", result.MatchInfo.Playlist.VersionId);
+                    }
+
+                    if (result.MatchInfo.PlaylistMapModePair != null)
+                    {
+                        command.Parameters.AddWithValue("@PlaylistMapModePairAssetId", result.MatchInfo.PlaylistMapModePair.AssetId);
+                        command.Parameters.AddWithValue("@PlaylistMapModePairVersionId", result.MatchInfo.PlaylistMapModePair.VersionId);
+                    }
+
+                    using var reader = await command.ExecuteReaderAsync();
+                    if (await reader.ReadAsync())
+                    {
+                        mapAvailable = reader.GetFieldValue<int>("MAP_AVAILABLE") == 1;
+                        playlistAvailable = result.MatchInfo.Playlist != null && reader.GetFieldValue<int>("PLAYLIST_AVAILABLE") == 1;
+                        playlistMapModePairAvailable = result.MatchInfo.PlaylistMapModePair != null && reader.GetFieldValue<int>("PLAYLISTMAPMODEPAIR_AVAILABLE") == 1;
+                        gameVariantAvailable = reader.GetFieldValue<int>("GAMEVARIANT_AVAILABLE") == 1;
                     }
                 }
 
                 if (!mapAvailable)
                 {
-                    // Map is not available
                     var map = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.HIUGCDiscoveryGetMap(result.MatchInfo.MapVariant.AssetId.ToString(), result.MatchInfo.MapVariant.VersionId.ToString()));
                     if (map != null && map.Result != null && map.Response.Code == 200)
                     {
@@ -459,7 +471,7 @@ namespace OpenSpartan.Workshop.Data
                         insertionCommand.CommandText = GetQuery("Insert", "Maps");
                         insertionCommand.Parameters.AddWithValue("$ResponseBody", map.Response.Message);
 
-                        var insertionResult = insertionCommand.ExecuteNonQuery();
+                        var insertionResult = await insertionCommand.ExecuteNonQueryAsync();
 
                         if (insertionResult > 0)
                         {
@@ -470,7 +482,6 @@ namespace OpenSpartan.Workshop.Data
 
                 if (!playlistAvailable)
                 {
-                    // Playlist is not available
                     var playlist = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.HIUGCDiscoveryGetPlaylist(result.MatchInfo.Playlist.AssetId.ToString(), result.MatchInfo.Playlist.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken));
                     if (playlist != null && playlist.Result != null && playlist.Response.Code == 200)
                     {
@@ -478,7 +489,7 @@ namespace OpenSpartan.Workshop.Data
                         insertionCommand.CommandText = GetQuery("Insert", "Playlists");
                         insertionCommand.Parameters.AddWithValue("$ResponseBody", playlist.Response.Message);
 
-                        var insertionResult = insertionCommand.ExecuteNonQuery();
+                        var insertionResult = await insertionCommand.ExecuteNonQueryAsync();
 
                         if (insertionResult > 0)
                         {
@@ -489,7 +500,6 @@ namespace OpenSpartan.Workshop.Data
 
                 if (!playlistMapModePairAvailable)
                 {
-                    // Playlist + map mode pair is not available
                     var playlistMmp = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.HIUGCDiscoveryGetMapModePair(result.MatchInfo.PlaylistMapModePair.AssetId.ToString(), result.MatchInfo.PlaylistMapModePair.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken));
                     if (playlistMmp != null && playlistMmp.Result != null && playlistMmp.Response.Code == 200)
                     {
@@ -497,7 +507,7 @@ namespace OpenSpartan.Workshop.Data
                         insertionCommand.CommandText = GetQuery("Insert", "PlaylistMapModePairs");
                         insertionCommand.Parameters.AddWithValue("$ResponseBody", playlistMmp.Response.Message);
 
-                        var insertionResult = insertionCommand.ExecuteNonQuery();
+                        var insertionResult = await insertionCommand.ExecuteNonQueryAsync();
 
                         if (insertionResult > 0)
                         {
@@ -508,7 +518,6 @@ namespace OpenSpartan.Workshop.Data
 
                 if (!gameVariantAvailable)
                 {
-                    // Game variant is not available
                     var gameVariant = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.HIUGCDiscoveryGetUgcGameVariant(result.MatchInfo.UgcGameVariant.AssetId.ToString(), result.MatchInfo.UgcGameVariant.VersionId.ToString()));
                     if (gameVariant != null && gameVariant.Result != null && gameVariant.Response.Code == 200)
                     {
@@ -519,7 +528,7 @@ namespace OpenSpartan.Workshop.Data
                             insertionCommand.CommandText = GetQuery("Insert", "GameVariants");
                             insertionCommand.Parameters.AddWithValue("$ResponseBody", gameVariant.Response.Message);
 
-                            var insertionResult = insertionCommand.ExecuteNonQuery();
+                            var insertionResult = await insertionCommand.ExecuteNonQueryAsync();
 
                             if (insertionResult > 0)
                             {
@@ -530,13 +539,10 @@ namespace OpenSpartan.Workshop.Data
                         using var egvQueryCommand = connection.CreateCommand();
                         egvQueryCommand.CommandText = $"SELECT EXISTS(SELECT 1 FROM EngineGameVariants WHERE AssetId='{gameVariant.Result.EngineGameVariantLink.AssetId}' AND VersionId='{gameVariant.Result.EngineGameVariantLink.VersionId}') AS ENGINEGAMEVARIANT_AVAILABLE";
 
-                        using var egvReader = egvQueryCommand.ExecuteReader();
-                        if (egvReader.HasRows)
+                        using var egvReader = await egvQueryCommand.ExecuteReaderAsync();
+                        if (await egvReader.ReadAsync())
                         {
-                            while (egvReader.Read())
-                            {
-                                engineGameVariantAvailable = Convert.ToBoolean(egvReader.GetFieldValue<int>(egvReader.GetOrdinal("ENGINEGAMEVARIANT_AVAILABLE")));
-                            }
+                            engineGameVariantAvailable = egvReader.GetFieldValue<int>("ENGINEGAMEVARIANT_AVAILABLE") == 1;
                         }
                     }
                 }
@@ -551,7 +557,7 @@ namespace OpenSpartan.Workshop.Data
                         egvInsertionCommand.CommandText = GetQuery("Insert", "EngineGameVariants");
                         egvInsertionCommand.Parameters.AddWithValue("$ResponseBody", engineGameVariant.Response.Message);
 
-                        var insertionResult = egvInsertionCommand.ExecuteNonQuery();
+                        var insertionResult = await egvInsertionCommand.ExecuteNonQueryAsync();
 
                         if (insertionResult > 0)
                         {
@@ -568,6 +574,7 @@ namespace OpenSpartan.Workshop.Data
                 return false;
             }
         }
+
 
         private static string GetQuery(string category, string target)
         {
@@ -748,35 +755,45 @@ namespace OpenSpartan.Workshop.Data
             return null;
         }
 
-        internal static bool InsertOwnedInventoryItems(PlayerInventory result)
+        internal static async Task<bool> InsertOwnedInventoryItems(PlayerInventory result)
         {
-            using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-            connection.Open();
-
-            var command = GetQuery("Insert", "OwnedInventoryItems");
-
-            foreach (var item in result.Items)
+            try
             {
-                using var insertionCommand = connection.CreateCommand();
-                insertionCommand.CommandText = command;
-                insertionCommand.Parameters.AddWithValue("$Amount", item.Amount);
-                insertionCommand.Parameters.AddWithValue("$ItemId", item.ItemId);
-                insertionCommand.Parameters.AddWithValue("$ItemPath", item.ItemPath);
-                insertionCommand.Parameters.AddWithValue("$ItemType", item.ItemType);
-                insertionCommand.Parameters.AddWithValue("$FirstAcquiredDate", item.FirstAcquiredDate.ISO8601Date);
+                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
+                await connection.OpenAsync();
 
-                var insertionResult = insertionCommand.ExecuteNonQuery();
-                if (insertionResult > 0)
+                var command = GetQuery("Insert", "OwnedInventoryItems");
+
+                foreach (var item in result.Items)
                 {
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored owned inventory item {item.ItemId}.");
+                    using var insertionCommand = connection.CreateCommand();
+                    insertionCommand.CommandText = command;
+                    insertionCommand.Parameters.AddWithValue("$Amount", item.Amount);
+                    insertionCommand.Parameters.AddWithValue("$ItemId", item.ItemId);
+                    insertionCommand.Parameters.AddWithValue("$ItemPath", item.ItemPath);
+                    insertionCommand.Parameters.AddWithValue("$ItemType", item.ItemType);
+                    insertionCommand.Parameters.AddWithValue("$FirstAcquiredDate", item.FirstAcquiredDate.ISO8601Date);
+
+                    var insertionResult = await insertionCommand.ExecuteNonQueryAsync();
+
+                    if (insertionResult > 0)
+                    {
+                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored owned inventory item {item.ItemId}.");
+                    }
+                    else
+                    {
+                        if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not store owned inventory item {item.ItemId}.");
+                    }
                 }
-                else
-                {
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not store owned inventory item {item.ItemId}.");
-                }
+
+                return true;
             }
-
-            return true;
+            catch (Exception ex)
+            {
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Error inserting owned inventory items. {ex.Message}");
+                return false;
+            }
         }
+
     }
 }

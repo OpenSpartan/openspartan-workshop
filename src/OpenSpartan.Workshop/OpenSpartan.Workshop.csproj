@@ -12,6 +12,7 @@
     <EnableMsixTooling>false</EnableMsixTooling>
     <WindowsPackageType>None</WindowsPackageType>
     <EnableMsixTooling>true</EnableMsixTooling>
+	<AnalysisMode>All</AnalysisMode>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Controls\MatchesGridControl.xaml" />

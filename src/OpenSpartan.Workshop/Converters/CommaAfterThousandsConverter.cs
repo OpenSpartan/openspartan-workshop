@@ -3,7 +3,7 @@ using System;
 
 namespace OpenSpartan.Workshop.Converters
 {
-    internal class CommaAfterThousandsConverter : IValueConverter
+    internal sealed class CommaAfterThousandsConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

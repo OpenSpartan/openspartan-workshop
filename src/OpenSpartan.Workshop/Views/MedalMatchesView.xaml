@@ -9,6 +9,7 @@
     xmlns:viewmodels="using:OpenSpartan.Workshop.ViewModels"
     xmlns:converters="using:OpenSpartan.Workshop.Converters"
     mc:Ignorable="d"
+    NavigationCacheMode="Enabled"
     DataContext="{x:Bind viewmodels:MedalMatchesViewModel.Instance}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -65,6 +66,6 @@
             <TextBlock Grid.Column="1" Text="{Binding MatchLoadingString}" VerticalAlignment="Center"></TextBlock>
         </Grid>
         
-        <localcontrols:MatchesGridControl Grid.Row="2" MatchSource="{Binding MatchList}" />
+        <localcontrols:MatchesGridControl x:Name="mgcMatches" Grid.Row="2" MatchSource="{Binding MatchList}" />
     </Grid>
 </Page>

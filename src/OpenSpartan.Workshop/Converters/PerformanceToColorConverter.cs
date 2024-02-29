@@ -7,7 +7,7 @@ using Microsoft.UI;
 
 namespace OpenSpartan.Workshop.Converters
 {
-    class PerformanceToColorConverter : IValueConverter
+    internal sealed class PerformanceToColorConverter : IValueConverter
     {
         private readonly Dictionary<PerformanceMeasure, SolidColorBrush> performanceBrushMap = new Dictionary<PerformanceMeasure, SolidColorBrush>
         {

@@ -4,7 +4,7 @@ using System;
 
 namespace OpenSpartan.Workshop.Converters
 {
-    internal class MedalDifficultyToBrushConverter : IValueConverter
+    internal sealed class MedalDifficultyToBrushConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

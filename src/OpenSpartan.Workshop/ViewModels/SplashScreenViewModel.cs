@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.ViewModels
 {
-    internal class SplashScreenViewModel : Observable
+    internal sealed class SplashScreenViewModel : Observable
     {
         public static SplashScreenViewModel Instance { get; } = new SplashScreenViewModel();
 

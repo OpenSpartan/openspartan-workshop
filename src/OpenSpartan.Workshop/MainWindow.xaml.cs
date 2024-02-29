@@ -4,7 +4,6 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
 using OpenSpartan.Workshop.Shared;
-using OpenSpartan.Workshop.ViewModels;
 using OpenSpartan.Workshop.Views;
 using System;
 using System.Linq;
@@ -27,7 +26,7 @@ namespace OpenSpartan.Workshop
             ContentFrame.Navigated += On_Navigated;
         }
 
-        private void On_Navigated(object sender, NavigationEventArgs e)
+        private async void On_Navigated(object sender, NavigationEventArgs e)
         {
             nvRoot.IsBackEnabled = ContentFrame.CanGoBack;
 
@@ -41,18 +40,25 @@ namespace OpenSpartan.Workshop
                 // Select the nav view item that corresponds to the page being navigated to.
                 if (ContentFrame.SourcePageType != typeof(MedalMatchesView))
                 {
-                    nvRoot.SelectedItem = nvRoot.MenuItems
-                                .OfType<NavigationViewItem>()
-                                .First(i => i.Tag.Equals(ContentFrame.SourcePageType.FullName.ToString()));
+                    var selectedItem = nvRoot.MenuItems
+                        ?.OfType<NavigationViewItem>()
+                        .FirstOrDefault(i => i.Tag?.Equals(ContentFrame.SourcePageType.FullName.ToString()) ?? false);
+
+                    if (selectedItem != null)
+                    {
+                        nvRoot.SelectedItem = selectedItem;
+                    }
                 }
             }
 
-            Task.Run(() =>
+            await CleanupFramesAsync();
+        }
+
+        private async Task CleanupFramesAsync()
+        {
+            await UserContextManager.DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
             {
-                UserContextManager.DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                {
-                    CleanupFrames();
-                });
+                CleanupFrames();
             });
         }
 
@@ -69,13 +75,13 @@ namespace OpenSpartan.Workshop
 
         private void nvRoot_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
-            if (args.IsSettingsInvoked == true)
+            if (args.IsSettingsInvoked)
             {
                 NavView_Navigate(typeof(Views.SettingsView), args.RecommendedNavigationTransitionInfo);
             }
-            else if (args.InvokedItemContainer != null)
+            else if (args.InvokedItemContainer?.Tag is string typeName)
             {
-                Type navPageType = Type.GetType(args.InvokedItemContainer.Tag.ToString());
+                Type navPageType = Type.GetType(typeName);
                 NavView_Navigate(navPageType, args.RecommendedNavigationTransitionInfo);
             }
         }

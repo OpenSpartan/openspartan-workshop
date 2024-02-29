@@ -40,7 +40,7 @@ namespace OpenSpartan.Workshop
             var authResult = await UserContextManager.InitializeAllDataOnLaunch();
         }
 
-        private async void LoadSettings()
+        private async static void LoadSettings()
         {
             var settingsPath = Path.Combine(Configuration.AppDataDirectory, Configuration.SettingsFileName);
             if (File.Exists(settingsPath))

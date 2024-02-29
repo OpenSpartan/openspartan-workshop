@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace OpenSpartan.Workshop.Models
 {
-    internal class WorkshopSettings : Observable
+    internal sealed class WorkshopSettings : Observable
     {
         private string _release;
         private bool _syncSettings;

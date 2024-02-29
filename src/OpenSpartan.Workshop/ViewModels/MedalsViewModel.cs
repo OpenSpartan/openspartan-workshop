@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.ViewModels
 {
-    internal class MedalsViewModel : Observable
+    internal sealed class MedalsViewModel : Observable
     {
         public static MedalsViewModel Instance { get; } = new MedalsViewModel();
 

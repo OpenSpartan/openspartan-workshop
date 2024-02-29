@@ -4,7 +4,7 @@ using System.IO;
 
 namespace OpenSpartan.Workshop.Converters
 {
-    internal class ServicePathToLocalPathConverter : IValueConverter
+    internal sealed class ServicePathToLocalPathConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

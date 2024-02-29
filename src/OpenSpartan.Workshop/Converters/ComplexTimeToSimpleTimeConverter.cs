@@ -3,7 +3,7 @@ using System;
 
 namespace OpenSpartan.Workshop.Converters
 {
-    internal class ComplexTimeToSimpleTimeConverter : IValueConverter
+    internal sealed class ComplexTimeToSimpleTimeConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

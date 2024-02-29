@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace OpenSpartan.Workshop.Models
 {
-    internal class MatchTableEntity
+    internal sealed class MatchTableEntity
     {
         public string MatchId { get; set; }
 

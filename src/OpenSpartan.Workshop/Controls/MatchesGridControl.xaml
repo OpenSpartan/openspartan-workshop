@@ -3,11 +3,9 @@
     x:Class="OpenSpartan.Workshop.Controls.MatchesGridControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:OpenSpartan.Workshop.Controls"
     xmlns:models="using:OpenSpartan.Workshop.Models"
     xmlns:converters="using:OpenSpartan.Workshop.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:shared="using:OpenSpartan.Workshop.Shared"
     xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
@@ -38,15 +36,15 @@
             <controls:DataGrid.Columns>
                 <controls:DataGridTextColumn Header="Start Time" Width="*" Binding="{Binding StartTime}"></controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Match ID" Width="*" Binding="{Binding MatchId}"></controls:DataGridTextColumn>
-                <controls:DataGridTextColumn Header="Outcome" Width="120" Binding="{Binding Outcome}">
-                    <controls:DataGridTextColumn.CellStyle>
-                        <Style TargetType="controls:DataGridCell">
-                            <Setter Property="shared:BindingHelper.CellForegroundBindingPath" Value="Outcome" />
-                            <Setter Property="shared:BindingHelper.CellBackgroundBindingPath" Value="Outcome" />
-                            <Setter Property="FontWeight" Value="SemiBold"/>
-                        </Style>
-                    </controls:DataGridTextColumn.CellStyle>
-                </controls:DataGridTextColumn>
+                <controls:DataGridTemplateColumn Header="Outcome" Width="120">
+                    <controls:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="models:MatchTableEntity">
+                            <Grid Background="{Binding Outcome, Converter={StaticResource OutcomeToBackgroundConverter}}">
+                                <TextBlock Foreground="{Binding Outcome, Converter={StaticResource OutcomeToForegroundConverter}}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="12,0,0,0" Text="{Binding Outcome}"></TextBlock>
+                            </Grid>
+                        </DataTemplate>
+                    </controls:DataGridTemplateColumn.CellTemplate>
+                </controls:DataGridTemplateColumn>
                 <controls:DataGridTextColumn Header="Team MMR" Width="*" Binding="{Binding TeamMmr}"></controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Duration" Width="*" Binding="{Binding Duration}"></controls:DataGridTextColumn>
                 <controls:DataGridTemplateColumn Header="Kills" Width="*">

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace OpenSpartan.Workshop.Data
 {
-    public class MatchesSource : IIncrementalSource<MatchTableEntity>
+    public sealed class MatchesSource : IIncrementalSource<MatchTableEntity>
     {
         public MatchesSource()
         {

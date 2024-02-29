@@ -4,7 +4,7 @@ using System;
 
 namespace OpenSpartan.Workshop.Converters
 {
-    class RankToVisibilityConverter : IValueConverter
+    internal sealed class RankToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

@@ -20,7 +20,7 @@ namespace OpenSpartan.Workshop.Views
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
-            base.OnNavigatedTo(e);
+            this.DataContext = MedalMatchesViewModel.Instance;
 
             if (e.NavigationMode != NavigationMode.Back)
             {
@@ -39,13 +39,16 @@ namespace OpenSpartan.Workshop.Views
                     });
                 }
             }
+
+            base.OnNavigatedTo(e);
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
-            base.OnNavigatedFrom(e);
+            ((MedalMatchesViewModel)this.DataContext).Dispose();
+            this.DataContext = null;
 
-            MedalMatchesViewModel.Instance.MatchList.Clear();
+            base.OnNavigatedFrom(e);
         }
     }
 }

@@ -3,7 +3,7 @@ using System;
 
 namespace OpenSpartan.Workshop.Models
 {
-    internal class RewardMetaContainer
+    internal sealed class RewardMetaContainer
     {
         public bool IsFree { get; set; }
 

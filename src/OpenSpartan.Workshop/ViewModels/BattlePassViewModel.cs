@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.ViewModels
 {
-    internal class BattlePassViewModel : Observable
+    internal sealed class BattlePassViewModel : Observable
     {
         private MetadataLoadingState _battlePassLoadingState;
         private string _battlePassLoadingParameter;

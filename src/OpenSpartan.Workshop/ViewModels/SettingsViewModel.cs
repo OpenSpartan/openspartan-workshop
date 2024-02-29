@@ -5,13 +5,13 @@ using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.ViewModels
 {
-    internal class SettingsViewModel : Observable
+    internal sealed class SettingsViewModel : Observable
     {
         public static SettingsViewModel Instance { get; } = new SettingsViewModel();
 
-        public string Gamertag => HomeViewModel.Instance.Gamertag;
+        public static string Gamertag => HomeViewModel.Instance.Gamertag;
 
-        public string Xuid => HomeViewModel.Instance.Xuid;
+        public static string Xuid => HomeViewModel.Instance.Xuid;
 
         public bool SyncSettings
         {
@@ -77,7 +77,7 @@ namespace OpenSpartan.Workshop.ViewModels
             }
         }
 
-        public string Version
+        public static string Version
         {
             get => $"{Configuration.Version}-{Configuration.BuildId}";
         }
