@@ -526,9 +526,9 @@ namespace OpenSpartan.Workshop.Shared
                         MatchesViewModel.Instance.MatchLoadingParameter = $"{matchId} ({matchCounter} out of {matchesTotal} - {completionProgress:#.00}%)";
                     });
 
-                    Tuple<bool, bool> matchStatsAvailability = DataHandler.GetMatchStatsAvailability(matchId.ToString());
+                    var matchStatsAvailability = DataHandler.GetMatchStatsAvailability(matchId.ToString());
 
-                    if (!matchStatsAvailability.Item1)
+                    if (!matchStatsAvailability.MatchAvailable)
                     {
                         if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Getting match stats for {matchId}...");
 
@@ -548,7 +548,7 @@ namespace OpenSpartan.Workshop.Shared
                         if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} already available. Not requesting new data.");
                     }
 
-                    if (!matchStatsAvailability.Item2)
+                    if (!matchStatsAvailability.StatsAvailable)
                     {
                         if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Attempting to get player results for players for match {matchId}.");
 

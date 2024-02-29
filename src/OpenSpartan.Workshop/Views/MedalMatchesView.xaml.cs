@@ -1,6 +1,9 @@
 using System.Linq;
+using System.Threading.Tasks;
+using CommunityToolkit.WinUI;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
 
 namespace OpenSpartan.Workshop.Views
@@ -24,13 +27,25 @@ namespace OpenSpartan.Workshop.Views
                 // Access the parameter using QueryParameter
                 if (e.Parameter != null && e.Parameter is long parameter)
                 {
-                    MedalMatchesViewModel.Instance.Medal = MedalsViewModel.Instance.Medals
-                        .SelectMany(group => group)
-                        .FirstOrDefault(i => i.NameId == parameter);
+                    await Task.Run(() => {
+                        UserContextManager.DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        {
+                            MedalMatchesViewModel.Instance.Medal = MedalsViewModel.Instance.Medals
+                            .SelectMany(group => group)
+                            .FirstOrDefault(i => i.NameId == parameter);
 
-                    MedalMatchesViewModel.Instance.MatchList = [];
+                            MedalMatchesViewModel.Instance.MatchList = [];
+                        });
+                    });
                 }
             }
+        }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            base.OnNavigatedFrom(e);
+
+            MedalMatchesViewModel.Instance.MatchList.Clear();
         }
     }
 }

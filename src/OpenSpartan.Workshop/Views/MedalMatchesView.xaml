@@ -9,7 +9,6 @@
     xmlns:viewmodels="using:OpenSpartan.Workshop.ViewModels"
     xmlns:converters="using:OpenSpartan.Workshop.Converters"
     mc:Ignorable="d"
-    NavigationCacheMode="Disabled"
     DataContext="{x:Bind viewmodels:MedalMatchesViewModel.Instance}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 

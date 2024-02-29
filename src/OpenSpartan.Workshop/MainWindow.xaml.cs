@@ -1,11 +1,14 @@
+using CommunityToolkit.WinUI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
+using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
 using OpenSpartan.Workshop.Views;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace OpenSpartan.Workshop
 {
@@ -41,6 +44,25 @@ namespace OpenSpartan.Workshop
                     nvRoot.SelectedItem = nvRoot.MenuItems
                                 .OfType<NavigationViewItem>()
                                 .First(i => i.Tag.Equals(ContentFrame.SourcePageType.FullName.ToString()));
+                }
+            }
+
+            Task.Run(() =>
+            {
+                UserContextManager.DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                {
+                    CleanupFrames();
+                });
+            });
+        }
+
+        private void CleanupFrames()
+        {
+            for (int i = ContentFrame.BackStack.Count - 1; i >= 0; i--)
+            {
+                if (ContentFrame.BackStack[i].SourcePageType == typeof(MedalMatchesView))
+                {
+                    ContentFrame.BackStack.RemoveAt(i);
                 }
             }
         }

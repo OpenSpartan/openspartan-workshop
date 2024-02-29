@@ -323,12 +323,10 @@ namespace OpenSpartan.Workshop.Data
         }
 
 
-        internal static Tuple<bool, bool> GetMatchStatsAvailability(string matchId)
+        internal static (bool MatchAvailable, bool StatsAvailable) GetMatchStatsAvailability(string matchId)
         {
             try
             {
-                Tuple<bool, bool> availability = null;
-
                 using var connection = new SqliteConnection($"Data Source={DatabasePath}");
                 connection.Open();
 
@@ -338,23 +336,18 @@ namespace OpenSpartan.Workshop.Data
                     command.Parameters.AddWithValue("$MatchId", matchId);
 
                     using var reader = command.ExecuteReader();
-                    if (reader.HasRows)
+                    if (reader.HasRows && reader.Read())
                     {
-                        while (reader.Read())
-                        {
-                            availability = new Tuple<bool, bool>(Convert.ToBoolean(reader.GetFieldValue<int>(0)), Convert.ToBoolean(reader.GetFieldValue<int>(1)));
-                        }
+                        return (Convert.ToBoolean(reader.GetFieldValue<int>(0)), Convert.ToBoolean(reader.GetFieldValue<int>(1)));
                     }
                 }
-
-                return availability;
             }
             catch (Exception ex)
             {
                 if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining match and stats availability. {ex.Message}");
             }
 
-            return null;
+            return (false, false); // Default values if the data retrieval fails
         }
 
         internal static bool InsertPlayerMatchStats(string matchId, string statsBody)
@@ -459,7 +452,7 @@ namespace OpenSpartan.Workshop.Data
                 if (!mapAvailable)
                 {
                     // Map is not available
-                    var map = await UserContextManager.HaloClient.HIUGCDiscoveryGetMap(result.MatchInfo.MapVariant.AssetId.ToString(), result.MatchInfo.MapVariant.VersionId.ToString());
+                    var map = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.HIUGCDiscoveryGetMap(result.MatchInfo.MapVariant.AssetId.ToString(), result.MatchInfo.MapVariant.VersionId.ToString()));
                     if (map != null && map.Result != null && map.Response.Code == 200)
                     {
                         using var insertionCommand = connection.CreateCommand();
@@ -478,7 +471,7 @@ namespace OpenSpartan.Workshop.Data
                 if (!playlistAvailable)
                 {
                     // Playlist is not available
-                    var playlist = await UserContextManager.HaloClient.HIUGCDiscoveryGetPlaylist(result.MatchInfo.Playlist.AssetId.ToString(), result.MatchInfo.Playlist.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken);
+                    var playlist = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.HIUGCDiscoveryGetPlaylist(result.MatchInfo.Playlist.AssetId.ToString(), result.MatchInfo.Playlist.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken));
                     if (playlist != null && playlist.Result != null && playlist.Response.Code == 200)
                     {
                         using var insertionCommand = connection.CreateCommand();
@@ -497,7 +490,7 @@ namespace OpenSpartan.Workshop.Data
                 if (!playlistMapModePairAvailable)
                 {
                     // Playlist + map mode pair is not available
-                    var playlistMmp = await UserContextManager.HaloClient.HIUGCDiscoveryGetMapModePair(result.MatchInfo.PlaylistMapModePair.AssetId.ToString(), result.MatchInfo.PlaylistMapModePair.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken);
+                    var playlistMmp = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.HIUGCDiscoveryGetMapModePair(result.MatchInfo.PlaylistMapModePair.AssetId.ToString(), result.MatchInfo.PlaylistMapModePair.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken));
                     if (playlistMmp != null && playlistMmp.Result != null && playlistMmp.Response.Code == 200)
                     {
                         using var insertionCommand = connection.CreateCommand();
@@ -516,7 +509,7 @@ namespace OpenSpartan.Workshop.Data
                 if (!gameVariantAvailable)
                 {
                     // Game variant is not available
-                    var gameVariant = await UserContextManager.HaloClient.HIUGCDiscoveryGetUgcGameVariant(result.MatchInfo.UgcGameVariant.AssetId.ToString(), result.MatchInfo.UgcGameVariant.VersionId.ToString());
+                    var gameVariant = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.HIUGCDiscoveryGetUgcGameVariant(result.MatchInfo.UgcGameVariant.AssetId.ToString(), result.MatchInfo.UgcGameVariant.VersionId.ToString()));
                     if (gameVariant != null && gameVariant.Result != null && gameVariant.Response.Code == 200)
                     {
                         targetGameVariant = gameVariant.Result;
@@ -550,7 +543,7 @@ namespace OpenSpartan.Workshop.Data
 
                 if (!engineGameVariantAvailable && targetGameVariant != null)
                 {
-                    var engineGameVariant = await UserContextManager.HaloClient.HIUGCDiscoveryGetEngineGameVariant(targetGameVariant.EngineGameVariantLink.AssetId.ToString(), targetGameVariant.EngineGameVariantLink.VersionId.ToString());
+                    var engineGameVariant = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.HIUGCDiscoveryGetEngineGameVariant(targetGameVariant.EngineGameVariantLink.AssetId.ToString(), targetGameVariant.EngineGameVariantLink.VersionId.ToString()));
 
                     if (engineGameVariant != null && engineGameVariant.Result != null && engineGameVariant.Response.Code == 200)
                     {
