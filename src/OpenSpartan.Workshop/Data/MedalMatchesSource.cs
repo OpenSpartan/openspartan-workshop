@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Common.Collections;
+using CommunityToolkit.WinUI;
 using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
@@ -14,10 +15,18 @@ namespace OpenSpartan.Workshop.Data
     {
         public MedalMatchesSource()
         {
-            Task.Run(() =>
+            if (MedalMatchesViewModel.Instance != null && MedalMatchesViewModel.Instance.Medal != null)
             {
-                UserContextManager.GetPlayerMatches();
-            });
+                Task.Run(() =>
+                {
+                    UserContextManager.PopulateMedalMatchData(MedalMatchesViewModel.Instance.Medal.NameId);
+
+                    UserContextManager.DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    {
+                        MedalMatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Completed;
+                    });
+                });
+            }
         }
 
         Task<IEnumerable<MatchTableEntity>> IIncrementalSource<MatchTableEntity>.GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken)

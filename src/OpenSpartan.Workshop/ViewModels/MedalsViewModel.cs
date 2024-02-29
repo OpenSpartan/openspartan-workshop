@@ -1,7 +1,5 @@
 ﻿using Den.Dev.Orion.Models.HaloInfinite;
-using Microsoft.UI.Xaml.Controls;
 using OpenSpartan.Workshop.Shared;
-using OpenSpartan.Workshop.Views;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;

@@ -70,5 +70,13 @@ namespace OpenSpartan.Workshop
                 ContentFrame.Navigate(navPageType, null, transitionInfo);
             }
         }
+
+        private void nvRoot_BackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args)
+        {
+            if (ContentFrame.CanGoBack)
+            {
+                ContentFrame.GoBack();
+            }
+        }
     }
 }

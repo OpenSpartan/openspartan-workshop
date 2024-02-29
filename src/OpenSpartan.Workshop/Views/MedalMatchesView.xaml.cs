@@ -1,7 +1,6 @@
 using System.Linq;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
-using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
 
 namespace OpenSpartan.Workshop.Views
@@ -16,19 +15,21 @@ namespace OpenSpartan.Workshop.Views
             this.InitializeComponent();
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
 
-            // Access the parameter using QueryParameter
-            if (e.Parameter != null && e.Parameter is long parameter)
+            if (e.NavigationMode != NavigationMode.Back)
             {
-                // Make sure to reset the match list.
-                MedalMatchesViewModel.Instance.MatchList = new CommunityToolkit.WinUI.IncrementalLoadingCollection<Data.MedalMatchesSource, Models.MatchTableEntity>();
+                // Access the parameter using QueryParameter
+                if (e.Parameter != null && e.Parameter is long parameter)
+                {
+                    MedalMatchesViewModel.Instance.Medal = MedalsViewModel.Instance.Medals
+                        .SelectMany(group => group)
+                        .FirstOrDefault(i => i.NameId == parameter);
 
-                UserContextManager.PopulateMedalMatchData(parameter);
-
-                MedalMatchesViewModel.Instance.Medal = MedalsViewModel.Instance.Medals.SelectMany(group => group).FirstOrDefault(i => i.NameId == parameter);
+                    MedalMatchesViewModel.Instance.MatchList = [];
+                }
             }
         }
     }

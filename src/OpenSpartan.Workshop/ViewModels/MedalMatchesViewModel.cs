@@ -11,12 +11,41 @@ namespace OpenSpartan.Workshop.ViewModels
     {
         public static MedalMatchesViewModel Instance { get; } = new MedalMatchesViewModel();
 
+        private MetadataLoadingState _matchLoadingState;
         private IncrementalLoadingCollection<MedalMatchesSource, MatchTableEntity> _matchList;
         private Medal _medal;
 
         public MedalMatchesViewModel()
         {
-            MatchList = new IncrementalLoadingCollection<MedalMatchesSource, MatchTableEntity>();
+            MatchList = [];
+        }
+
+        public string MatchLoadingString
+        {
+            get
+            {
+                return MatchLoadingState switch
+                {
+                    MetadataLoadingState.Calculating => $"NOOP - Never Seen",
+                    MetadataLoadingState.Loading => $"Querying matches from database...",
+                    MetadataLoadingState.Completed => "Completed",
+                    _ => "NOOP - Never Seen",
+                };
+            }
+        }
+
+        public MetadataLoadingState MatchLoadingState
+        {
+            get => _matchLoadingState;
+            set
+            {
+                if (_matchLoadingState != value)
+                {
+                    _matchLoadingState = value;
+                    NotifyPropertyChanged();
+                    NotifyPropertyChanged(nameof(MatchLoadingString));
+                }
+            }
         }
 
         public Medal Medal

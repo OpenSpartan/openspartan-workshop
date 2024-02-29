@@ -12,6 +12,12 @@ namespace OpenSpartan.Workshop.Views
         {
             InitializeComponent();
             this.Loaded += MedalsView_Loaded;
+            this.Unloaded += MedalsView_Unloaded;
+        }
+
+        private void MedalsView_Unloaded(object sender, RoutedEventArgs e)
+        {
+            ((MedalsViewModel)this.DataContext).NavigationRequested -= ViewModel_NavigationRequested;
         }
 
         private void MedalsView_Loaded(object sender, RoutedEventArgs e)
@@ -21,6 +27,10 @@ namespace OpenSpartan.Workshop.Views
 
         private void ViewModel_NavigationRequested(object sender, long e)
         {
+            // Once navigation starts, it's safe to assume that the match loading begins, so
+            // we want to make sure that the infobar is properly displayed once the view is rendered.
+            MedalMatchesViewModel.Instance.MatchLoadingState = Models.MetadataLoadingState.Loading;
+
             Frame.Navigate(typeof(MedalMatchesView), e);
         }
 
