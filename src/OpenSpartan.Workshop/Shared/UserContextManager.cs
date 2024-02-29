@@ -128,11 +128,11 @@ namespace OpenSpartan.Workshop.Shared
         {
             try
             {
-                var result = await orionAPICall().ConfigureAwait(false);
+                var result = await orionAPICall();
 
                 if (result.Response.Code == 401)
                 {
-                    var tokenResult = await ReAcquireTokens().ConfigureAwait(false);
+                    var tokenResult = await ReAcquireTokens();
 
                     if (!tokenResult)
                     {
@@ -141,7 +141,7 @@ namespace OpenSpartan.Workshop.Shared
                         return default;
                     }
 
-                    return await orionAPICall().ConfigureAwait(false);
+                    return await orionAPICall();
                 }
 
                 return result;
@@ -165,23 +165,23 @@ namespace OpenSpartan.Workshop.Shared
 
             Task.Run(async () =>
             {
-                ticket = await manager.RequestUserToken(authResult.AccessToken).ConfigureAwait(false);
-                ticket ??= await manager.RequestUserToken(authResult.AccessToken).ConfigureAwait(false);
+                ticket = await manager.RequestUserToken(authResult.AccessToken);
+                ticket ??= await manager.RequestUserToken(authResult.AccessToken);
             }).GetAwaiter().GetResult();
 
             Task.Run(async () =>
             {
-                haloTicket = await manager.RequestXstsToken(ticket.Token).ConfigureAwait(false);
+                haloTicket = await manager.RequestXstsToken(ticket.Token);
             }).GetAwaiter().GetResult();
 
             Task.Run(async () =>
             {
-                extendedTicket = await manager.RequestXstsToken(ticket.Token, false).ConfigureAwait(false);
+                extendedTicket = await manager.RequestXstsToken(ticket.Token, false);
             }).GetAwaiter().GetResult();
 
             Task.Run(async () =>
             {
-                haloToken = await haloAuthClient.GetSpartanToken(haloTicket.Token, 4).ConfigureAwait(false);
+                haloToken = await haloAuthClient.GetSpartanToken(haloTicket.Token, 4);
             }).GetAwaiter().GetResult();
 
             if (extendedTicket != null)
@@ -193,7 +193,7 @@ namespace OpenSpartan.Workshop.Shared
                 string localClearance = string.Empty;
                 Task.Run(async () =>
                 {
-                    var clearance = (await SafeAPICall(async () => { return await HaloClient.SettingsActiveClearance(SettingsViewModel.Instance.Settings.Release).ConfigureAwait(false); }).ConfigureAwait(false)).Result;
+                    var clearance = (await SafeAPICall(async () => { return await HaloClient.SettingsActiveClearance(SettingsViewModel.Instance.Settings.Release); })).Result;
                     if (clearance != null)
                     {
                         localClearance = clearance.FlightConfigurationId;
@@ -220,23 +220,23 @@ namespace OpenSpartan.Workshop.Shared
             {
                 var tasks = new List<Task>
                 {
-                    SafeAPICall(async () => await HaloClient.EconomyGetPlayerCareerRank(new List<string> { $"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})" }, "careerRank1").ConfigureAwait(false)),
-                    SafeAPICall(async () => await HaloClient.GameCmsGetCareerRanks("careerRank1").ConfigureAwait(false))
+                    SafeAPICall(async () => await HaloClient.EconomyGetPlayerCareerRank(new List<string> { $"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})" }, "careerRank1")),
+                    SafeAPICall(async () => await HaloClient.GameCmsGetCareerRanks("careerRank1"))
                 };
 
-                await Task.WhenAll(tasks).ConfigureAwait(false);
+                await Task.WhenAll(tasks);
 
                 var careerTrackResult = (HaloApiResultContainer<RewardTrackResultContainer, RawResponseContainer>)tasks[0].GetResultOrDefault();
                 var careerTrackContainerResult = (HaloApiResultContainer<CareerTrackContainer, RawResponseContainer>)tasks[1].GetResultOrDefault();
 
                 if (careerTrackResult.Result != null && careerTrackResult.Response.Code == 200)
                 {
-                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => HomeViewModel.Instance.CareerSnapshot = careerTrackResult.Result).ConfigureAwait(false);
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => HomeViewModel.Instance.CareerSnapshot = careerTrackResult.Result);
                 }
 
                 if (careerTrackContainerResult.Result != null && (careerTrackContainerResult.Response.Code == 200 || careerTrackContainerResult.Response.Code == 304))
                 {
-                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => HomeViewModel.Instance.MaxRank = careerTrackContainerResult.Result.Ranks.Count).ConfigureAwait(false);
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => HomeViewModel.Instance.MaxRank = careerTrackContainerResult.Result.Ranks.Count);
 
                     if (HomeViewModel.Instance.CareerSnapshot != null)
                     {
@@ -256,7 +256,7 @@ namespace OpenSpartan.Workshop.Shared
                                 var relevantRanks = careerTrackContainerResult.Result.Ranks
                                     .Where(c => c.Rank <= HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank);
                                 HomeViewModel.Instance.ExperienceEarnedToDate = relevantRanks.Sum(rank => rank.XpRequiredForRank) + careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
-                            }).ConfigureAwait(false);
+                            });
 
                             string qualifiedRankImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankLargeIcon);
                             string qualifiedAdornmentImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankAdornmentIcon);
@@ -264,8 +264,8 @@ namespace OpenSpartan.Workshop.Shared
                             EnsureDirectoryExists(qualifiedRankImagePath);
                             EnsureDirectoryExists(qualifiedAdornmentImagePath);
 
-                            await DownloadAndSetImage(currentCareerStage.RankLargeIcon, qualifiedRankImagePath, () => HomeViewModel.Instance.RankImage = qualifiedRankImagePath).ConfigureAwait(false);
-                            await DownloadAndSetImage(currentCareerStage.RankAdornmentIcon, qualifiedAdornmentImagePath, () => HomeViewModel.Instance.AdornmentImage = qualifiedAdornmentImagePath).ConfigureAwait(false);
+                            await DownloadAndSetImage(currentCareerStage.RankLargeIcon, qualifiedRankImagePath, () => HomeViewModel.Instance.RankImage = qualifiedRankImagePath);
+                            await DownloadAndSetImage(currentCareerStage.RankAdornmentIcon, qualifiedAdornmentImagePath, () => HomeViewModel.Instance.AdornmentImage = qualifiedAdornmentImagePath);
                         }
                     }
                     else
@@ -293,14 +293,14 @@ namespace OpenSpartan.Workshop.Shared
         {
             if (!System.IO.File.Exists(imagePath))
             {
-                var image = await SafeAPICall(async () => await HaloClient.GameCmsGetImage(imageName).ConfigureAwait(false)).ConfigureAwait(false);
+                var image = await SafeAPICall(async () => await HaloClient.GameCmsGetImage(imageName));
                 if (image.Result != null && image.Response.Code == 200)
                 {
                     System.IO.File.WriteAllBytes(imagePath, image.Result);
                 }
             }
 
-            await DispatcherWindow.DispatcherQueue.EnqueueAsync(setImageAction).ConfigureAwait(false);
+            await DispatcherWindow.DispatcherQueue.EnqueueAsync(setImageAction);
         }
 
         internal static async Task<bool> PopulateServiceRecordData()
@@ -310,8 +310,8 @@ namespace OpenSpartan.Workshop.Shared
                 // Get initial service record details
                 var serviceRecordResult = await SafeAPICall(async () =>
                 {
-                    return await HaloClient.StatsGetPlayerServiceRecord(HomeViewModel.Instance.Gamertag, Den.Dev.Orion.Models.HaloInfinite.LifecycleMode.Matchmade).ConfigureAwait(false);
-                }).ConfigureAwait(false);
+                    return await HaloClient.StatsGetPlayerServiceRecord(HomeViewModel.Instance.Gamertag, Den.Dev.Orion.Models.HaloInfinite.LifecycleMode.Matchmade);
+                });
 
                 if (serviceRecordResult.Result != null && serviceRecordResult.Response.Code == 200)
                 {
@@ -591,7 +591,7 @@ namespace OpenSpartan.Workshop.Shared
 
         private static async Task<HaloApiResultContainer<MatchSkillInfo, RawResponseContainer>> GetPlayerStats(string matchId)
         {
-            var matchStats = await HaloClient.StatsGetMatchStats(matchId).ConfigureAwait(false);
+            var matchStats = await HaloClient.StatsGetMatchStats(matchId);
             if (matchStats == null || matchStats.Result == null || matchStats.Result.Players == null)
             {
                 if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"[Error] Could not obtain player stats for match {matchId} because the match metadata was unavailable.");
@@ -601,7 +601,7 @@ namespace OpenSpartan.Workshop.Shared
             // Anything that starts with "bid" is a bot and including that in the request for player stats will result in failure.
             var targetPlayers = matchStats.Result.Players.Select(p => p.PlayerId).Where(p => !p.StartsWith("bid")).ToList();
 
-            var playerStatsSnapshot = await SafeAPICall(async () => await HaloClient.SkillGetMatchPlayerResult(matchId, targetPlayers!).ConfigureAwait(false)).ConfigureAwait(false);
+            var playerStatsSnapshot = await SafeAPICall(async () => await HaloClient.SkillGetMatchPlayerResult(matchId, targetPlayers!));
             if (playerStatsSnapshot == null || playerStatsSnapshot.Result == null || playerStatsSnapshot.Result.Value == null)
             {
                 if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not obtain player stats for match {matchId}. Requested {targetPlayers.Count} XUIDs.");
@@ -627,8 +627,8 @@ namespace OpenSpartan.Workshop.Shared
 
                 var matches = await SafeAPICall(async () =>
                 {
-                    return await HaloClient.StatsGetMatchHistory($"xuid({xuid})", queryStart, queryCount, Den.Dev.Orion.Models.HaloInfinite.MatchType.All).ConfigureAwait(false);
-                }).ConfigureAwait(false);
+                    return await HaloClient.StatsGetMatchHistory($"xuid({xuid})", queryStart, queryCount, Den.Dev.Orion.Models.HaloInfinite.MatchType.All);
+                });
 
                 if (matches != null && matches.Result != null && matches.Result.Results != null && matches.Result.ResultCount > 0)
                 {
@@ -642,7 +642,7 @@ namespace OpenSpartan.Workshop.Shared
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                     {
                         MatchesViewModel.Instance.MatchLoadingParameter = matchIds.Count.ToString();
-                    }).ConfigureAwait(false);
+                    });
 
                     //counter = counter - matchIdBatch.Count;
                     queryStart += matchIdBatch.Count;
@@ -659,7 +659,7 @@ namespace OpenSpartan.Workshop.Shared
 
         internal static async Task<bool> ReAcquireTokens()
         {
-            var authResult = await InitializePublicClientApplication().ConfigureAwait(false);
+            var authResult = await InitializePublicClientApplication();
             if (authResult != null)
             {
                 var result = InitializeHaloClient(authResult);

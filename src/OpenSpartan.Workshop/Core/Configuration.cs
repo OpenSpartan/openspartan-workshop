@@ -10,8 +10,8 @@ namespace OpenSpartan.Workshop.Core
         internal const string HaloWaypointPlayerEndpoint = "https://www.halowaypoint.com/halo-infinite/players";
 
         // Build-related metadata.
-        internal const string Version = "1.0.0";
-        internal const string BuildId = "AKELUS-02082024";
+        internal const string Version = "1.0.1";
+        internal const string BuildId = "MANTLE-02292024";
         internal const string PackageName = "OpenSpartan.Workshop";
 
         internal static readonly string[] Scopes = ["Xboxlive.signin", "Xboxlive.offline_access"];
