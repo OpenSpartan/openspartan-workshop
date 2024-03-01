@@ -14,6 +14,7 @@ using OpenSpartan.Workshop.Data;
 using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.ViewModels;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -517,8 +518,14 @@ namespace OpenSpartan.Workshop.Shared
                 int matchCounter = 0;
                 int matchesTotal = matchIds.Count();
 
-                foreach (var matchId in matchIds)
+                ParallelOptions parallelOptions = new()
                 {
+                    MaxDegreeOfParallelism = 4
+                };
+
+                await Parallel.ForEachAsync(matchIds, parallelOptions, async (matchId, token) =>
+                {
+                    token.ThrowIfCancellationRequested();
                     cancellationToken.ThrowIfCancellationRequested();
 
                     double completionProgress = (matchCounter++ / (double)matchesTotal) * 100.0;
@@ -536,7 +543,7 @@ namespace OpenSpartan.Workshop.Shared
 
                         var matchStats = await GetMatchStats(matchId.ToString(), completionProgress);
                         if (matchStats == null)
-                            continue;
+                            return;
 
                         var processedMatchAssetParameters = await DataHandler.UpdateMatchAssetRecords(matchStats.Result);
 
@@ -556,7 +563,7 @@ namespace OpenSpartan.Workshop.Shared
 
                         var playerStatsSnapshot = await GetPlayerStats(matchId.ToString());
                         if (playerStatsSnapshot == null)
-                            continue;
+                            return;
 
                         var playerStatsInsertionResult = DataHandler.InsertPlayerMatchStats(matchId.ToString(), playerStatsSnapshot.Response.Message);
 
@@ -568,7 +575,7 @@ namespace OpenSpartan.Workshop.Shared
                     {
                         if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} player stats already available. Not requesting new data.");
                     }
-                }
+                });
 
                 return true;
             }
@@ -618,19 +625,17 @@ namespace OpenSpartan.Workshop.Shared
             List<Guid> matchIds = new List<Guid>();
             int queryStart = 0;
 
-            var tasks = new List<Task<List<Guid>>>();
+            var tasks = new ConcurrentBag<Task<List<Guid>>>();
 
             while (true)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var matchBatchTask = GetMatchBatchAsync(xuid, queryStart, MatchesPerPage);
-                tasks.Add(matchBatchTask);
+                tasks.Add(GetMatchBatchAsync(xuid, queryStart, MatchesPerPage));
 
                 queryStart += MatchesPerPage;
 
-                // Adjust the number of concurrent requests based on your requirements
-                if (tasks.Count % 8 == 0)
+                if (tasks.Count == 8)
                 {
                     var completedTasks = await Task.WhenAll(tasks);
                     tasks.Clear();

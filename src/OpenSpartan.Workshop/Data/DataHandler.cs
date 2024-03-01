@@ -482,36 +482,42 @@ namespace OpenSpartan.Workshop.Data
 
                 if (!playlistAvailable)
                 {
-                    var playlist = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.HIUGCDiscoveryGetPlaylist(result.MatchInfo.Playlist.AssetId.ToString(), result.MatchInfo.Playlist.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken));
-                    if (playlist != null && playlist.Result != null && playlist.Response.Code == 200)
+                    if (result.MatchInfo.Playlist != null)
                     {
-                        using var insertionCommand = connection.CreateCommand();
-                        insertionCommand.CommandText = GetQuery("Insert", "Playlists");
-                        insertionCommand.Parameters.AddWithValue("$ResponseBody", playlist.Response.Message);
-
-                        var insertionResult = await insertionCommand.ExecuteNonQueryAsync();
-
-                        if (insertionResult > 0)
+                        var playlist = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.HIUGCDiscoveryGetPlaylist(result.MatchInfo.Playlist.AssetId.ToString(), result.MatchInfo.Playlist.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken));
+                        if (playlist != null && playlist.Result != null && playlist.Response.Code == 200)
                         {
-                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored playlist: {result.MatchInfo.Playlist.AssetId}/{result.MatchInfo.Playlist.VersionId}");
+                            using var insertionCommand = connection.CreateCommand();
+                            insertionCommand.CommandText = GetQuery("Insert", "Playlists");
+                            insertionCommand.Parameters.AddWithValue("$ResponseBody", playlist.Response.Message);
+
+                            var insertionResult = await insertionCommand.ExecuteNonQueryAsync();
+
+                            if (insertionResult > 0)
+                            {
+                                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored playlist: {result.MatchInfo.Playlist.AssetId}/{result.MatchInfo.Playlist.VersionId}");
+                            }
                         }
                     }
                 }
 
                 if (!playlistMapModePairAvailable)
                 {
-                    var playlistMmp = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.HIUGCDiscoveryGetMapModePair(result.MatchInfo.PlaylistMapModePair.AssetId.ToString(), result.MatchInfo.PlaylistMapModePair.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken));
-                    if (playlistMmp != null && playlistMmp.Result != null && playlistMmp.Response.Code == 200)
+                    if (result.MatchInfo.PlaylistMapModePair != null)
                     {
-                        using var insertionCommand = connection.CreateCommand();
-                        insertionCommand.CommandText = GetQuery("Insert", "PlaylistMapModePairs");
-                        insertionCommand.Parameters.AddWithValue("$ResponseBody", playlistMmp.Response.Message);
-
-                        var insertionResult = await insertionCommand.ExecuteNonQueryAsync();
-
-                        if (insertionResult > 0)
+                        var playlistMmp = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.HIUGCDiscoveryGetMapModePair(result.MatchInfo.PlaylistMapModePair.AssetId.ToString(), result.MatchInfo.PlaylistMapModePair.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken));
+                        if (playlistMmp != null && playlistMmp.Result != null && playlistMmp.Response.Code == 200)
                         {
-                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored playlist + map mode pair: {result.MatchInfo.PlaylistMapModePair.AssetId}/{result.MatchInfo.PlaylistMapModePair.VersionId}");
+                            using var insertionCommand = connection.CreateCommand();
+                            insertionCommand.CommandText = GetQuery("Insert", "PlaylistMapModePairs");
+                            insertionCommand.Parameters.AddWithValue("$ResponseBody", playlistMmp.Response.Message);
+
+                            var insertionResult = await insertionCommand.ExecuteNonQueryAsync();
+
+                            if (insertionResult > 0)
+                            {
+                                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored playlist + map mode pair: {result.MatchInfo.PlaylistMapModePair.AssetId}/{result.MatchInfo.PlaylistMapModePair.VersionId}");
+                            }
                         }
                     }
                 }
