@@ -9,7 +9,7 @@
 	<br>
 </div>
 
-[![Build](https://github.com/OpenSpartan/openspartan-workshop/actions/workflows/build.yml/badge.svg)](https://github.com/OpenSpartan/openspartan-workshop/actions/workflows/build.yml)
+[![Build](https://github.com/OpenSpartan/openspartan-workshop/actions/workflows/build.yml/badge.svg)](https://github.com/OpenSpartan/openspartan-workshop/actions/workflows/build.yml) [![Build installer](https://github.com/OpenSpartan/openspartan-workshop/actions/workflows/installer-build.yml/badge.svg)](https://github.com/OpenSpartan/openspartan-workshop/actions/workflows/installer-build.yml)
 
 **OpenSpartan Workshop** is a Windows-based companion application for Halo Infinite. It stores personal stats and metadata through the Halo Infinite API in a local SQLite database, and then renders relevant data through the app.
 
@@ -21,7 +21,7 @@ The benefit of using OpenSpartan Workshop is that for any more complex analysis 
 
 You can download the application from this repository, in the **Releases** section.
 
-<a href="https://github.com/OpenSpartan/openspartan-workshop/releases/download/1.0.1/OpenSpartan.Workshop.Installer.Bundle.exe"><img alt="Download for Windows button" src="media/windows-download.gif" width="200"></a>
+<a href="https://github.com/OpenSpartan/openspartan-workshop/releases/download/1.0.2/OpenSpartan.Workshop.Installer.Bundle.exe"><img alt="Download for Windows button" src="media/windows-download.gif" width="200"></a>
 
 >[!IMPORTANT]
 >Requires Windows 10 (20H1 - `10.0.19041.0`) or later, [.NET Desktop Runtime 8.0+](https://dotnet.microsoft.com/download/dotnet/8.0), and the [latest Windows App SDK](https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads). Both are bundled with the installer.
