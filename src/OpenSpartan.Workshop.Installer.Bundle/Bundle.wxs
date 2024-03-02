@@ -17,7 +17,7 @@
 
 	<Fragment>
 		<!-- Apps use .NET Core 8 -->
-		<netfx:DotNetCoreSearch RuntimeType="desktop" MajorVersion="8" Platform="x64" Variable="DOTNETDESKTOPVERSION"/>
+		<netfx:DotNetCoreSearch Id="SearchForDotNet8" RuntimeType="desktop" MajorVersion="8" Platform="x64" Variable="DOTNETDESKTOPVERSION"/>
 
 		<PackageGroup Id="Prerequisites">
 			<!-- .NET 8, latest preview as used by this installer and the projects -->
