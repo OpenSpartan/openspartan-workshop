@@ -1042,11 +1042,17 @@ namespace OpenSpartan.Workshop.Shared
 
                 container.ImagePath = container.ItemDetails?.CommonData.DisplayPath.Media.MediaUrl.Path;
 
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not set container item details for {inventoryReward.InventoryItemPath}");
-
-                lock (rewardContainers)
+                try
                 {
-                    rewardContainers.Add(container);
+                    lock (rewardContainers)
+                    {
+                        rewardContainers.Add(container);
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                    if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not set container item details for {inventoryReward.InventoryItemPath}. {ex.Message}");
                 }
             }));
 

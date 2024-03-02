@@ -419,46 +419,46 @@ namespace OpenSpartan.Workshop.Data
 
                 using var connection = new SqliteConnection($"Data Source={DatabasePath}");
                 await connection.OpenAsync();
+                
+                string query = "SELECT EXISTS(SELECT 1 FROM Maps WHERE AssetId = $MapAssetId AND VersionId = $MapVersionId) AS MAP_AVAILABLE, " +
+                      "EXISTS(SELECT 1 FROM GameVariants WHERE AssetId = $GameVariantAssetId AND VersionId = $GameVariantVersionId) AS GAMEVARIANT_AVAILABLE";
 
-                using (var command = connection.CreateCommand())
+                if (result.MatchInfo.Playlist != null)
                 {
-                    command.CommandText = "SELECT EXISTS(SELECT 1 FROM Maps WHERE AssetId=@MapAssetId AND VersionId=@MapVersionId) AS MAP_AVAILABLE, " +
-                                          "EXISTS(SELECT 1 FROM GameVariants WHERE AssetId=@GameVariantAssetId AND VersionId=@GameVariantVersionId) AS GAMEVARIANT_AVAILABLE";
+                    query += ", EXISTS(SELECT 1 FROM Playlists WHERE AssetId = $PlaylistAssetId AND VersionId = $PlaylistVersionId) AS PLAYLIST_AVAILABLE";
+                }
+
+                if (result.MatchInfo.PlaylistMapModePair != null)
+                {
+                    query += ", EXISTS(SELECT 1 FROM PlaylistMapModePairs WHERE AssetId = $PlaylistMapModePairAssetId AND VersionId = $PlaylistMapModePairVersionId) AS PLAYLISTMAPMODEPAIR_AVAILABLE";
+                }
+
+                using (SqliteCommand command = new(query, connection))
+                {
+                    command.Parameters.AddWithValue("$MapAssetId", result.MatchInfo.MapVariant.AssetId.ToString());
+                    command.Parameters.AddWithValue("$MapVersionId", result.MatchInfo.MapVariant.VersionId.ToString());
+                    command.Parameters.AddWithValue("$GameVariantAssetId", result.MatchInfo.UgcGameVariant.AssetId.ToString());
+                    command.Parameters.AddWithValue("$GameVariantVersionId", result.MatchInfo.UgcGameVariant.VersionId.ToString());
 
                     if (result.MatchInfo.Playlist != null)
                     {
-                        command.CommandText += ", EXISTS(SELECT 1 FROM Playlists WHERE AssetId=@PlaylistAssetId AND VersionId=@PlaylistVersionId) AS PLAYLIST_AVAILABLE";
+                        command.Parameters.AddWithValue("$PlaylistAssetId", result.MatchInfo.Playlist.AssetId.ToString());
+                        command.Parameters.AddWithValue("$PlaylistVersionId", result.MatchInfo.Playlist.VersionId.ToString());
                     }
 
                     if (result.MatchInfo.PlaylistMapModePair != null)
                     {
-                        command.CommandText += ", EXISTS(SELECT 1 FROM PlaylistMapModePairs WHERE AssetId=@PlaylistMapModePairAssetId AND VersionId=@PlaylistMapModePairVersionId) AS PLAYLISTMAPMODEPAIR_AVAILABLE";
-                    }
-
-                    command.Parameters.AddWithValue("@MapAssetId", result.MatchInfo.MapVariant.AssetId);
-                    command.Parameters.AddWithValue("@MapVersionId", result.MatchInfo.MapVariant.VersionId);
-                    command.Parameters.AddWithValue("@GameVariantAssetId", result.MatchInfo.UgcGameVariant.AssetId);
-                    command.Parameters.AddWithValue("@GameVariantVersionId", result.MatchInfo.UgcGameVariant.VersionId);
-
-                    if (result.MatchInfo.Playlist != null)
-                    {
-                        command.Parameters.AddWithValue("@PlaylistAssetId", result.MatchInfo.Playlist.AssetId);
-                        command.Parameters.AddWithValue("@PlaylistVersionId", result.MatchInfo.Playlist.VersionId);
-                    }
-
-                    if (result.MatchInfo.PlaylistMapModePair != null)
-                    {
-                        command.Parameters.AddWithValue("@PlaylistMapModePairAssetId", result.MatchInfo.PlaylistMapModePair.AssetId);
-                        command.Parameters.AddWithValue("@PlaylistMapModePairVersionId", result.MatchInfo.PlaylistMapModePair.VersionId);
+                        command.Parameters.AddWithValue("$PlaylistMapModePairAssetId", result.MatchInfo.PlaylistMapModePair.AssetId.ToString());
+                        command.Parameters.AddWithValue("$PlaylistMapModePairVersionId", result.MatchInfo.PlaylistMapModePair.VersionId.ToString());
                     }
 
                     using var reader = await command.ExecuteReaderAsync();
                     if (await reader.ReadAsync())
                     {
-                        mapAvailable = reader.GetFieldValue<int>("MAP_AVAILABLE") == 1;
-                        playlistAvailable = result.MatchInfo.Playlist != null && reader.GetFieldValue<int>("PLAYLIST_AVAILABLE") == 1;
-                        playlistMapModePairAvailable = result.MatchInfo.PlaylistMapModePair != null && reader.GetFieldValue<int>("PLAYLISTMAPMODEPAIR_AVAILABLE") == 1;
-                        gameVariantAvailable = reader.GetFieldValue<int>("GAMEVARIANT_AVAILABLE") == 1;
+                        mapAvailable = await reader.GetFieldValueAsync<int>("MAP_AVAILABLE") == 1;
+                        playlistAvailable = result.MatchInfo.Playlist != null && await reader.GetFieldValueAsync<int>("PLAYLIST_AVAILABLE") == 1;
+                        playlistMapModePairAvailable = result.MatchInfo.PlaylistMapModePair != null && await reader.GetFieldValueAsync<int>("PLAYLISTMAPMODEPAIR_AVAILABLE") == 1;
+                        gameVariantAvailable = await reader.GetFieldValueAsync<int>("GAMEVARIANT_AVAILABLE") == 1;
                     }
                 }
 
