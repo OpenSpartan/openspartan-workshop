@@ -2,7 +2,7 @@
 	 xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
 	 xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx">
 	
-	<Bundle Name="OpenSpartan Workshop" Manufacturer="Den Delimarsky" Version="1.0.0.0" UpgradeCode="cf3576f5-2f23-4095-94b9-c6c44e6b4891">
+	<Bundle Name="OpenSpartan Workshop" Manufacturer="Den Delimarsky" Version="1.0.2.0" UpgradeCode="cf3576f5-2f23-4095-94b9-c6c44e6b4891">
 		<netfx:DotNetCoreSearchRef Id="SearchForDotNet8" />
 
 		<BootstrapperApplication>
@@ -17,30 +17,28 @@
 
 	<Fragment>
 		<!-- Apps use .NET Core 8 -->
-		<netfx:DotNetCoreSearch
-			Id="SearchForDotNet8"
-			RuntimeType="desktop"
-			Platform="x64"
-			MajorVersion="8"
-			Variable="DotNetDesktopRuntimeVersion"
-            />
-		
+		<netfx:DotNetCoreSearch RuntimeType="desktop" MajorVersion="8" Platform="x64" Variable="DOTNETDESKTOPVERSION"/>
+
 		<PackageGroup Id="Prerequisites">
 			<!-- .NET 8, latest preview as used by this installer and the projects -->
 			<ExePackage
 				DisplayName="Microsoft .NET 8 Desktop Runtime"
 				SourceFile="Dependencies\windowsdesktop-runtime-8.0.2-win-x64.exe"
-				Compressed="yes"
-				DetectCondition="DotNetDesktopRuntimeVersion &gt;= v8.0.0"
-				InstallArguments="/install /passive /norestart /log openspartan.workshop.net8install.log"
+				Permanent="true"
+				Compressed="true"
+				InstallCondition="VersionNT64"
+				Vital="true"
 				UninstallArguments="/uninstall /passive /norestart /quiet"
+				DetectCondition="DOTNETDESKTOPVERSION &gt;= &quot;8.0.0&quot;"
+				InstallArguments="/install /passive /norestart /log openspartan.workshop.net8install.log"
                 />
 			<ExePackage
 				DisplayName="Microsoft Windows App Runtime"
 				SourceFile="Dependencies\WindowsAppRuntimeInstall-x64.exe"
-				Compressed="yes"
+				Compressed="true"
 				InstallArguments="-q"
 				Permanent="true"
+				Vital="true"
                 >
 			</ExePackage>
 		</PackageGroup>

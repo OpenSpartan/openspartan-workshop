@@ -1,7 +1,7 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
 	 xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
 	 xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx">
-	<Package Name="OpenSpartan Workshop" Manufacturer="Den.Dev" Version="1.0.0.0" UpgradeCode="2e9d46f4-33fc-4625-8c17-382391347e00">
+	<Package Name="OpenSpartan Workshop" Manufacturer="Den.Dev" Version="1.0.2.0" UpgradeCode="2e9d46f4-33fc-4625-8c17-382391347e00">
 		<MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
 
 		<netfx:DotNetCompatibilityCheck
