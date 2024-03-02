@@ -14,6 +14,7 @@ using OpenSpartan.Workshop.Data;
 using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.ViewModels;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -28,6 +29,8 @@ namespace OpenSpartan.Workshop.Shared
 {
     internal static class UserContextManager
     {
+        private const int MatchesPerPage = 25;
+
         private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 
         private static readonly HttpClient WorkshopHttpClient = new() 
@@ -437,7 +440,7 @@ namespace OpenSpartan.Workshop.Shared
                 MatchesViewModel.Instance.MatchLoadingState = Models.MetadataLoadingState.Calculating;
             });
 
-            MatchLoadingCancellationTracker.Cancel();
+            await MatchLoadingCancellationTracker.CancelAsync();
             MatchLoadingCancellationTracker = new CancellationTokenSource();
 
             try
@@ -515,8 +518,14 @@ namespace OpenSpartan.Workshop.Shared
                 int matchCounter = 0;
                 int matchesTotal = matchIds.Count();
 
-                foreach (var matchId in matchIds)
+                ParallelOptions parallelOptions = new()
                 {
+                    MaxDegreeOfParallelism = 4
+                };
+
+                await Parallel.ForEachAsync(matchIds, parallelOptions, async (matchId, token) =>
+                {
+                    token.ThrowIfCancellationRequested();
                     cancellationToken.ThrowIfCancellationRequested();
 
                     double completionProgress = (matchCounter++ / (double)matchesTotal) * 100.0;
@@ -534,7 +543,7 @@ namespace OpenSpartan.Workshop.Shared
 
                         var matchStats = await GetMatchStats(matchId.ToString(), completionProgress);
                         if (matchStats == null)
-                            continue;
+                            return;
 
                         var processedMatchAssetParameters = await DataHandler.UpdateMatchAssetRecords(matchStats.Result);
 
@@ -554,7 +563,7 @@ namespace OpenSpartan.Workshop.Shared
 
                         var playerStatsSnapshot = await GetPlayerStats(matchId.ToString());
                         if (playerStatsSnapshot == null)
-                            continue;
+                            return;
 
                         var playerStatsInsertionResult = DataHandler.InsertPlayerMatchStats(matchId.ToString(), playerStatsSnapshot.Response.Message);
 
@@ -566,7 +575,7 @@ namespace OpenSpartan.Workshop.Shared
                     {
                         if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} player stats already available. Not requesting new data.");
                     }
-                }
+                });
 
                 return true;
             }
@@ -613,48 +622,55 @@ namespace OpenSpartan.Workshop.Shared
 
         private static async Task<List<Guid>> GetPlayerMatchIds(string xuid, CancellationToken cancellationToken)
         {
-            List<Guid> matchIds = [];
-
-            int queryCount = 25;
+            List<Guid> matchIds = new List<Guid>();
             int queryStart = 0;
 
-            // We start with a value of 1 to bootstrap the process. This will then be overwritten.
-            int lastResultCount = 1;
+            var tasks = new ConcurrentBag<Task<List<Guid>>>();
 
-            while (lastResultCount > 0)
+            while (true)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var matches = await SafeAPICall(async () =>
+                tasks.Add(GetMatchBatchAsync(xuid, queryStart, MatchesPerPage));
+
+                queryStart += MatchesPerPage;
+
+                if (tasks.Count == 8)
                 {
-                    return await HaloClient.StatsGetMatchHistory($"xuid({xuid})", queryStart, queryCount, Den.Dev.Orion.Models.HaloInfinite.MatchType.All);
-                });
+                    var completedTasks = await Task.WhenAll(tasks);
+                    tasks.Clear();
 
-                if (matches != null && matches.Result != null && matches.Result.Results != null && matches.Result.ResultCount > 0)
-                {
-                    lastResultCount = matches.Result.ResultCount;
-
-                    // We want to extract individual match IDs first.
-                    var matchIdBatch = matches.Result.Results.Select(item => item.MatchId).ToList();
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Got matches starting from {queryStart} up to {queryCount} entries. Last query yielded {matchIdBatch.Count} results.");
-                    matchIds.AddRange(matchIdBatch);
-
-                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    // Flatten the batches and add to the overall match list
+                    foreach (var batch in completedTasks)
                     {
+                        matchIds.AddRange(batch);
+                    }
+
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => {
                         MatchesViewModel.Instance.MatchLoadingParameter = matchIds.Count.ToString();
                     });
 
-                    //counter = counter - matchIdBatch.Count;
-                    queryStart += matchIdBatch.Count;
-                }
-                else
-                {
-                    break;
+                    if (completedTasks.LastOrDefault()?.Count == 0)
+                    {
+                        // No more matches to fetch, break out of the loop
+                        break;
+                    }
                 }
             }
 
-            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Ended indexing at {matchIds.Count} total matchmade games.");
+            if (SettingsViewModel.Instance.EnableLogging)
+            {
+                Logger.Info($"Ended indexing at {matchIds.Count} total matchmade games.");
+            }
             return matchIds;
+        }
+
+        private static async Task<List<Guid>> GetMatchBatchAsync(string xuid, int start, int count)
+        {
+            var matches = await SafeAPICall(() =>
+                HaloClient.StatsGetMatchHistory($"xuid({xuid})", start, count, Den.Dev.Orion.Models.HaloInfinite.MatchType.All));
+
+            return matches?.Result?.Results?.Select(item => item.MatchId).ToList() ?? new List<Guid>();
         }
 
         internal static async Task<bool> ReAcquireTokens()
@@ -1026,11 +1042,17 @@ namespace OpenSpartan.Workshop.Shared
 
                 container.ImagePath = container.ItemDetails?.CommonData.DisplayPath.Media.MediaUrl.Path;
 
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not set container item details for {inventoryReward.InventoryItemPath}");
-
-                lock (rewardContainers)
+                try
                 {
-                    rewardContainers.Add(container);
+                    lock (rewardContainers)
+                    {
+                        rewardContainers.Add(container);
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                    if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not set container item details for {inventoryReward.InventoryItemPath}. {ex.Message}");
                 }
             }));
 

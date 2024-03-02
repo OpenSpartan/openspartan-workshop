@@ -1,11 +1,9 @@
-# OpenSpartan Workshop 1.0.1 (`MANTLE-02292024`)
+# OpenSpartan Workshop 1.0.2 (`SANGHEILI-03012024`)
 
-- Improves performance in navigation between pages.
-- Fixes an issue where logs were produced even if the option is disabled.
-- Medal description can be seen when a medal is selected in the **Medals** view.
-- Introduces support for **expected deaths** and **expected kills** in the match overview.
-- Adds the ability to browse matches where a certain medal was earned.
-- Minor performance enhancements across the codebase.
-- The **Battle Pass** view now remembers the tab you visited when navigating away in the same session.
+- Application moves to Windows App SDK 1.5.
+- Fixed the logic where some matches for which stats were not acquired were never re-acquired.
+- Improves match acquisition performance.
+- Fixes an issue where the match population process is not done if a playlist or playlist map/mode pair is not available.
+- Fix an issue with the query where the map and playlist metadata was requested from the server even when it was available locally.
 
 Refer to [**getting started guide**](https://openspartan.com/docs/workshop/guides/get-started/) to start using OpenSpartan Workshop.
