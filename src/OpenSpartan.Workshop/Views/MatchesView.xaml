@@ -41,7 +41,7 @@
                 </Button>
             </StackPanel>
             
-            <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,4,0,0">
+            <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="-2,0,0,0">
                 <TextBlock Foreground="#adb5bd" Text="Displayed matches:" Margin="0,0,4,0"></TextBlock>
                 <TextBlock Foreground="#adb5bd" FontWeight="Bold" Text="{Binding MatchList.Count}"></TextBlock>
             </StackPanel>
