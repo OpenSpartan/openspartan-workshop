@@ -3,7 +3,6 @@ using Microsoft.UI.Xaml.Controls;
 using CommunityToolkit.WinUI.UI.Controls;
 using System.Collections;
 using OpenSpartan.Workshop.Core;
-using System.Diagnostics;
 
 namespace OpenSpartan.Workshop.Controls
 {
@@ -40,12 +39,6 @@ namespace OpenSpartan.Workshop.Controls
         public MatchesGridControl()
         {
             this.InitializeComponent();
-            this.Loaded += MatchesGridControl_Loaded;
-        }
-
-        private void MatchesGridControl_Loaded(object sender, RoutedEventArgs e)
-        {
-            Debug.WriteLine(this.DataContext);
         }
 
         private void dgdMatches_PointerReleased(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
@@ -72,8 +65,6 @@ namespace OpenSpartan.Workshop.Controls
             {
                 teachingTip.IsOpen = true;
                 teachingTip.ActionButtonCommand = this.MedalNavigationCommand;
-
-                Debug.WriteLine(teachingTip.ActionButtonCommand);
             }
         }
     }
