@@ -5,5 +5,6 @@
 - [#10] Ranked information displayed in match view and match details.
 - [#12] **Battle Pass** is now listed as **Operations** in the navigation view.
 - Fixed a bug where the service record might not correctly load.
+- [#14] Title now correctly displays the tier and tier type.
 
 Refer to [**getting started guide**](https://openspartan.com/docs/workshop/guides/get-started/) to start using OpenSpartan Workshop.
