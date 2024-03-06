@@ -265,7 +265,7 @@ namespace OpenSpartan.Workshop.Core
                         {
                             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                             {
-                                HomeViewModel.Instance.Title = currentCareerStage.RankTitle.Value;
+                                HomeViewModel.Instance.Title = $"{currentCareerStage.TierType} {currentCareerStage.RankTitle.Value} {currentCareerStage.RankTier.Value}";
                                 HomeViewModel.Instance.CurrentRankExperience = careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
                                 HomeViewModel.Instance.RequiredRankExperience = currentCareerStage.XpRequiredForRank;
 
