@@ -773,38 +773,40 @@ namespace OpenSpartan.Workshop.Core
 
         internal static List<Medal>? EnrichMedalMetadata(List<Medal> medals)
         {
-            List<Medal> richMedals = new List<Medal>();
-
             try
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Info("Getting medal metadata...");
+                if (SettingsViewModel.Instance.EnableLogging)
+                    Logger.Info("Getting medal metadata...");
 
                 if (MedalMetadata?.Result?.Medals == null || MedalMetadata.Result.Medals.Count == 0)
                     return null;
 
-                foreach (var medal in medals)
-                {
-                    var metaMedal = (from c in MedalMetadata.Result.Medals where c.NameId == medal.NameId select c).FirstOrDefault();
-                    if (metaMedal != null)
+                var richMedals = medals
+                    .Where(medal => MedalMetadata.Result.Medals.Any(metaMedal => metaMedal.NameId == medal.NameId))
+                    .Select(medal =>
                     {
+                        var metaMedal = MedalMetadata.Result.Medals.First(c => c.NameId == medal.NameId);
                         medal.Name = metaMedal.Name;
                         medal.Description = metaMedal.Description;
                         medal.DifficultyIndex = metaMedal.DifficultyIndex;
                         medal.SpriteIndex = metaMedal.SpriteIndex;
                         medal.TypeIndex = metaMedal.TypeIndex;
-                        
-                        richMedals.Add(medal);
-                    }
-                }
+                        return medal;
+                    })
+                    .OrderByDescending(medal => medal.Count)
+                    .ToList();
 
-                return richMedals.OrderByDescending(medal => medal.Count).ToList();
+                return richMedals.Count > 0 ? richMedals : null;
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not enrich medal metadata. Error: {ex.Message}");
+                if (SettingsViewModel.Instance.EnableLogging)
+                    Logger.Error($"Could not enrich medal metadata. Error: {ex.Message}");
+
                 return null;
             }
         }
+
 
 
         internal static async Task<bool> PopulateMedalData()
@@ -1203,11 +1205,12 @@ namespace OpenSpartan.Workshop.Core
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                     {
                         // Reset all collections to make sure that left-over data is not displayed.
-                        BattlePassViewModel.Instance.BattlePasses = BattlePassViewModel.Instance.BattlePasses ?? new System.Collections.ObjectModel.ObservableCollection<OperationCompoundModel>();
-                        MatchesViewModel.Instance.MatchList = MatchesViewModel.Instance.MatchList ?? new IncrementalLoadingCollection<MatchesSource, MatchTableEntity>();
-                        MedalsViewModel.Instance.Medals = MedalsViewModel.Instance.Medals ?? new System.Collections.ObjectModel.ObservableCollection<IGrouping<int, Medal>>();
+                        BattlePassViewModel.Instance.BattlePasses = BattlePassViewModel.Instance.BattlePasses ?? [];
+                        MatchesViewModel.Instance.MatchList = MatchesViewModel.Instance.MatchList ?? [];
+                        MedalsViewModel.Instance.Medals = MedalsViewModel.Instance.Medals ?? [];
                     });
 
+                    // We want to populate the medal metadata before we do anything else.
                     _ = await PrepopulateMedalMetadata();
 
                     Parallel.Invoke(    

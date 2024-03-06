@@ -43,17 +43,22 @@ namespace OpenSpartan.Workshop.Controls
 
         private void dgdMatches_PointerReleased(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
-            DataGridRow row = UserInterface.FindParentElement<DataGridRow>((UIElement)e.OriginalSource);
+            StackPanel detailContainer = UserInterface.FindParentElement<StackPanel>((UIElement)e.OriginalSource);
 
-            if (row != null)
+            if (detailContainer == null)
             {
-                if (row.DetailsVisibility == Visibility.Visible)
+                DataGridRow row = UserInterface.FindParentElement<DataGridRow>((UIElement)e.OriginalSource);
+
+                if (row != null)
                 {
-                    row.DetailsVisibility = Visibility.Collapsed;
-                }
-                else
-                {
-                    row.DetailsVisibility = Visibility.Visible;
+                    if (row.DetailsVisibility == Visibility.Visible)
+                    {
+                        row.DetailsVisibility = Visibility.Collapsed;
+                    }
+                    else
+                    {
+                        row.DetailsVisibility = Visibility.Visible;
+                    }
                 }
             }
         }

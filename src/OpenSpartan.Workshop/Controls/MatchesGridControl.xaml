@@ -302,7 +302,7 @@
                                                     <TeachingTip Title="{Binding Name.Value}"
                                                          Subtitle="{Binding Description.Value}"
                                                          PreferredPlacement="Bottom"
-                                                         IsLightDismissEnabled="False"
+                                                         IsLightDismissEnabled="True"
                                                          ActionButtonContent="Browse Matches"
                                                          ActionButtonCommand="{Binding MedalNavigationCommand, ElementName=MatchesGridControlEntity}"
                                                          ActionButtonCommandParameter="{Binding NameId}"
