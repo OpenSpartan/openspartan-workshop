@@ -65,7 +65,7 @@
 
             <TextBlock Grid.Column="1" Text="{Binding MatchLoadingString}" VerticalAlignment="Center"></TextBlock>
         </Grid>
-        
-        <localcontrols:MatchesGridControl x:Name="mgcMatches" Grid.Row="2" MatchSource="{Binding MatchList}" />
+
+        <localcontrols:MatchesGridControl x:Name="mgcMatches" Grid.Row="2" MatchSource="{Binding MatchList}" MedalNavigationCommand="{Binding NavigateCommand}" />
     </Grid>
 </Page>

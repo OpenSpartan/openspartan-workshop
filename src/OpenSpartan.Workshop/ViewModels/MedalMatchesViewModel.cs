@@ -16,9 +16,14 @@ namespace OpenSpartan.Workshop.ViewModels
         private IncrementalLoadingCollection<MedalMatchesSource, MatchTableEntity> _matchList;
         private Medal _medal;
 
+        public RelayCommand<long> NavigateCommand { get; }
+
+        public event EventHandler<long> NavigationRequested;
+
         public MedalMatchesViewModel()
         {
             MatchList = [];
+            NavigateCommand = new RelayCommand<long>(NavigateToAnotherView);
         }
 
         public string MatchLoadingString
@@ -98,6 +103,11 @@ namespace OpenSpartan.Workshop.ViewModels
             this.MatchList.Clear();
             this.MatchList = null;
             this.Medal = null;
+        }
+
+        private void NavigateToAnotherView(long parameter)
+        {
+            NavigationRequested?.Invoke(this, parameter);
         }
 
         ~MedalMatchesViewModel()

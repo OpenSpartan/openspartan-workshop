@@ -262,10 +262,17 @@ namespace OpenSpartan.Workshop.Data
                 using var reader = command.ExecuteReader();
                 if (reader.HasRows)
                 {
-                    List<MatchTableEntity> matches = new List<MatchTableEntity>();
+                    List<MatchTableEntity> matches = [];
                     while (reader.Read())
                     {
-                        matches.Add(ReadMatchTableEntity(reader));
+                        var matchEntry = ReadMatchTableEntity(reader);
+                        
+                        if (matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals != null && matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals.Count > 0)
+                        {
+                            matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals = UserContextManager.EnrichMedalMetadata(matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals);
+                        }
+
+                        matches.Add(matchEntry);
                     }
 
                     return matches;

@@ -24,6 +24,9 @@
         <converters:StringAvailabilityToVisibilityConverter x:Key="StringAvailabilityToVisibilityConverter"/>
         <converters:CsrProgressStateConverter x:Key="CsrProgressStateConverter"/>
         <winuiconverters:StringFormatConverter x:Key="StringFormatConverter"/>
+        <converters:MedalNameIdToPathConverter x:Key="MedalNameIdToPathConverter"/>
+        <converters:MedalDifficultyToBrushConverter x:Key="MedalDifficultyToBrushConverter"/>
+        <converters:CommaAfterThousandsConverter x:Key="CommaAfterThousandsConverter"/>
     </UserControl.Resources>
 
     <Grid>
@@ -229,8 +232,12 @@
                         </Grid>
 
                         <Grid Margin="48,0,0,0">
-                            <Grid VerticalAlignment="Top" Visibility="{Binding IsRanked, Converter={StaticResource BoolToVisibilityConverter}}">
-                                <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                            <Grid VerticalAlignment="Top">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"></RowDefinition>
+                                    <RowDefinition Height="*"></RowDefinition>
+                                </Grid.RowDefinitions>
+                                <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Grid.Row="0"  Visibility="{Binding IsRanked, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <Image Height="64" Margin="12,0,0,0" Source="{Binding RankIdentifier, Converter={StaticResource RankIdentifierToPathConverter}}"></Image>
                                     <StackPanel Margin="12,12,12,0" VerticalAlignment="Center">
                                         <Grid>
@@ -257,6 +264,55 @@
                                     </StackPanel>
                                     <Image Height="64" Margin="0,0,0,0" Source="{Binding NextRankIdentifier, Converter={StaticResource RankIdentifierToPathConverter}}"></Image>
                                 </StackPanel>
+
+                                <Grid Row="1">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"></RowDefinition>
+                                        <RowDefinition Height="*"></RowDefinition>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Text="Medals" FontWeight="Bold" Grid.Row="0" Margin="0,0,0,8"/>
+
+                                    <GridView Grid.Row="1" ItemsSource="{Binding PlayerTeamStats[0].Stats.CoreStats.Medals}" Width="446">
+                                        <GridView.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Background="#404040" BorderThickness="2" CornerRadius="4" Tapped="MedalGridItem_Tapped">
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="36"></RowDefinition>
+                                                        <RowDefinition Height="*"></RowDefinition>
+                                                    </Grid.RowDefinitions>
+
+                                                    <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"></ColumnDefinition>
+                                                            <ColumnDefinition Width="32"></ColumnDefinition>
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <Grid Grid.Column="1" CornerRadius="4">
+                                                            <Border Background="#404040">
+                                                                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="{Binding Count, Converter={StaticResource CommaAfterThousandsConverter}}"></TextBlock>
+                                                            </Border>
+                                                        </Grid>
+                                                    </Grid>
+
+                                                    <Grid Grid.Row="1" Padding="8" Background="{Binding DifficultyIndex, Converter={StaticResource MedalDifficultyToBrushConverter}}">
+                                                        <Image Height="64" Width="86" Source="{Binding NameId, Converter={StaticResource MedalNameIdToPathConverter}}"/>
+                                                    </Grid>
+
+                                                    <TeachingTip Title="{Binding Name.Value}"
+                                                         Subtitle="{Binding Description.Value}"
+                                                         PreferredPlacement="Bottom"
+                                                         IsLightDismissEnabled="False"
+                                                         ActionButtonContent="Browse Matches"
+                                                         ActionButtonCommand="{Binding MedalNavigationCommand, ElementName=MatchesGridControlEntity}"
+                                                         ActionButtonCommandParameter="{Binding NameId}"
+                                                         Target="{Binding RelativeSource={RelativeSource TemplatedParent}}">
+                                                    </TeachingTip>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </GridView.ItemTemplate>
+                                    </GridView>
+                                </Grid>
                             </Grid>
                         </Grid>
                     </StackPanel>

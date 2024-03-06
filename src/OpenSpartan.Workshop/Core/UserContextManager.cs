@@ -3,7 +3,6 @@ using CommunityToolkit.WinUI;
 using Den.Dev.Orion.Authentication;
 using Den.Dev.Orion.Core;
 using Den.Dev.Orion.Models;
-using Den.Dev.Orion.Models.ApiIngress;
 using Den.Dev.Orion.Models.HaloInfinite;
 using Den.Dev.Orion.Models.Security;
 using Microsoft.Identity.Client;
@@ -24,11 +23,14 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
 
 namespace OpenSpartan.Workshop.Core
 {
     internal static class UserContextManager
     {
+        private static HaloApiResultContainer<MedalMetadata, RawResponseContainer> MedalMetadata;
+
         private const int MatchesPerPage = 25;
 
         private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
@@ -59,6 +61,22 @@ namespace OpenSpartan.Workshop.Core
         internal static nint GetMainWindowHandle()
         {
             return WinRT.Interop.WindowNative.GetWindowHandle(DispatcherWindow);
+        }
+        
+        internal static async Task<bool> PrepopulateMedalMetadata()
+        {
+            try
+            {
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Attempting to populate medata metadata...");
+                MedalMetadata = await SafeAPICall(async () => await HaloClient.GameCmsGetMedalMetadata());
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Medal metadata populated.");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not populate medal metadata. {ex.Message}");
+                return false;
+            }
         }
 
         internal static async Task<AuthenticationResult> InitializePublicClientApplication()
@@ -353,7 +371,7 @@ namespace OpenSpartan.Workshop.Core
                         FileInfo file = new FileInfo(qualifiedBackgroundImagePath);
                         file.Directory.Create();
 
-                        System.IO.File.WriteAllBytes(qualifiedBackgroundImagePath, backgroundImageResult.Result);
+                        await System.IO.File.WriteAllBytesAsync(qualifiedBackgroundImagePath, backgroundImageResult.Result);
                     }
                 }
 
@@ -753,21 +771,56 @@ namespace OpenSpartan.Workshop.Core
             }
         }
 
+        internal static List<Medal>? EnrichMedalMetadata(List<Medal> medals)
+        {
+            List<Medal> richMedals = new List<Medal>();
+
+            try
+            {
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Info("Getting medal metadata...");
+
+                if (MedalMetadata?.Result?.Medals == null || MedalMetadata.Result.Medals.Count == 0)
+                    return null;
+
+                foreach (var medal in medals)
+                {
+                    var metaMedal = (from c in MedalMetadata.Result.Medals where c.NameId == medal.NameId select c).FirstOrDefault();
+                    if (metaMedal != null)
+                    {
+                        medal.Name = metaMedal.Name;
+                        medal.Description = metaMedal.Description;
+                        medal.DifficultyIndex = metaMedal.DifficultyIndex;
+                        medal.SpriteIndex = metaMedal.SpriteIndex;
+                        medal.TypeIndex = metaMedal.TypeIndex;
+                        
+                        richMedals.Add(medal);
+                    }
+                }
+
+                return richMedals.OrderByDescending(medal => medal.Count).ToList();
+            }
+            catch (Exception ex)
+            {
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not enrich medal metadata. Error: {ex.Message}");
+                return null;
+            }
+        }
+
+
         internal static async Task<bool> PopulateMedalData()
         {
             try
             {
                 if (SettingsViewModel.Instance.EnableLogging) Logger.Info("Getting medal metadata...");
-                var medalData = await SafeAPICall(async () => await HaloClient.GameCmsGetMedalMetadata());
 
-                if (medalData?.Result?.Medals == null || medalData.Result.Medals.Count == 0)
+                if (MedalMetadata?.Result?.Medals == null || MedalMetadata.Result.Medals.Count == 0)
                     return false;
 
                 var medals = DataHandler.GetMedals();
                 if (medals == null)
                     return false;
 
-                var compoundMedals = medals.Join(medalData.Result.Medals, earned => earned.NameId, references => references.NameId, (earned, references) => new Medal()
+                var compoundMedals = medals.Join(MedalMetadata.Result.Medals, earned => earned.NameId, references => references.NameId, (earned, references) => new Medal()
                 {
                     Count = earned.Count,
                     Description = references.Description,
@@ -790,7 +843,7 @@ namespace OpenSpartan.Workshop.Core
 
                 string qualifiedMedalPath = Path.Combine(Configuration.AppDataDirectory, "imagecache", "medals");
 
-                var spriteRequestResult = await SafeAPICall(async () => await HaloClient.GameCmsGetGenericWaypointFile(medalData.Result.Sprites.ExtraLarge.Path));
+                var spriteRequestResult = await SafeAPICall(async () => await HaloClient.GameCmsGetGenericWaypointFile(MedalMetadata.Result.Sprites.ExtraLarge.Path));
 
                 var spriteContent = spriteRequestResult?.Result;
                 if (spriteContent != null)
@@ -812,7 +865,7 @@ namespace OpenSpartan.Workshop.Core
 
                             var subset = pixmap.ExtractSubset(rectI);
                             using var data = subset.Encode(SkiaSharp.SKPngEncoderOptions.Default);
-                            System.IO.File.WriteAllBytes(medalImagePath, data.ToArray());
+                            await System.IO.File.WriteAllBytesAsync(medalImagePath, data.ToArray());
                             if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Wrote medal to file: {medalImagePath}");
                         }
                     }
@@ -1155,14 +1208,16 @@ namespace OpenSpartan.Workshop.Core
                         MedalsViewModel.Instance.Medals = MedalsViewModel.Instance.Medals ?? new System.Collections.ObjectModel.ObservableCollection<IGrouping<int, Medal>>();
                     });
 
-                    Parallel.Invoke(
+                    _ = await PrepopulateMedalMetadata();
+
+                    Parallel.Invoke(    
+                        async () => await PopulateMedalData(),
                         async () => await PopulateCsrImages(),
                         async () => await PopulateServiceRecordData(),
                         async () => await PopulateCareerData(),
                         async () => await PopulateUserInventory(),
                         async () => await PopulateCustomizationData(),
-                        async () => await PopulateDecorationData(),
-                        async () => await PopulateMedalData(),
+                        async () => await PopulateDecorationData(),  
                         async () =>
                         {
                             var matchRecordsOutcome = await PopulateMatchRecordsData();
