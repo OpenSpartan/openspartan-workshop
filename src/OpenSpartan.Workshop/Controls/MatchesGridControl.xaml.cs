@@ -43,7 +43,7 @@ namespace OpenSpartan.Workshop.Controls
 
         private void dgdMatches_PointerReleased(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
-            DataGridRow row = UserInterface.FindParent<DataGridRow>((UIElement)e.OriginalSource);
+            DataGridRow row = UserInterface.FindParentElement<DataGridRow>((UIElement)e.OriginalSource);
 
             if (row != null)
             {

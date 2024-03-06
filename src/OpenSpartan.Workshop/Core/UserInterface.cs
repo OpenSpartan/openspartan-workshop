@@ -29,7 +29,7 @@ namespace OpenSpartan.Workshop.Core
             return null;
         }
 
-        internal static T FindParent<T>(DependencyObject childElement) where T : Control
+        internal static T FindParentElement<T>(DependencyObject childElement) where T : Control
         {
             DependencyObject currentElement = childElement;
 
