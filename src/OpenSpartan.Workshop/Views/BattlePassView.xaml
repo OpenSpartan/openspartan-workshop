@@ -50,7 +50,7 @@
                 <RowDefinition Height="*"></RowDefinition>
             </Grid.RowDefinitions>
 
-            <TextBlock Text="Battle Pass" Grid.Row="0"  Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
+            <TextBlock Text="Operations" Grid.Row="0"  Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
         </Grid>
 
         <!--Informational state-->
