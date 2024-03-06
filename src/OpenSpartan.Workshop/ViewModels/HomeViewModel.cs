@@ -1,5 +1,5 @@
 ﻿using Den.Dev.Orion.Models.HaloInfinite;
-using OpenSpartan.Workshop.Shared;
+using OpenSpartan.Workshop.Core;
 using System;
 using System.Runtime.CompilerServices;
 

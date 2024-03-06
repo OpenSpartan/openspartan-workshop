@@ -1,5 +1,5 @@
-﻿using OpenSpartan.Workshop.Models;
-using OpenSpartan.Workshop.Shared;
+﻿using OpenSpartan.Workshop.Core;
+using OpenSpartan.Workshop.Models;
 using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 

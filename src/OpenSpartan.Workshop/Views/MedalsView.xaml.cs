@@ -1,7 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
-using OpenSpartan.Workshop.Shared;
+using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.ViewModels;
 
 namespace OpenSpartan.Workshop.Views

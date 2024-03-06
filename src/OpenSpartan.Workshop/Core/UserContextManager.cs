@@ -3,13 +3,13 @@ using CommunityToolkit.WinUI;
 using Den.Dev.Orion.Authentication;
 using Den.Dev.Orion.Core;
 using Den.Dev.Orion.Models;
+using Den.Dev.Orion.Models.ApiIngress;
 using Den.Dev.Orion.Models.HaloInfinite;
 using Den.Dev.Orion.Models.Security;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
 using Microsoft.UI.Xaml;
 using NLog;
-using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Data;
 using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.ViewModels;
@@ -25,7 +25,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace OpenSpartan.Workshop.Shared
+namespace OpenSpartan.Workshop.Core
 {
     internal static class UserContextManager
     {
@@ -33,8 +33,8 @@ namespace OpenSpartan.Workshop.Shared
 
         private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private static readonly HttpClient WorkshopHttpClient = new() 
-        { 
+        private static readonly HttpClient WorkshopHttpClient = new()
+        {
             BaseAddress = new Uri(Configuration.SettingsEndpoint),
             DefaultRequestHeaders =
             {
@@ -56,7 +56,7 @@ namespace OpenSpartan.Workshop.Shared
             PropertyNameCaseInsensitive = true,
         };
 
-        internal static IntPtr GetMainWindowHandle()
+        internal static nint GetMainWindowHandle()
         {
             return WinRT.Interop.WindowNative.GetWindowHandle(DispatcherWindow);
         }
@@ -68,10 +68,10 @@ namespace OpenSpartan.Workshop.Shared
                 Title = "OpenSpartan Workshop"
             };
 
-            var storageProperties = new StorageCreationPropertiesBuilder(Core.Configuration.CacheFileName, Core.Configuration.AppDataDirectory).Build();
+            var storageProperties = new StorageCreationPropertiesBuilder(Configuration.CacheFileName, Configuration.AppDataDirectory).Build();
 
             var pca = PublicClientApplicationBuilder
-                .Create(Core.Configuration.ClientID)
+                .Create(Configuration.ClientID)
                 .WithAuthority(AadAuthorityAudience.PersonalMicrosoftAccount)
                 .WithParentActivityOrWindow(GetMainWindowHandle)
                 .WithBroker(options)
@@ -87,14 +87,14 @@ namespace OpenSpartan.Workshop.Shared
 
             try
             {
-                authResult = await pca.AcquireTokenSilent(Core.Configuration.Scopes, accountToLogin)
+                authResult = await pca.AcquireTokenSilent(Configuration.Scopes, accountToLogin)
                                             .ExecuteAsync();
             }
             catch (MsalUiRequiredException)
             {
                 try
                 {
-                    authResult = await pca.AcquireTokenInteractive(Core.Configuration.Scopes)
+                    authResult = await pca.AcquireTokenInteractive(Configuration.Scopes)
                                                 .WithAccount(accountToLogin)
                                                 .ExecuteAsync();
                 }
@@ -110,12 +110,9 @@ namespace OpenSpartan.Workshop.Shared
 
         public static async Task<WorkshopSettings> GetWorkshopSettings()
         {
-            string apiEndpoint = "clientsettings";
-
-            WorkshopHttpClient.DefaultRequestHeaders.Clear();
             WorkshopHttpClient.DefaultRequestHeaders.Add("X-API-Version", Configuration.DefaultAPIVersion);
 
-            HttpResponseMessage response = await WorkshopHttpClient.GetAsync(new Uri(apiEndpoint));
+            HttpResponseMessage response = await WorkshopHttpClient.GetAsync(new Uri(Configuration.SettingsEndpoint));
 
             if (response.IsSuccessStatusCode)
             {
@@ -261,8 +258,8 @@ namespace OpenSpartan.Workshop.Shared
                                 HomeViewModel.Instance.ExperienceEarnedToDate = relevantRanks.Sum(rank => rank.XpRequiredForRank) + careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
                             });
 
-                            string qualifiedRankImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankLargeIcon);
-                            string qualifiedAdornmentImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankAdornmentIcon);
+                            string qualifiedRankImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankLargeIcon);
+                            string qualifiedAdornmentImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankAdornmentIcon);
 
                             EnsureDirectoryExists(qualifiedRankImagePath);
                             EnsureDirectoryExists(qualifiedAdornmentImagePath);
@@ -299,7 +296,7 @@ namespace OpenSpartan.Workshop.Shared
                 var image = await SafeAPICall(async () => await HaloClient.GameCmsGetImage(imageName));
                 if (image.Result != null && image.Response.Code == 200)
                 {
-                    System.IO.File.WriteAllBytes(imagePath, image.Result);
+                    await System.IO.File.WriteAllBytesAsync(imagePath, image.Result);
                 }
             }
 
@@ -313,7 +310,7 @@ namespace OpenSpartan.Workshop.Shared
                 // Get initial service record details
                 var serviceRecordResult = await SafeAPICall(async () =>
                 {
-                    return await HaloClient.StatsGetPlayerServiceRecord(HomeViewModel.Instance.Gamertag, Den.Dev.Orion.Models.HaloInfinite.LifecycleMode.Matchmade);
+                    return await HaloClient.StatsGetPlayerServiceRecord(HomeViewModel.Instance.Gamertag, LifecycleMode.Matchmade);
                 });
 
                 if (serviceRecordResult.Result != null && serviceRecordResult.Response.Code == 200)
@@ -338,7 +335,7 @@ namespace OpenSpartan.Workshop.Shared
                 string backgroundPath = SettingsViewModel.Instance.Settings.HeaderImagePath;
 
                 // Get initial service record details
-                string qualifiedBackgroundImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", backgroundPath);
+                string qualifiedBackgroundImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", backgroundPath);
 
                 if (!System.IO.File.Exists(qualifiedBackgroundImagePath))
                 {
@@ -350,7 +347,7 @@ namespace OpenSpartan.Workshop.Shared
                     if (backgroundImageResult.Result != null && backgroundImageResult.Response.Code == 200)
                     {
                         // Let's make sure that we create the directory if it does not exist.
-                        FileInfo file = new System.IO.FileInfo(qualifiedBackgroundImagePath);
+                        FileInfo file = new FileInfo(qualifiedBackgroundImagePath);
                         file.Directory.Create();
 
                         System.IO.File.WriteAllBytes(qualifiedBackgroundImagePath, backgroundImageResult.Result);
@@ -407,9 +404,9 @@ namespace OpenSpartan.Workshop.Shared
                         HomeViewModel.Instance.IDBadgeTextColor = nameplate.TextColor;
                     });
 
-                    string qualifiedNameplateImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", nameplate.NameplateCmsPath);
-                    string qualifiedEmblemImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", nameplate.EmblemCmsPath);
-                    string qualifiedBackdropImagePath = backdrop.Result != null ? Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", backdrop.Result.ImagePath.Media.MediaUrl.Path) : string.Empty;
+                    string qualifiedNameplateImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", nameplate.NameplateCmsPath);
+                    string qualifiedEmblemImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", nameplate.EmblemCmsPath);
+                    string qualifiedBackdropImagePath = backdrop.Result != null ? Path.Combine(Configuration.AppDataDirectory, "imagecache", backdrop.Result.ImagePath.Media.MediaUrl.Path) : string.Empty;
 
                     FileInfo file = new(qualifiedNameplateImagePath); file.Directory.Create();
                     file = new(qualifiedEmblemImagePath); file.Directory.Create();
@@ -437,7 +434,7 @@ namespace OpenSpartan.Workshop.Shared
         {
             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
             {
-                MatchesViewModel.Instance.MatchLoadingState = Models.MetadataLoadingState.Calculating;
+                MatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Calculating;
             });
 
             await MatchLoadingCancellationTracker.CancelAsync();
@@ -528,7 +525,7 @@ namespace OpenSpartan.Workshop.Shared
                     token.ThrowIfCancellationRequested();
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    double completionProgress = (matchCounter++ / (double)matchesTotal) * 100.0;
+                    double completionProgress = matchCounter++ / (double)matchesTotal * 100.0;
 
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                     {
@@ -646,7 +643,8 @@ namespace OpenSpartan.Workshop.Shared
                         matchIds.AddRange(batch);
                     }
 
-                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => {
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    {
                         MatchesViewModel.Instance.MatchLoadingParameter = matchIds.Count.ToString();
                     });
 
@@ -787,7 +785,7 @@ namespace OpenSpartan.Workshop.Shared
                     MedalsViewModel.Instance.Medals = new System.Collections.ObjectModel.ObservableCollection<IGrouping<int, Medal>>(group);
                 });
 
-                string qualifiedMedalPath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", "medals");
+                string qualifiedMedalPath = Path.Combine(Configuration.AppDataDirectory, "imagecache", "medals");
 
                 var spriteRequestResult = await SafeAPICall(async () => await HaloClient.GameCmsGetGenericWaypointFile(medalData.Result.Sprites.ExtraLarge.Path));
 
@@ -845,7 +843,7 @@ namespace OpenSpartan.Workshop.Shared
 
         public static async Task<bool> PopulateBattlePassData(CancellationToken cancellationToken)
         {
-            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.BattlePassLoadingState = Models.MetadataLoadingState.Loading);
+            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.BattlePassLoadingState = MetadataLoadingState.Loading);
 
             var operations = await GetOperations();
             if (operations == null) return false;
@@ -944,7 +942,7 @@ namespace OpenSpartan.Workshop.Shared
 
                     container.ImagePath = currencyImageLocation;
 
-                    string qualifiedImagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", currencyImageLocation);
+                    string qualifiedImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", currencyImageLocation);
 
                     EnsureDirectoryExists(qualifiedImagePath);
 
@@ -1063,7 +1061,7 @@ namespace OpenSpartan.Workshop.Shared
         internal static async Task<bool> UpdateLocalImage(string subDirectoryName, string imagePath)
         {
 
-            string qualifiedImagePath = Path.Join(Core.Configuration.AppDataDirectory, subDirectoryName, imagePath);
+            string qualifiedImagePath = Path.Join(Configuration.AppDataDirectory, subDirectoryName, imagePath);
 
             // Let's make sure that we create the directory if it does not exist.
             EnsureDirectoryExists(qualifiedImagePath);
@@ -1077,7 +1075,7 @@ namespace OpenSpartan.Workshop.Shared
 
                 if (rankImage.Result != null && rankImage.Response.Code == 200)
                 {
-                    System.IO.File.WriteAllBytes(qualifiedImagePath, rankImage.Result);
+                    await System.IO.File.WriteAllBytesAsync(qualifiedImagePath, rankImage.Result);
                     return true;
                 }
                 else
@@ -1090,6 +1088,31 @@ namespace OpenSpartan.Workshop.Shared
                 // File already exists, so we can safely return true.
                 return true;
             }
+        }
+
+        internal static async Task<bool> PopulateCsrImages()
+        {
+            foreach (var rank in Configuration.HaloInfiniteRanks)
+            {
+                string qualifiedRankImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", "csr", $"{rank}.png");
+                EnsureDirectoryExists(qualifiedRankImagePath);
+
+                if (!System.IO.File.Exists(qualifiedRankImagePath))
+                {
+                    try
+                    {
+                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Downloading image for {rank}...");
+                        byte[] imageBytes = await WorkshopHttpClient.GetByteArrayAsync(new Uri($"{Configuration.HaloWaypointCsrImageEndpoint}/{rank}.png"));
+                        await System.IO.File.WriteAllBytesAsync(qualifiedRankImagePath, imageBytes);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Could not download and store rank image for {rank}. {ex.Message}");
+                    }
+                }
+            }
+
+            return true;
         }
 
         internal static async Task<bool> InitializeAllDataOnLaunch()
@@ -1129,7 +1152,9 @@ namespace OpenSpartan.Workshop.Shared
                         MedalsViewModel.Instance.Medals = MedalsViewModel.Instance.Medals ?? new System.Collections.ObjectModel.ObservableCollection<IGrouping<int, Medal>>();
                     });
 
-                    Parallel.Invoke(async () => await PopulateServiceRecordData(),
+                    Parallel.Invoke(
+                        async () => await PopulateCsrImages(),
+                        async () => await PopulateServiceRecordData(),
                         async () => await PopulateCareerData(),
                         async () => await PopulateUserInventory(),
                         async () => await PopulateCustomizationData(),
@@ -1143,7 +1168,7 @@ namespace OpenSpartan.Workshop.Shared
                             {
                                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                                 {
-                                    MatchesViewModel.Instance.MatchLoadingState = Models.MetadataLoadingState.Completed;
+                                    MatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Completed;
                                     MatchesViewModel.Instance.MatchLoadingParameter = string.Empty;
                                 });
                             }
@@ -1156,7 +1181,7 @@ namespace OpenSpartan.Workshop.Shared
 
                                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                                 {
-                                    BattlePassViewModel.Instance.BattlePassLoadingState = Models.MetadataLoadingState.Completed;
+                                    BattlePassViewModel.Instance.BattlePassLoadingState = MetadataLoadingState.Completed;
                                 });
                             }
                             catch

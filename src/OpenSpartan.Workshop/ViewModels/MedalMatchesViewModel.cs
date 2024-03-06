@@ -1,8 +1,8 @@
 ﻿using CommunityToolkit.WinUI;
 using Den.Dev.Orion.Models.HaloInfinite;
+using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Data;
 using OpenSpartan.Workshop.Models;
-using OpenSpartan.Workshop.Shared;
 using System;
 using System.Runtime.CompilerServices;
 

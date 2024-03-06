@@ -1,7 +1,7 @@
 using CommunityToolkit.WinUI;
 using Microsoft.UI.Xaml.Controls;
+using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Models;
-using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
 
 namespace OpenSpartan.Workshop.Views

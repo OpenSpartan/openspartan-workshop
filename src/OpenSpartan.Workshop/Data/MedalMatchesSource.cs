@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Common.Collections;
 using CommunityToolkit.WinUI;
+using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Models;
-using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
 using System.Collections.Generic;
 using System.Globalization;

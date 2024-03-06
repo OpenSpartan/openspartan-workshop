@@ -1,4 +1,4 @@
-﻿using OpenSpartan.Workshop.Shared;
+﻿using OpenSpartan.Workshop.Core;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 

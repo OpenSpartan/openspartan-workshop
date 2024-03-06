@@ -2,7 +2,6 @@ using CommunityToolkit.WinUI;
 using Microsoft.UI.Xaml.Controls;
 using NLog;
 using OpenSpartan.Workshop.Core;
-using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.Diagnostics;

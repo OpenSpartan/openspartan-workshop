@@ -1,7 +1,6 @@
 ﻿using Microsoft.UI.Xaml;
 using NLog;
 using OpenSpartan.Workshop.Core;
-using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.IO;

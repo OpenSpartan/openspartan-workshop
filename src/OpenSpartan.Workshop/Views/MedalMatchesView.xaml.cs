@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.WinUI;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
-using OpenSpartan.Workshop.Shared;
+using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.ViewModels;
 
 namespace OpenSpartan.Workshop.Views

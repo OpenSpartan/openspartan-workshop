@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace OpenSpartan.Workshop.Shared
+namespace OpenSpartan.Workshop.Core
 {
     public class RelayCommand<T> : ICommand
     {
