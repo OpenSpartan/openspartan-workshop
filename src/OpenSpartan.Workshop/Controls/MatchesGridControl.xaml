@@ -232,16 +232,16 @@
                             <Grid VerticalAlignment="Top" Visibility="{Binding IsRanked, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
                                     <Image Height="64" Margin="12,0,0,0" Source="{Binding RankIdentifier, Converter={StaticResource RankIdentifierToPathConverter}}"></Image>
-                                    <StackPanel Margin="12,24,12,0" VerticalAlignment="Center">
+                                    <StackPanel Margin="12,12,12,0" VerticalAlignment="Center">
                                         <Grid>
-                                            <ProgressBar CornerRadius="0" MinHeight="20" Width="200" Height="20" Minimum="{Binding TierStart}" Maximum="{Binding NextTierStart}" Value="{Binding PostMatchCsr}" Foreground="White">
+                                            <ProgressBar CornerRadius="0" MinHeight="20" Width="200" Height="20" Minimum="{Binding TierStart}" Maximum="{Binding NextTierStart}" Value="{Binding CurrentEntity, Converter={StaticResource CsrProgressStateConverter}}" Foreground="White">
                                                 <ProgressBar.Resources>
                                                     <x:Double x:Key="ProgressBarTrackHeight">20</x:Double>
                                                     <CornerRadius x:Key="ProgressBarTrackCornerRadius">0</CornerRadius>
                                                 </ProgressBar.Resources>
                                             </ProgressBar>
 
-                                            <ProgressBar CornerRadius="0" MinHeight="20" Width="200" Height="20" Minimum="{Binding TierStart}" Maximum="{Binding NextTierStart}" Value="{Binding PreMatchCsr}" Background="Transparent">
+                                            <ProgressBar CornerRadius="0" MinHeight="20" Width="200" Height="20" Minimum="{Binding TierStart}" Maximum="{Binding NextTierStart}" Value="{Binding CurrentEntity, Converter={StaticResource CsrProgressStateConverter}, ConverterParameter='inverse'}" Background="Transparent">
                                                 <ProgressBar.Resources>
                                                     <x:Double x:Key="ProgressBarTrackHeight">20</x:Double>
                                                     <CornerRadius x:Key="ProgressBarTrackCornerRadius">0</CornerRadius>
@@ -252,7 +252,7 @@
                                             <TextBlock Text="{Binding PostMatchCsr}"></TextBlock>
                                             <TextBlock>/</TextBlock>
                                             <TextBlock Text="{Binding NextTierStart}"></TextBlock>
-                                            <TextBlock Margin="4,0,0,0" Text="{Binding CsrDelta, Converter={StaticResource StringFormatConverter}, ConverterParameter='({0})'}"></TextBlock>
+                                            <TextBlock Margin="4,0,0,0" FontWeight="Bold" Text="{Binding CsrDelta, Converter={StaticResource StringFormatConverter}, ConverterParameter='({0})'}"></TextBlock>
                                         </StackPanel>
                                     </StackPanel>
                                     <Image Height="64" Margin="0,0,0,0" Source="{Binding NextRankIdentifier, Converter={StaticResource RankIdentifierToPathConverter}}"></Image>

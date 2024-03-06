@@ -8,29 +8,16 @@ namespace OpenSpartan.Workshop.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            MatchTableEntity entity = (MatchTableEntity)value;
-            if (entity.PostMatchCsr > entity.PreMatchCsr)
+            MatchTableEntity entity = value as MatchTableEntity;
+
+            if (entity != null)
             {
-                if (parameter.ToString() != "inverse")
-                {
-                    return entity.PostMatchCsr;
-                }
-                else
-                {
-                    return entity.PreMatchCsr;
-                }
+                bool inverse = parameter?.ToString() == "inverse";
+
+                return (entity.PostMatchCsr > entity.PreMatchCsr ^ inverse) ? entity.PostMatchCsr : entity.PreMatchCsr;
             }
-            else
-            {
-                if (parameter.ToString() != "inverse")
-                {
-                    return entity.PreMatchCsr;
-                }
-                else
-                {
-                    return entity.PostMatchCsr;
-                }
-            }
+
+            return 0;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

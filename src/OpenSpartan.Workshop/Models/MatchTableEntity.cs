@@ -133,5 +133,13 @@ namespace OpenSpartan.Workshop.Models
                     : (ExpectedDeaths > PlayerTeamStats[0].Stats.CoreStats.Deaths ? PerformanceMeasure.Outperformed : PerformanceMeasure.Underperformed);
             }
         }
+
+        public MatchTableEntity? CurrentEntity
+        {
+            get
+            {
+                return this;
+            }
+        }
     }
 }
