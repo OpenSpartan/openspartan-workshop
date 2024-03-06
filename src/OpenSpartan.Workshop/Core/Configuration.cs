@@ -11,8 +11,8 @@ namespace OpenSpartan.Workshop.Core
         internal const string HaloWaypointCsrImageEndpoint = "https://www.halowaypoint.com/images/halo-infinite/csr/";
 
         // Build-related metadata.
-        internal const string Version = "1.0.2";
-        internal const string BuildId = "SANGHEILI-03012024";
+        internal const string Version = "1.0.3";
+        internal const string BuildId = "ESCHARUM-03052024";
         internal const string PackageName = "OpenSpartan.Workshop";
 
         internal static readonly string[] Scopes = ["Xboxlive.signin", "Xboxlive.offline_access"];

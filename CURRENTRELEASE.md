@@ -1,9 +1,9 @@
-# OpenSpartan Workshop 1.0.2 (`SANGHEILI-03012024`)
+# OpenSpartan Workshop 1.0.3 (`ESCHARUM-03052024`)
 
-- Application moves to Windows App SDK 1.5.
-- Fixed the logic where some matches for which stats were not acquired were never re-acquired.
-- Improves match acquisition performance.
-- Fixes an issue where the match population process is not done if a playlist or playlist map/mode pair is not available.
-- Fix an issue with the query where the map and playlist metadata was requested from the server even when it was available locally.
+- Medals are now shown for each of the matches.
+- User can navigate to matches where they earned medals from the match view.
+- Ranked information displayed in match view and match details.
+- **Battle Pass** is now listed as **Operations** in the navigation view.
+- Fixed a bug where the service record might not correctly load.
 
 Refer to [**getting started guide**](https://openspartan.com/docs/workshop/guides/get-started/) to start using OpenSpartan Workshop.

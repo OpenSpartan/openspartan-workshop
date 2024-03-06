@@ -58,7 +58,7 @@
                         <FontIcon Glyph="&#xEA18;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Battle Pass" x:Name="nviBattlePass" Tag="OpenSpartan.Workshop.Views.BattlePassView">
+                <NavigationViewItem Content="Operations" x:Name="nviBattlePass" Tag="OpenSpartan.Workshop.Views.BattlePassView">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xF133;"/>
                     </NavigationViewItem.Icon>
