@@ -234,14 +234,14 @@
                                     <Image Height="64" Margin="12,0,0,0" Source="{Binding RankIdentifier, Converter={StaticResource RankIdentifierToPathConverter}}"></Image>
                                     <StackPanel Margin="12,12,12,0" VerticalAlignment="Center">
                                         <Grid>
-                                            <ProgressBar CornerRadius="0" MinHeight="20" Width="200" Height="20" Minimum="{Binding TierStart}" Maximum="{Binding NextTierStart}" Value="{Binding CurrentEntity, Converter={StaticResource CsrProgressStateConverter}}" Foreground="White">
+                                            <ProgressBar BorderBrush="White" BorderThickness="1" CornerRadius="0" MinHeight="20" Width="200" Height="20" Minimum="{Binding TierStart}" Maximum="{Binding NextTierStart}" Value="{Binding CurrentEntity, Converter={StaticResource CsrProgressStateConverter}}" Foreground="White">
                                                 <ProgressBar.Resources>
                                                     <x:Double x:Key="ProgressBarTrackHeight">20</x:Double>
                                                     <CornerRadius x:Key="ProgressBarTrackCornerRadius">0</CornerRadius>
                                                 </ProgressBar.Resources>
                                             </ProgressBar>
 
-                                            <ProgressBar CornerRadius="0" MinHeight="20" Width="200" Height="20" Minimum="{Binding TierStart}" Maximum="{Binding NextTierStart}" Value="{Binding CurrentEntity, Converter={StaticResource CsrProgressStateConverter}, ConverterParameter='inverse'}" Background="Transparent">
+                                            <ProgressBar BorderBrush="White" BorderThickness="1" CornerRadius="0" MinHeight="20" Width="200" Height="20" Minimum="{Binding TierStart}" Maximum="{Binding NextTierStart}" Value="{Binding CurrentEntity, Converter={StaticResource CsrProgressStateConverter}, ConverterParameter='inverse'}" Background="Transparent">
                                                 <ProgressBar.Resources>
                                                     <x:Double x:Key="ProgressBarTrackHeight">20</x:Double>
                                                     <CornerRadius x:Key="ProgressBarTrackCornerRadius">0</CornerRadius>
