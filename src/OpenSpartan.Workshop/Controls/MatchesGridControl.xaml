@@ -8,6 +8,7 @@
     xmlns:winuiconverters="using:CommunityToolkit.WinUI.UI.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
+    xmlns:localcontrols="using:OpenSpartan.Workshop.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     x:Name="MatchesGridControlEntity"
@@ -124,7 +125,7 @@
             </controls:DataGrid.Columns>
             <controls:DataGrid.RowDetailsTemplate>
                 <DataTemplate>
-                    <StackPanel Height="600" Margin="24,12" Padding="5" Spacing="3" Orientation="Horizontal">
+                    <StackPanel Background="#2B2B2B" Width="2000" Height="600" HorizontalAlignment="Left" Margin="24,12" Padding="5" Spacing="3" Orientation="Horizontal">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="150"></ColumnDefinition>
@@ -299,15 +300,16 @@
                                                         <Image Height="64" Width="86" Source="{Binding NameId, Converter={StaticResource MedalNameIdToPathConverter}}"/>
                                                     </Grid>
 
-                                                    <TeachingTip Title="{Binding Name.Value}"
+                                                    <localcontrols:AutoClosingTeachingTip Title="{Binding Name.Value}"
                                                          Subtitle="{Binding Description.Value}"
                                                          PreferredPlacement="Bottom"
+                                                         ShouldConstrainToRootBounds="True"
                                                          IsLightDismissEnabled="True"
                                                          ActionButtonContent="Browse Matches"
                                                          ActionButtonCommand="{Binding MedalNavigationCommand, ElementName=MatchesGridControlEntity}"
                                                          ActionButtonCommandParameter="{Binding NameId}"
                                                          Target="{Binding RelativeSource={RelativeSource TemplatedParent}}">
-                                                    </TeachingTip>
+                                                    </localcontrols:AutoClosingTeachingTip>
                                                 </Grid>
                                             </DataTemplate>
                                         </GridView.ItemTemplate>
