@@ -99,8 +99,12 @@ namespace OpenSpartan.Workshop.ViewModels
         }
 
         private void CleanupManagedResources()
-        { 
-            this.MatchList.Clear();
+        {
+            if (this.MatchList != null)
+            {
+                this.MatchList.Clear();
+            }
+
             this.MatchList = null;
             this.Medal = null;
         }

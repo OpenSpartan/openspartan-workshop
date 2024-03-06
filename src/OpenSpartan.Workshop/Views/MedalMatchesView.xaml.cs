@@ -60,6 +60,7 @@ namespace OpenSpartan.Workshop.Views
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
+            ((MedalMatchesViewModel)this.DataContext).NavigationRequested -= MedalMatchesView_NavigationRequested;
             ((MedalMatchesViewModel)this.DataContext).Dispose();
             this.DataContext = null;
 

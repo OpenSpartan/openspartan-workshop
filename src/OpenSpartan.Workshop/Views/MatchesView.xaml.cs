@@ -12,6 +12,12 @@ namespace OpenSpartan.Workshop.Views
         {
             InitializeComponent();
             this.Loaded += MatchesView_Loaded;
+            this.Unloaded += MatchesView_Unloaded;
+        }
+
+        private void MatchesView_Unloaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+        {
+            ((MatchesViewModel)this.DataContext).NavigationRequested -= MatchesView_NavigationRequested;
         }
 
         private void MatchesView_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
