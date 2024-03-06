@@ -315,7 +315,10 @@ namespace OpenSpartan.Workshop.Core
 
                 if (serviceRecordResult.Result != null && serviceRecordResult.Response.Code == 200)
                 {
-                    HomeViewModel.Instance.ServiceRecord = serviceRecordResult.Result;
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    {
+                        HomeViewModel.Instance.ServiceRecord = serviceRecordResult.Result;
+                    });
 
                     DataHandler.InsertServiceRecordEntry(serviceRecordResult.Response.Message);
                 }
