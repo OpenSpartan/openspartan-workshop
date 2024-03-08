@@ -890,7 +890,7 @@ namespace OpenSpartan.Workshop.Core
             return true;
         }
 
-        public static async Task<OperationRewardTrackSnapshot> GetOperations()
+        public static async Task<OperationRewardTrackSnapshot?> GetOperations()
         {
             return (await SafeAPICall(async () =>
             {
@@ -898,7 +898,7 @@ namespace OpenSpartan.Workshop.Core
             })).Result;
         }
 
-        public static async Task<CurrencyDefinition> GetInGameCurrency(string currencyId)
+        public static async Task<CurrencyDefinition?> GetInGameCurrency(string currencyId)
         {
             return (await SafeAPICall(async () =>
             {

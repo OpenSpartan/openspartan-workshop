@@ -25,9 +25,19 @@ namespace OpenSpartan.Workshop.Views
 
         private void nvBattlePassDetails_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
         {
-            if (args.InvokedItemContainer != null && ((OperationCompoundModel)nvBattlePassDetails.SelectedItem).RewardTrack.RewardTrackPath != BattlePassViewModel.Instance.CurrentlySelectedBattlepass)
+            if (args.InvokedItem is string)
             {
-                NavView_Navigate(typeof(BattlePassDetailView), args.RecommendedNavigationTransitionInfo, args.InvokedItemContainer.Tag.ToString());
+                if (args.InvokedItemContainer != null && ((OperationCompoundModel)nvBattlePassDetails.SelectedItem).RewardTrack.RewardTrackPath != BattlePassViewModel.Instance.CurrentlySelectedBattlepass)
+                {
+                    NavView_Navigate(typeof(BattlePassDetailView), args.RecommendedNavigationTransitionInfo, args.InvokedItemContainer.Tag.ToString());
+                }
+            }
+            else if (args.InvokedItem is OperationCompoundModel)
+            {
+                if (((OperationCompoundModel)nvBattlePassDetails.SelectedItem).RewardTrack.RewardTrackPath != BattlePassViewModel.Instance.CurrentlySelectedBattlepass)
+                {
+                    NavView_Navigate(typeof(BattlePassDetailView), args.RecommendedNavigationTransitionInfo, ((OperationCompoundModel)args.InvokedItem).RewardTrack.RewardTrackPath);
+                }
             }
         }
     }
