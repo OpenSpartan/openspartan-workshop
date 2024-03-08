@@ -69,7 +69,7 @@ namespace OpenSpartan.Workshop.Core
             {
                 if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Attempting to populate medata metadata...");
                 MedalMetadata = await SafeAPICall(async () => await HaloClient.GameCmsGetMedalMetadata());
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Medal metadata populated.");
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Medal metadata populated.");
                 return true;
             }
             catch (Exception ex)
@@ -275,6 +275,13 @@ namespace OpenSpartan.Workshop.Core
                                     .Where(c => c.Rank <= HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank);
                                 HomeViewModel.Instance.ExperienceEarnedToDate = relevantRanks.Sum(rank => rank.XpRequiredForRank) + careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
                             });
+
+                            // Currently a bug in the Halo Infinite CMS where the Onyx Cadet 3 large icon is set incorrectly.
+                            // Hopefully at some point this will be fixed.
+                            if (currentCareerStage.RankLargeIcon == "career_rank/CelebrationMoment/219_Cadet_Onyx_III.png")
+                            {
+                                currentCareerStage.RankLargeIcon = "career_rank/CelebrationMoment/19_Cadet_Onyx_III.png";
+                            }
 
                             string qualifiedRankImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankLargeIcon);
                             string qualifiedAdornmentImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankAdornmentIcon);
