@@ -1,6 +1,7 @@
 # OpenSpartan Workshop 1.0.3 (`ESCHARUM-03052024`)
 
 - [#2] Fixed a bug where the battle pass navigation was not correctly done on smaller window sizes.
+- [#3] Medal name ID is now shown in medal details, so that a user can note it for SQL queries.
 - [#5] Medals are now shown for each of the matches.
 - User can navigate to matches where they earned medals from the match view.
 - [#10] Ranked information displayed in match view and match details.
