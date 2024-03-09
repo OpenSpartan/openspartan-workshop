@@ -5,19 +5,29 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="using:OpenSpartan.Workshop.Models"
     xmlns:converters="using:OpenSpartan.Workshop.Converters"
+    xmlns:winuiconverters="using:CommunityToolkit.WinUI.UI.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
+    xmlns:localcontrols="using:OpenSpartan.Workshop.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     x:Name="MatchesGridControlEntity"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <UserControl.Resources>
-        <converters:MetadataLoadingStateToVisibilityConverter x:Key="MetadataLoadingStateToVisibilityConverter"></converters:MetadataLoadingStateToVisibilityConverter>
-        <converters:OutcomeToBackgroundConverter x:Key="OutcomeToBackgroundConverter"></converters:OutcomeToBackgroundConverter>
-        <converters:OutcomeToForegroundConverter x:Key="OutcomeToForegroundConverter"></converters:OutcomeToForegroundConverter>
-        <converters:PerformanceToGlyphConverter x:Key="PerformanceToGlyphConverter"></converters:PerformanceToGlyphConverter>
-        <converters:PerformanceToColorConverter x:Key="PerformanceToColorConverter"></converters:PerformanceToColorConverter>
+        <converters:MetadataLoadingStateToVisibilityConverter x:Key="MetadataLoadingStateToVisibilityConverter"/>
+        <converters:OutcomeToBackgroundConverter x:Key="OutcomeToBackgroundConverter"/>
+        <converters:OutcomeToForegroundConverter x:Key="OutcomeToForegroundConverter"/>
+        <converters:PerformanceToGlyphConverter x:Key="PerformanceToGlyphConverter"/>
+        <converters:PerformanceToColorConverter x:Key="PerformanceToColorConverter"/>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:RankIdentifierToPathConverter x:Key="RankIdentifierToPathConverter"/>
+        <converters:StringAvailabilityToVisibilityConverter x:Key="StringAvailabilityToVisibilityConverter"/>
+        <converters:CsrProgressStateConverter x:Key="CsrProgressStateConverter"/>
+        <winuiconverters:StringFormatConverter x:Key="StringFormatConverter"/>
+        <converters:MedalNameIdToPathConverter x:Key="MedalNameIdToPathConverter"/>
+        <converters:MedalDifficultyToBrushConverter x:Key="MedalDifficultyToBrushConverter"/>
+        <converters:CommaAfterThousandsConverter x:Key="CommaAfterThousandsConverter"/>
     </UserControl.Resources>
 
     <Grid>
@@ -78,13 +88,44 @@
                 </controls:DataGridTemplateColumn>
                 <controls:DataGridTextColumn Header="Expected Deaths" Width="*" Binding="{Binding ExpectedDeaths}"></controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Rank" Width="*" Binding="{Binding Rank}"></controls:DataGridTextColumn>
+                <controls:DataGridTemplateColumn Header="Ranked Tier" Width="*">
+                    <controls:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Visibility="{Binding IsRanked, Converter={StaticResource BoolToVisibilityConverter}}" >
+                                <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center" Orientation="Horizontal" >
+                                    <Image Height="24" Margin="12,0,0,0" Source="{Binding RankIdentifier, Converter={StaticResource RankIdentifierToPathConverter}}"></Image>
+                                    <TextBlock VerticalAlignment="Center" Margin="8,0,0,0" Visibility="{Binding Tier, Converter={StaticResource StringAvailabilityToVisibilityConverter}}" Text="{Binding Tier}"></TextBlock>
+                                    <TextBlock VerticalAlignment="Center" Margin="4,0,0,0" Visibility="{Binding Tier, Converter={StaticResource StringAvailabilityToVisibilityConverter}}" Text="{Binding ActualTierLevel}"></TextBlock>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </controls:DataGridTemplateColumn.CellTemplate>
+                </controls:DataGridTemplateColumn>
+                <controls:DataGridTemplateColumn Header="CSR Change" Width="*">
+                    <controls:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" Visibility="{Binding IsRanked, Converter={StaticResource BoolToVisibilityConverter}}" Text="{Binding CsrDelta}"></TextBlock>
+                            </Grid>
+                        </DataTemplate>
+                    </controls:DataGridTemplateColumn.CellTemplate>
+                </controls:DataGridTemplateColumn>
+                <controls:DataGridTemplateColumn Header="Current CSR" Width="*">
+                    <controls:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <TextBlock VerticalAlignment="Center" Margin="12,0,0,0" Visibility="{Binding IsRanked, Converter={StaticResource BoolToVisibilityConverter}}" Text="{Binding PostMatchCsr}"></TextBlock>
+                            </Grid>
+                        </DataTemplate>
+                    </controls:DataGridTemplateColumn.CellTemplate>
+                </controls:DataGridTemplateColumn>
                 <controls:DataGridTextColumn Header="Category" Width="*" Binding="{Binding Category}"></controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Map" Width="*" Binding="{Binding Map}"></controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Playlist" Width="*" Binding="{Binding Playlist}"></controls:DataGridTextColumn>
             </controls:DataGrid.Columns>
             <controls:DataGrid.RowDetailsTemplate>
                 <DataTemplate>
-                    <StackPanel Height="600" Margin="24,12" Padding="5" Spacing="3" Orientation="Horizontal">
+                    <StackPanel Background="#2B2B2B" Width="2000" Height="600" HorizontalAlignment="Left" Margin="24,12" Padding="5" Spacing="3" Orientation="Horizontal">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="150"></ColumnDefinition>
@@ -189,6 +230,105 @@
                                 <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Suicides}"/>
                                 <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.VehicleDestroys}"/>
                             </StackPanel>
+                        </Grid>
+
+                        <Grid Margin="48,0,0,0">
+                            <Grid VerticalAlignment="Top">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"></RowDefinition>
+                                    <RowDefinition Height="*"></RowDefinition>
+                                </Grid.RowDefinitions>
+                                <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Grid.Row="0"  Visibility="{Binding IsRanked, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <Image Height="64" Margin="12,0,0,0" Source="{Binding RankIdentifier, Converter={StaticResource RankIdentifierToPathConverter}}"></Image>
+                                    <StackPanel Margin="12,12,12,0" VerticalAlignment="Center">
+                                        <Grid>
+                                            <ProgressBar BorderBrush="White" BorderThickness="1" CornerRadius="0" MinHeight="20" Width="200" Height="20" Minimum="{Binding TierStart}" Maximum="{Binding NextTierStart}" Value="{Binding CurrentEntity, Converter={StaticResource CsrProgressStateConverter}}" Foreground="White">
+                                                <ProgressBar.Resources>
+                                                    <x:Double x:Key="ProgressBarTrackHeight">20</x:Double>
+                                                    <CornerRadius x:Key="ProgressBarTrackCornerRadius">0</CornerRadius>
+                                                </ProgressBar.Resources>
+                                            </ProgressBar>
+
+                                            <ProgressBar BorderBrush="White" BorderThickness="1" CornerRadius="0" MinHeight="20" Width="200" Height="20" Minimum="{Binding TierStart}" Maximum="{Binding NextTierStart}" Value="{Binding CurrentEntity, Converter={StaticResource CsrProgressStateConverter}, ConverterParameter='inverse'}" Background="Transparent">
+                                                <ProgressBar.Resources>
+                                                    <x:Double x:Key="ProgressBarTrackHeight">20</x:Double>
+                                                    <CornerRadius x:Key="ProgressBarTrackCornerRadius">0</CornerRadius>
+                                                </ProgressBar.Resources>
+                                            </ProgressBar>
+                                        </Grid>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,8,0,0">
+                                            <TextBlock Text="{Binding PostMatchCsr}"></TextBlock>
+                                            <TextBlock>/</TextBlock>
+                                            <TextBlock Text="{Binding NextTierStart}"></TextBlock>
+                                            <TextBlock Margin="4,0,0,0" FontWeight="Bold" Text="{Binding CsrDelta, Converter={StaticResource StringFormatConverter}, ConverterParameter='({0})'}"></TextBlock>
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <Image Height="64" Margin="0,0,0,0" Source="{Binding NextRankIdentifier, Converter={StaticResource RankIdentifierToPathConverter}}"></Image>
+                                </StackPanel>
+
+                                <Grid Row="1">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"></RowDefinition>
+                                        <RowDefinition Height="*"></RowDefinition>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Text="Medals" FontWeight="Bold" Grid.Row="0" Margin="0,23,0,8"/>
+
+                                    <GridView Grid.Row="1" ItemsSource="{Binding PlayerTeamStats[0].Stats.CoreStats.Medals}" Width="446">
+                                        <GridView.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Background="#404040" BorderThickness="2" CornerRadius="4" Tapped="MedalGridItem_Tapped">
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="36"></RowDefinition>
+                                                        <RowDefinition Height="*"></RowDefinition>
+                                                    </Grid.RowDefinitions>
+
+                                                    <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"></ColumnDefinition>
+                                                            <ColumnDefinition Width="32"></ColumnDefinition>
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <Grid Grid.Column="1" CornerRadius="4">
+                                                            <Border Background="#404040">
+                                                                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="{Binding Count, Converter={StaticResource CommaAfterThousandsConverter}}"></TextBlock>
+                                                            </Border>
+                                                        </Grid>
+                                                    </Grid>
+
+                                                    <Grid Grid.Row="1" Padding="8" Background="{Binding DifficultyIndex, Converter={StaticResource MedalDifficultyToBrushConverter}}">
+                                                        <Image Height="64" Width="86" Source="{Binding NameId, Converter={StaticResource MedalNameIdToPathConverter}}"/>
+                                                    </Grid>
+
+                                                    <localcontrols:AutoClosingTeachingTip Title="{Binding Name.Value}"
+                                                         AutoCloseInterval="8000"
+                                                         Subtitle="{Binding Description.Value}"
+                                                         PreferredPlacement="Bottom"
+                                                         ShouldConstrainToRootBounds="True"
+                                                         IsLightDismissEnabled="True"
+                                                         ActionButtonContent="Browse Matches"
+                                                         ActionButtonCommand="{Binding MedalNavigationCommand, ElementName=MatchesGridControlEntity}"
+                                                         ActionButtonCommandParameter="{Binding NameId}"
+                                                         Target="{Binding RelativeSource={RelativeSource TemplatedParent}}">
+                                                        <localcontrols:AutoClosingTeachingTip.Content>
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="120"></ColumnDefinition>
+                                                                    <ColumnDefinition Width="*"></ColumnDefinition>
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Text="Name ID:"></TextBlock>
+                                                                <Border Margin="4,0,0,0" CornerRadius="4" Grid.Column="1" Background="#404040">
+                                                                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding NameId}" Style="{StaticResource MonospaceTextStyle}"></TextBlock>
+                                                                </Border>
+                                                            </Grid>
+                                                        </localcontrols:AutoClosingTeachingTip.Content>
+                                                    </localcontrols:AutoClosingTeachingTip>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </GridView.ItemTemplate>
+                                    </GridView>
+                                </Grid>
+                            </Grid>
                         </Grid>
                     </StackPanel>
                 </DataTemplate>

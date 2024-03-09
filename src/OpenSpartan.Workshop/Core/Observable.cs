@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace OpenSpartan.Workshop.Shared
+namespace OpenSpartan.Workshop.Core
 {
     public class Observable : INotifyPropertyChanged
     {

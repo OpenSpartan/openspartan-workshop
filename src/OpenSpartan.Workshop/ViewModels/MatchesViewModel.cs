@@ -1,7 +1,8 @@
 ﻿using CommunityToolkit.WinUI;
+using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Data;
 using OpenSpartan.Workshop.Models;
-using OpenSpartan.Workshop.Shared;
+using System;
 using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.ViewModels
@@ -14,10 +15,15 @@ namespace OpenSpartan.Workshop.ViewModels
 
         public static MatchesViewModel Instance { get; } = new MatchesViewModel();
 
+        public RelayCommand<long> NavigateCommand { get; }
+
+        public event EventHandler<long> NavigationRequested;
+
         private MatchesViewModel()
         {
             MatchLoadingParameter = "0";
             MatchList = [];
+            NavigateCommand = new RelayCommand<long>(NavigateToAnotherView);
         }
 
         public string MatchLoadingString
@@ -73,6 +79,11 @@ namespace OpenSpartan.Workshop.ViewModels
                     NotifyPropertyChanged();
                 }
             }
+        }
+
+        private void NavigateToAnotherView(long parameter)
+        {
+            NavigationRequested?.Invoke(this, parameter);
         }
 
         public void NotifyPropertyChanged([CallerMemberName] string propertyName = null)

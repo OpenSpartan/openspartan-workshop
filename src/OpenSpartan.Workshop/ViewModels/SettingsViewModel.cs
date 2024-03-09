@@ -1,6 +1,5 @@
 ﻿using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Models;
-using OpenSpartan.Workshop.Shared;
 using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.ViewModels

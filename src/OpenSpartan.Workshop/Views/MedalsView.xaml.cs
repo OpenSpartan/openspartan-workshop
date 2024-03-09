@@ -1,7 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Media;
-using OpenSpartan.Workshop.Shared;
+using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.ViewModels;
 
 namespace OpenSpartan.Workshop.Views
@@ -42,34 +41,11 @@ namespace OpenSpartan.Workshop.Views
 
         private void MedalGridItem_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
-            var teachingTip = FindChildElement<TeachingTip>((DependencyObject)sender);
+            var teachingTip = UserInterface.FindChildElement<TeachingTip>((DependencyObject)sender);
             if (teachingTip != null)
             {
                 teachingTip.IsOpen = true;
             }
-        }
-
-        public static T FindChildElement<T>(DependencyObject parent) where T : FrameworkElement
-        {
-            if (parent == null)
-                return null;
-
-            int childCount = VisualTreeHelper.GetChildrenCount(parent);
-            for (int i = 0; i < childCount; i++)
-            {
-                DependencyObject child = VisualTreeHelper.GetChild(parent, i);
-
-                if (child is T typedChild)
-                {
-                    return typedChild;
-                }
-
-                T result = FindChildElement<T>(child);
-                if (result != null)
-                    return result;
-            }
-
-            return null;
         }
     }
 }

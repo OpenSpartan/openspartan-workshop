@@ -36,7 +36,17 @@ MATCH_DETAILS AS (
         PMS.MatchId,
         json_extract(PE.value, '$.Result.TeamMmr') AS TeamMmr,
         json_extract(PE.value, '$.Result.Counterfactuals.SelfCounterfactuals.Deaths') AS ExpectedDeaths,
-        json_extract(PE.value, '$.Result.Counterfactuals.SelfCounterfactuals.Kills') AS ExpectedKills
+        json_extract(PE.value, '$.Result.Counterfactuals.SelfCounterfactuals.Kills') AS ExpectedKills,
+        json_extract(PE.value, '$.Result.RankRecap.PostMatchCsr.Value') AS PostMatchCsr,
+		json_extract(PE.value, '$.Result.RankRecap.PreMatchCsr.Value') AS PreMatchCsr,
+		json_extract(PE.value, '$.Result.RankRecap.PostMatchCsr.Tier') AS Tier,
+		json_extract(PE.value, '$.Result.RankRecap.PostMatchCsr.SubTier') AS TierLevel,
+        json_extract(PE.value, '$.Result.RankRecap.PostMatchCsr.TierStart') AS TierStart,
+        json_extract(PE.value, '$.Result.RankRecap.PostMatchCsr.NextTier') AS NextTier,
+		json_extract(PE.value, '$.Result.RankRecap.PostMatchCsr.NextSubTier') AS NextTierLevel,
+		json_extract(PE.value, '$.Result.RankRecap.PostMatchCsr.NextTierStart') AS NextTierStart,
+		json_extract(PE.value, '$.Result.RankRecap.PostMatchCsr.InitialMeasurementMatches') AS InitialMeasurementMatches,
+		json_extract(PE.value, '$.Result.RankRecap.PostMatchCsr.MeasurementMatchesRemaining') AS MeasurementMatchesRemaining
     FROM
         PlayerMatchStats PMS
     JOIN
@@ -82,7 +92,17 @@ SELECT
     GV.PublicName AS GameVariant,
     MD.TeamMmr AS TeamMmr,
     MD.ExpectedDeaths AS ExpectedDeaths,
-    MD.ExpectedKills AS ExpectedKills
+    MD.ExpectedKills AS ExpectedKills,
+    MD.PostMatchCsr AS PostMatchCsr,
+	MD.PreMatchCsr AS PreMatchCsr,
+	MD.Tier AS Tier,
+	MD.TierLevel AS TierLevel,
+    MD.NextTier AS NextTier,
+    MD.TierStart AS TierStart,
+	MD.NextTierLevel AS NextTierLevel,
+	MD.NextTierStart AS NextTierStart,
+	MD.InitialMeasurementMatches AS InitialMeasurementMatches,
+	MD.MeasurementMatchesRemaining AS MeasurementMatchesRemaining
 FROM
     SELECTIVE_MATCHES SM
 LEFT JOIN

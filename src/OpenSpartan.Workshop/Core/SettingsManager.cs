@@ -1,12 +1,11 @@
 ﻿using NLog;
-using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.IO;
 using System.Text.Json;
 
-namespace OpenSpartan.Workshop.Shared
+namespace OpenSpartan.Workshop.Core
 {
     internal class SettingsManager
     {

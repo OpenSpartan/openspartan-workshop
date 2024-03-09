@@ -8,17 +8,12 @@
     mc:Ignorable="d"
     x:Name="MedalsViewPage"
     NavigationCacheMode="Enabled"
-    xmlns:converters="using:OpenSpartan.Workshop.Converters"
     xmlns:viewmodels="using:OpenSpartan.Workshop.ViewModels"
+    xmlns:localcontrols="using:OpenSpartan.Workshop.Controls"
     DataContext="{x:Bind viewmodels:MedalsViewModel.Instance}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Page.Resources>
-        <converters:MedalNameIdToPathConverter x:Key="MedalNameIdToPathConverter"></converters:MedalNameIdToPathConverter>
-        <converters:MedalTypeIndexToStringConverter x:Key="MedalTypeIndexToStringConverter"></converters:MedalTypeIndexToStringConverter>
-        <converters:CommaAfterThousandsConverter x:Key="CommaAfterThousandsConverter"></converters:CommaAfterThousandsConverter>
-        <converters:MedalDifficultyToBrushConverter x:Key="MedalDifficultyToBrushConverter"></converters:MedalDifficultyToBrushConverter>
-        
         <CollectionViewSource x:Key="cvsMedals" IsSourceGrouped="True" Source="{Binding Medals}"/>
     </Page.Resources>
     
@@ -69,7 +64,8 @@
                             <Image Height="128" Width="192" Source="{Binding NameId, Converter={StaticResource MedalNameIdToPathConverter}}"/>
                         </Grid>
 
-                        <TeachingTip Title="{Binding Name.Value}"
+                        <localcontrols:AutoClosingTeachingTip Title="{Binding Name.Value}"
+                                     AutoCloseInterval="8000"
                                      Subtitle="{Binding Description.Value}"
                                      PreferredPlacement="Bottom"
                                      IsLightDismissEnabled="True"
@@ -77,7 +73,19 @@
                                      ActionButtonCommand="{Binding DataContext.NavigateCommand, ElementName=MedalsViewPage}"
                                      ActionButtonCommandParameter="{Binding NameId}"
                                      Target="{Binding RelativeSource={RelativeSource TemplatedParent}}">
-                        </TeachingTip>
+                            <localcontrols:AutoClosingTeachingTip.Content>
+                                <Grid Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="120"></ColumnDefinition>
+                                        <ColumnDefinition Width="*"></ColumnDefinition>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock VerticalAlignment="Center" Text="Name ID:"></TextBlock>
+                                    <Border Margin="4,0,0,0" CornerRadius="4" Grid.Column="1" Background="#404040" VerticalAlignment="Center">
+                                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding NameId}" Style="{StaticResource MonospaceTextStyle}"></TextBlock>
+                                    </Border>
+                                </Grid>
+                            </localcontrols:AutoClosingTeachingTip.Content>
+                        </localcontrols:AutoClosingTeachingTip>
                     </Grid>
                 </DataTemplate>
             </GridView.ItemTemplate>

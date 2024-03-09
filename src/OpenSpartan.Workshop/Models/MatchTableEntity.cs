@@ -38,6 +38,82 @@ namespace OpenSpartan.Workshop.Models
 
         public float? ExpectedKills { get; set; }
 
+        public int? PostMatchCsr { get; set; }
+
+        public int? PreMatchCsr { get; set; }
+
+        public string? Tier { get; set; }
+
+        public int? TierLevel { get; set; }
+
+        public int? TierStart { get; set; }
+
+        public string? NextTier { get; set; }
+
+        public int? NextTierLevel { get; set; }
+
+        public int? NextTierStart { get; set; }
+
+        public int? InitialMeasurementMatches { get; set; }
+
+        public int? MeasurementMatchesRemaining { get; set; }
+
+        // Tiers are zero-indexed, so we need to add one to get the
+        // readable tier level.
+        public int? ActualTierLevel
+        {
+            get
+            {
+                return TierLevel + 1;
+            }
+        }
+
+        public string? NextRankIdentifier
+        {
+            get
+            {
+                if (MeasurementMatchesRemaining > 0 && InitialMeasurementMatches > 0)
+                {
+                    return $"unranked_{InitialMeasurementMatches - MeasurementMatchesRemaining}";
+                }
+                else
+                {
+                    return $"{NextTier}_{NextTierLevel + 1}";
+                }
+            }
+        }
+
+        public string? RankIdentifier
+        {
+            get
+            {
+                if (MeasurementMatchesRemaining > 0 && InitialMeasurementMatches > 0)
+                {
+                    return $"unranked_{InitialMeasurementMatches - MeasurementMatchesRemaining}";
+                }
+                else
+                {
+                    return $"{Tier}_{TierLevel + 1}";
+                }
+            }
+        }
+
+        public int? CsrDelta
+        {
+            get
+            {
+                return PostMatchCsr - PreMatchCsr;
+            } 
+        }
+
+        public bool IsRanked
+        {
+            get
+            {
+                return InitialMeasurementMatches > 0;
+            }
+        }
+
         public PerformanceMeasure? KillPerformance
         {
             get
@@ -55,6 +131,14 @@ namespace OpenSpartan.Workshop.Models
                 return ExpectedDeaths == PlayerTeamStats[0].Stats.CoreStats.Deaths
                     ? PerformanceMeasure.MetExpectations
                     : (ExpectedDeaths > PlayerTeamStats[0].Stats.CoreStats.Deaths ? PerformanceMeasure.Outperformed : PerformanceMeasure.Underperformed);
+            }
+        }
+
+        public MatchTableEntity? CurrentEntity
+        {
+            get
+            {
+                return this;
             }
         }
     }

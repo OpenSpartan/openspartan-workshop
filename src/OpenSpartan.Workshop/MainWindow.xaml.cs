@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
-using OpenSpartan.Workshop.Shared;
+using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Views;
 using System;
 using System.Linq;

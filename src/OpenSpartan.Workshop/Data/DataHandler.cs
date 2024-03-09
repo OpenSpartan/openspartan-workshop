@@ -2,8 +2,8 @@
 using Den.Dev.Orion.Models.HaloInfinite;
 using Microsoft.Data.Sqlite;
 using NLog;
+using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Models;
-using OpenSpartan.Workshop.Shared;
 using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -262,10 +262,17 @@ namespace OpenSpartan.Workshop.Data
                 using var reader = command.ExecuteReader();
                 if (reader.HasRows)
                 {
-                    List<MatchTableEntity> matches = new List<MatchTableEntity>();
+                    List<MatchTableEntity> matches = [];
                     while (reader.Read())
                     {
-                        matches.Add(ReadMatchTableEntity(reader));
+                        var matchEntry = ReadMatchTableEntity(reader);
+                        
+                        if (matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals != null && matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals.Count > 0)
+                        {
+                            matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals = UserContextManager.EnrichMedalMetadata(matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals);
+                        }
+
+                        matches.Add(matchEntry);
                     }
 
                     return matches;
@@ -301,6 +308,16 @@ namespace OpenSpartan.Workshop.Data
             var teamMmrOrdinal = reader.GetOrdinal("TeamMmr");
             var expectedDeathsOrdinal = reader.GetOrdinal("ExpectedDeaths");
             var expectedKillsOrdinal = reader.GetOrdinal("ExpectedKills");
+            var postMatchOrdinal = reader.GetOrdinal("PostMatchCsr");
+            var preMatchCsrOrdinal = reader.GetOrdinal("PreMatchCsr");
+            var tierOrdinal = reader.GetOrdinal("Tier");
+            var tierStartOrdinal = reader.GetOrdinal("TierStart");
+            var tierLevelOrdinal = reader.GetOrdinal("TierLevel");
+            var initialMeasurementMatchesOrdinal = reader.GetOrdinal("InitialMeasurementMatches");
+            var measurementMatchesRemainingOrdinal = reader.GetOrdinal("MeasurementMatchesRemaining");
+            var nextTierOrdinal = reader.GetOrdinal("NextTier");
+            var nextTierLevelOrdinal = reader.GetOrdinal("NextTierLevel");
+            var nextTierStartOrdinal = reader.GetOrdinal("NextTierStart");
 
             return new MatchTableEntity
             {
@@ -320,6 +337,16 @@ namespace OpenSpartan.Workshop.Data
                 TeamMmr = reader.IsDBNull(teamMmrOrdinal) ? null : reader.GetFieldValue<float>(teamMmrOrdinal),
                 ExpectedDeaths = reader.IsDBNull(expectedDeathsOrdinal) ? null : reader.GetFieldValue<float>(expectedDeathsOrdinal),
                 ExpectedKills = reader.IsDBNull(expectedKillsOrdinal) ? null : reader.GetFieldValue<float>(expectedKillsOrdinal),
+                PostMatchCsr = reader.IsDBNull(postMatchOrdinal) ? null : reader.GetFieldValue<int>(postMatchOrdinal),
+                PreMatchCsr = reader.IsDBNull(preMatchCsrOrdinal) ? null : reader.GetFieldValue<int>(preMatchCsrOrdinal),
+                Tier = reader.IsDBNull(tierOrdinal) ? null : reader.GetFieldValue<string>(tierOrdinal),
+                TierStart = reader.IsDBNull(tierStartOrdinal) ? null : reader.GetFieldValue<int>(tierStartOrdinal),
+                TierLevel = reader.IsDBNull(tierLevelOrdinal) ? null : reader.GetFieldValue<int>(tierLevelOrdinal),
+                InitialMeasurementMatches = reader.IsDBNull(initialMeasurementMatchesOrdinal) ? null : reader.GetFieldValue<int>(initialMeasurementMatchesOrdinal),
+                MeasurementMatchesRemaining = reader.IsDBNull(measurementMatchesRemainingOrdinal) ? null : reader.GetFieldValue<int>(measurementMatchesRemainingOrdinal),
+                NextTier = reader.IsDBNull(nextTierOrdinal) ? null : reader.GetFieldValue<string>(nextTierOrdinal),
+                NextTierLevel = reader.IsDBNull(nextTierLevelOrdinal) ? null : reader.GetFieldValue<int>(nextTierLevelOrdinal),
+                NextTierStart = reader.IsDBNull(nextTierStartOrdinal) ? null : reader.GetFieldValue<int>(nextTierStartOrdinal),
             };
         }
 

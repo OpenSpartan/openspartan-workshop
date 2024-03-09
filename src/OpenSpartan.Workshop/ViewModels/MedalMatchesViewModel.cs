@@ -1,8 +1,8 @@
 ﻿using CommunityToolkit.WinUI;
 using Den.Dev.Orion.Models.HaloInfinite;
+using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Data;
 using OpenSpartan.Workshop.Models;
-using OpenSpartan.Workshop.Shared;
 using System;
 using System.Runtime.CompilerServices;
 
@@ -16,9 +16,14 @@ namespace OpenSpartan.Workshop.ViewModels
         private IncrementalLoadingCollection<MedalMatchesSource, MatchTableEntity> _matchList;
         private Medal _medal;
 
+        public RelayCommand<long> NavigateCommand { get; }
+
+        public event EventHandler<long> NavigationRequested;
+
         public MedalMatchesViewModel()
         {
             MatchList = [];
+            NavigateCommand = new RelayCommand<long>(NavigateToAnotherView);
         }
 
         public string MatchLoadingString
@@ -94,10 +99,19 @@ namespace OpenSpartan.Workshop.ViewModels
         }
 
         private void CleanupManagedResources()
-        { 
-            this.MatchList.Clear();
+        {
+            if (this.MatchList != null)
+            {
+                this.MatchList.Clear();
+            }
+
             this.MatchList = null;
             this.Medal = null;
+        }
+
+        private void NavigateToAnotherView(long parameter)
+        {
+            NavigationRequested?.Invoke(this, parameter);
         }
 
         ~MedalMatchesViewModel()
