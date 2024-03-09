@@ -7,21 +7,11 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:localcontrols="using:OpenSpartan.Workshop.Controls"
     xmlns:viewmodels="using:OpenSpartan.Workshop.ViewModels"
-    xmlns:converters="using:OpenSpartan.Workshop.Converters"
     mc:Ignorable="d"
     NavigationCacheMode="Enabled"
     DataContext="{x:Bind viewmodels:MedalMatchesViewModel.Instance}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-    <Page.Resources>
-        <converters:MedalNameIdToPathConverter x:Key="MedalNameIdToPathConverter"></converters:MedalNameIdToPathConverter>
-        <converters:MetadataLoadingStateToVisibilityConverter x:Key="MetadataLoadingStateToVisibilityConverter"></converters:MetadataLoadingStateToVisibilityConverter>
-        
-        <Style x:Key="MonospaceTextStyle" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="Consolas"/>
-        </Style>
-    </Page.Resources>
-    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="100"></RowDefinition>

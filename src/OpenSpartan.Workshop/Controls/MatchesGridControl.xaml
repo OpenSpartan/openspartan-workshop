@@ -301,6 +301,7 @@
                                                     </Grid>
 
                                                     <localcontrols:AutoClosingTeachingTip Title="{Binding Name.Value}"
+                                                         AutoCloseInterval="8000"
                                                          Subtitle="{Binding Description.Value}"
                                                          PreferredPlacement="Bottom"
                                                          ShouldConstrainToRootBounds="True"
@@ -309,6 +310,18 @@
                                                          ActionButtonCommand="{Binding MedalNavigationCommand, ElementName=MatchesGridControlEntity}"
                                                          ActionButtonCommandParameter="{Binding NameId}"
                                                          Target="{Binding RelativeSource={RelativeSource TemplatedParent}}">
+                                                        <localcontrols:AutoClosingTeachingTip.Content>
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="120"></ColumnDefinition>
+                                                                    <ColumnDefinition Width="*"></ColumnDefinition>
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Text="Name ID:"></TextBlock>
+                                                                <Border Margin="4,0,0,0" CornerRadius="4" Grid.Column="1" Background="#404040">
+                                                                    <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding NameId}" Style="{StaticResource MonospaceTextStyle}"></TextBlock>
+                                                                </Border>
+                                                            </Grid>
+                                                        </localcontrols:AutoClosingTeachingTip.Content>
                                                     </localcontrols:AutoClosingTeachingTip>
                                                 </Grid>
                                             </DataTemplate>

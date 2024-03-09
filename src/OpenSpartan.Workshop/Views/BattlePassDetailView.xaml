@@ -5,14 +5,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:converters="using:OpenSpartan.Workshop.Converters"
     mc:Ignorable="d"
     NavigationCacheMode="Enabled"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Page.Resources>
-        <converters:ServicePathToLocalPathConverter x:Key="ServicePathToLocalPathConverter"></converters:ServicePathToLocalPathConverter>
-        <converters:RankToVisibilityConverter x:Key="RankToVisibilityConverter"></converters:RankToVisibilityConverter>
         <CollectionViewSource x:Key="cvsBattlePassItems" IsSourceGrouped="True" Source="{Binding Rewards}"/>
     </Page.Resources>
 
