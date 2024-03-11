@@ -611,7 +611,7 @@ namespace OpenSpartan.Workshop.Data
 
         private static string GetQuery(string category, string target)
         {
-            return System.IO.File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Queries", category, $"{target}.sql"), Encoding.UTF8);
+            return System.IO.File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Queries", category, $"{target}.sql"), Encoding.UTF8);
         }
 
         internal static List<Medal> GetMedals()
