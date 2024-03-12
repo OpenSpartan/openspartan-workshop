@@ -269,7 +269,7 @@ namespace OpenSpartan.Workshop.Core
 
                                 HomeViewModel.Instance.ExperienceTotalRequired = careerTrackContainerResult.Result.Ranks.Sum(item => item.XpRequiredForRank);
 
-                                var relevantRanks = careerTrackContainerResult.Result.Ranks.TakeWhile(c => c.Rank <= currentRank);
+                                var relevantRanks = careerTrackContainerResult.Result.Ranks.TakeWhile(c => c.Rank < currentRank);
                                 HomeViewModel.Instance.ExperienceEarnedToDate = relevantRanks.Sum(rank => rank.XpRequiredForRank) + careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
 
                                 // Currently a bug in the Halo Infinite CMS where the Onyx Cadet 3 large icon is set incorrectly.
