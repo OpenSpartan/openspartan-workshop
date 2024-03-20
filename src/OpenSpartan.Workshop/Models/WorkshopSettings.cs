@@ -11,6 +11,7 @@ namespace OpenSpartan.Workshop.Models
         private bool _enableLogging;
         private string _apiVersion;
         private string _headerImagePath;
+        private bool _useBroker;
 
         [JsonPropertyName("release")]
         public string Release
@@ -77,6 +78,20 @@ namespace OpenSpartan.Workshop.Models
                 if (_headerImagePath != value)
                 {
                     _headerImagePath = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        [JsonPropertyName("usebroker")]
+        public bool UseBroker
+        {
+            get => _useBroker;
+            set
+            {
+                if (_useBroker != value)
+                {
+                    _useBroker = value;
                     NotifyPropertyChanged();
                 }
             }

@@ -23,7 +23,6 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Transactions;
 
 namespace OpenSpartan.Workshop.Core
 {
@@ -62,7 +61,7 @@ namespace OpenSpartan.Workshop.Core
         {
             return WinRT.Interop.WindowNative.GetWindowHandle(DispatcherWindow);
         }
-        
+
         internal static async Task<bool> PrepopulateMedalMetadata()
         {
             try
@@ -81,19 +80,25 @@ namespace OpenSpartan.Workshop.Core
 
         internal static async Task<AuthenticationResult> InitializePublicClientApplication()
         {
-            BrokerOptions options = new(BrokerOptions.OperatingSystems.Windows)
-            {
-                Title = "OpenSpartan Workshop"
-            };
+            
 
             var storageProperties = new StorageCreationPropertiesBuilder(Configuration.CacheFileName, Configuration.AppDataDirectory).Build();
 
-            var pca = PublicClientApplicationBuilder
+            var pcaBootstrap = PublicClientApplicationBuilder
                 .Create(Configuration.ClientID)
-                .WithAuthority(AadAuthorityAudience.PersonalMicrosoftAccount)
-                .WithParentActivityOrWindow(GetMainWindowHandle)
-                .WithBroker(options)
-                .Build();
+                .WithAuthority(AadAuthorityAudience.PersonalMicrosoftAccount);
+
+            if (SettingsViewModel.Instance.UseBroker)
+            {
+                BrokerOptions options = new(BrokerOptions.OperatingSystems.Windows)
+                {
+                    Title = "OpenSpartan Workshop"
+                };
+                
+                pcaBootstrap.WithParentActivityOrWindow(GetMainWindowHandle).WithBroker(options);
+            }
+
+            var pca = pcaBootstrap.Build();
 
             // This hooks up the cross-platform cache into MSAL
             var cacheHelper = await MsalCacheHelper.CreateAsync(storageProperties);
@@ -236,34 +241,32 @@ namespace OpenSpartan.Workshop.Core
         {
             try
             {
-                var tasks = new List<Task>
-                {
-                    SafeAPICall(async () => await HaloClient.EconomyGetPlayerCareerRank(new List<string> { $"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})" }, "careerRank1")),
-                    SafeAPICall(async () => await HaloClient.GameCmsGetCareerRanks("careerRank1"))
-                };
+                var xuid = XboxUserContext.DisplayClaims.Xui[0].XUID;
+                var economyTask = SafeAPICall(() => HaloClient.EconomyGetPlayerCareerRank(new List<string> { $"xuid({xuid})" }, "careerRank1"));
+                var ranksTask = SafeAPICall(() => HaloClient.GameCmsGetCareerRanks("careerRank1"));
 
-                await Task.WhenAll(tasks);
+                await Task.WhenAll(economyTask, ranksTask);
 
-                var careerTrackResult = (HaloApiResultContainer<RewardTrackResultContainer, RawResponseContainer>)tasks[0].GetResultOrDefault();
-                var careerTrackContainerResult = (HaloApiResultContainer<CareerTrackContainer, RawResponseContainer>)tasks[1].GetResultOrDefault();
+                var careerTrackResult = economyTask.GetResultOrDefault() as HaloApiResultContainer<RewardTrackResultContainer, RawResponseContainer>;
+                var careerTrackContainerResult = ranksTask.GetResultOrDefault() as HaloApiResultContainer<CareerTrackContainer, RawResponseContainer>;
 
-                if (careerTrackResult.Result != null && careerTrackResult.Response.Code == 200)
+                if (careerTrackResult?.Result != null && careerTrackResult.Response.Code == 200)
                 {
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => HomeViewModel.Instance.CareerSnapshot = careerTrackResult.Result);
                 }
 
-                if (careerTrackContainerResult.Result != null && (careerTrackContainerResult.Response.Code == 200 || careerTrackContainerResult.Response.Code == 304))
+                if (careerTrackContainerResult?.Result != null && (careerTrackContainerResult.Response.Code == 200 || careerTrackContainerResult.Response.Code == 304))
                 {
-                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => HomeViewModel.Instance.MaxRank = careerTrackContainerResult.Result.Ranks.Count);
-
-                    if (HomeViewModel.Instance.CareerSnapshot != null)
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(async () =>
                     {
-                        var currentCareerStage = careerTrackContainerResult.Result.Ranks
-                            .FirstOrDefault(c => c.Rank == HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank + 1);
+                        HomeViewModel.Instance.MaxRank = careerTrackContainerResult.Result.Ranks.Count;
 
-                        if (currentCareerStage != null)
+                        if (HomeViewModel.Instance.CareerSnapshot != null)
                         {
-                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                            var currentRank = HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank + 1;
+                            var currentCareerStage = careerTrackContainerResult.Result.Ranks.FirstOrDefault(c => c.Rank == currentRank);
+
+                            if (currentCareerStage != null)
                             {
                                 HomeViewModel.Instance.Title = $"{currentCareerStage.TierType} {currentCareerStage.RankTitle.Value} {currentCareerStage.RankTier.Value}";
                                 HomeViewModel.Instance.CurrentRankExperience = careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
@@ -271,42 +274,42 @@ namespace OpenSpartan.Workshop.Core
 
                                 HomeViewModel.Instance.ExperienceTotalRequired = careerTrackContainerResult.Result.Ranks.Sum(item => item.XpRequiredForRank);
 
-                                var relevantRanks = careerTrackContainerResult.Result.Ranks
-                                    .Where(c => c.Rank <= HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank);
+                                var relevantRanks = careerTrackContainerResult.Result.Ranks.TakeWhile(c => c.Rank < currentRank);
                                 HomeViewModel.Instance.ExperienceEarnedToDate = relevantRanks.Sum(rank => rank.XpRequiredForRank) + careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
-                            });
 
-                            // Currently a bug in the Halo Infinite CMS where the Onyx Cadet 3 large icon is set incorrectly.
-                            // Hopefully at some point this will be fixed.
-                            if (currentCareerStage.RankLargeIcon == "career_rank/CelebrationMoment/219_Cadet_Onyx_III.png")
-                            {
-                                currentCareerStage.RankLargeIcon = "career_rank/CelebrationMoment/19_Cadet_Onyx_III.png";
+                                // Currently a bug in the Halo Infinite CMS where the Onyx Cadet 3 large icon is set incorrectly.
+                                // Hopefully at some point this will be fixed.
+                                if (currentCareerStage.RankLargeIcon == "career_rank/CelebrationMoment/219_Cadet_Onyx_III.png")
+                                {
+                                    currentCareerStage.RankLargeIcon = "career_rank/CelebrationMoment/19_Cadet_Onyx_III.png";
+                                }
+
+                                string qualifiedRankImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankLargeIcon);
+                                string qualifiedAdornmentImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankAdornmentIcon);
+
+                                EnsureDirectoryExists(qualifiedRankImagePath);
+                                EnsureDirectoryExists(qualifiedAdornmentImagePath);
+
+                                await DownloadAndSetImage(currentCareerStage.RankLargeIcon, qualifiedRankImagePath, () => HomeViewModel.Instance.RankImage = qualifiedRankImagePath);
+                                await DownloadAndSetImage(currentCareerStage.RankAdornmentIcon, qualifiedAdornmentImagePath, () => HomeViewModel.Instance.AdornmentImage = qualifiedAdornmentImagePath);
                             }
-
-                            string qualifiedRankImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankLargeIcon);
-                            string qualifiedAdornmentImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankAdornmentIcon);
-
-                            EnsureDirectoryExists(qualifiedRankImagePath);
-                            EnsureDirectoryExists(qualifiedAdornmentImagePath);
-
-                            await DownloadAndSetImage(currentCareerStage.RankLargeIcon, qualifiedRankImagePath, () => HomeViewModel.Instance.RankImage = qualifiedRankImagePath);
-                            await DownloadAndSetImage(currentCareerStage.RankAdornmentIcon, qualifiedAdornmentImagePath, () => HomeViewModel.Instance.AdornmentImage = qualifiedAdornmentImagePath);
                         }
-                    }
-                    else
-                    {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Error("Could not get the career snapshot - it's null in the view model.");
-                        return false;
-                    }
+                        else
+                        {
+                            if (SettingsViewModel.Instance.EnableLogging) Logger.Error("Could not get the career snapshot - it's null in the view model.");
+                        }
+                    });
                 }
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred: {ex.Message}");
                 return false;
             }
         }
+
 
         internal static void EnsureDirectoryExists(string path)
         {
@@ -338,7 +341,7 @@ namespace OpenSpartan.Workshop.Core
                     return await HaloClient.StatsGetPlayerServiceRecord(HomeViewModel.Instance.Gamertag, LifecycleMode.Matchmade);
                 });
 
-                if (serviceRecordResult.Result != null && serviceRecordResult.Response.Code == 200)
+                if (serviceRecordResult != null && serviceRecordResult.Result != null && serviceRecordResult.Response.Code == 200)
                 {
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                     {
@@ -510,7 +513,7 @@ namespace OpenSpartan.Workshop.Core
 
                         await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                         {
-                            MatchesViewModel.Instance.MatchList = new IncrementalLoadingCollection<MatchesSource, MatchTableEntity>();
+                            MatchesViewModel.Instance.MatchList = [];
                         });
 
                         return result;
@@ -550,55 +553,64 @@ namespace OpenSpartan.Workshop.Core
 
                 await Parallel.ForEachAsync(matchIds, parallelOptions, async (matchId, token) =>
                 {
-                    token.ThrowIfCancellationRequested();
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    double completionProgress = matchCounter++ / (double)matchesTotal * 100.0;
-
-                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    try
                     {
-                        MatchesViewModel.Instance.MatchLoadingParameter = $"{matchId} ({matchCounter} out of {matchesTotal} - {completionProgress:#.00}%)";
-                    });
+                        token.ThrowIfCancellationRequested();
+                        cancellationToken.ThrowIfCancellationRequested();
 
-                    var matchStatsAvailability = DataHandler.GetMatchStatsAvailability(matchId.ToString());
+                        double completionProgress = matchCounter++ / (double)matchesTotal * 100.0;
 
-                    if (!matchStatsAvailability.MatchAvailable)
-                    {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Getting match stats for {matchId}...");
+                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        {
+                            MatchesViewModel.Instance.MatchLoadingParameter = $"{matchId} ({matchCounter} out of {matchesTotal} - {completionProgress:#.00}%)";
+                        });
 
-                        var matchStats = await GetMatchStats(matchId.ToString(), completionProgress);
-                        if (matchStats == null)
-                            return;
+                        var matchStatsAvailability = DataHandler.GetMatchStatsAvailability(matchId.ToString());
 
-                        var processedMatchAssetParameters = await DataHandler.UpdateMatchAssetRecords(matchStats.Result);
+                        if (!matchStatsAvailability.MatchAvailable)
+                        {
+                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Getting match stats for {matchId}...");
 
-                        bool matchStatsInsertionResult = DataHandler.InsertMatchStats(matchStats.Response.Message);
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info(matchStatsInsertionResult
-                            ? $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored match data for {matchId} in the database."
-                            : $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not store match {matchId} stats in the database.");
+                            var matchStats = await GetMatchStats(matchId.ToString(), completionProgress);
+                            if (matchStats == null)
+                                return;
+
+                            var processedMatchAssetParameters = await DataHandler.UpdateMatchAssetRecords(matchStats.Result);
+
+                            bool matchStatsInsertionResult = DataHandler.InsertMatchStats(matchStats.Response.Message);
+                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info(matchStatsInsertionResult
+                                ? $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored match data for {matchId} in the database."
+                                : $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not store match {matchId} stats in the database.");
+                        }
+                        else
+                        {
+                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} already available. Not requesting new data.");
+                        }
+
+                        if (!matchStatsAvailability.StatsAvailable)
+                        {
+                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Attempting to get player results for players for match {matchId}.");
+
+                            var playerStatsSnapshot = await GetPlayerStats(matchId.ToString());
+                            if (playerStatsSnapshot == null)
+                                return;
+
+                            var playerStatsInsertionResult = DataHandler.InsertPlayerMatchStats(matchId.ToString(), playerStatsSnapshot.Response.Message);
+
+                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info(playerStatsInsertionResult
+                                ? $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored player stats for {matchId}."
+                                : $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not store player stats for {matchId}.");
+                        }
+                        else
+                        {
+                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} player stats already available. Not requesting new data.");
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} already available. Not requesting new data.");
-                    }
-
-                    if (!matchStatsAvailability.StatsAvailable)
-                    {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Attempting to get player results for players for match {matchId}.");
-
-                        var playerStatsSnapshot = await GetPlayerStats(matchId.ToString());
-                        if (playerStatsSnapshot == null)
-                            return;
-
-                        var playerStatsInsertionResult = DataHandler.InsertPlayerMatchStats(matchId.ToString(), playerStatsSnapshot.Response.Message);
-
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info(playerStatsInsertionResult
-                            ? $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored player stats for {matchId}."
-                            : $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not store player stats for {matchId}.");
-                    }
-                    else
-                    {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} player stats already available. Not requesting new data.");
+                        // Because processing is parallelized, we don't quite want to error our right away and
+                        // stop processing other matches, so instead we will log an exception locally for investigation.
+                        if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Error storing {matchId} at {matchCounter}. {ex.Message}");
                     }
                 });
 
@@ -1044,69 +1056,71 @@ namespace OpenSpartan.Workshop.Core
 
         internal static async Task<List<RewardMetaContainer>> ExtractInventoryRewards(int rank, int playerRank, IEnumerable<InventoryAmount> inventoryItems, bool isFree)
         {
-            List<RewardMetaContainer> rewardContainers = [];
+            List<RewardMetaContainer> rewardContainers = new(inventoryItems.Count());
+            bool enableLogging = SettingsViewModel.Instance.EnableLogging;
+            var semaphore = new SemaphoreSlim(Environment.ProcessorCount);
 
-            await Task.WhenAll(inventoryItems.Select(async inventoryReward =>
+            async Task ProcessInventoryItem(InventoryAmount inventoryReward)
             {
-                bool inventoryItemLocallyAvailable = DataHandler.IsInventoryItemAvailable(inventoryReward.InventoryItemPath);
+                await semaphore.WaitAsync().ConfigureAwait(false);
 
-                var container = new RewardMetaContainer
+                try
                 {
-                    Ranks = Tuple.Create(rank, playerRank),
-                    IsFree = isFree,
-                    Amount = inventoryReward.Amount,
-                };
+                    bool inventoryItemLocallyAvailable = DataHandler.IsInventoryItemAvailable(inventoryReward.InventoryItemPath);
 
-                if (inventoryItemLocallyAvailable)
-                {
-                    container.ItemDetails = DataHandler.GetInventoryItem(inventoryReward.InventoryItemPath);
-
-                    if (container.ItemDetails != null)
+                    var container = new RewardMetaContainer
                     {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Trying to get local image for {container.ItemDetails.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
+                        Ranks = Tuple.Create(rank, playerRank),
+                        IsFree = isFree,
+                        Amount = inventoryReward.Amount,
+                    };
 
-                        if (await UpdateLocalImage("imagecache", container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path))
+                    if (inventoryItemLocallyAvailable)
+                    {
+                        container.ItemDetails = DataHandler.GetInventoryItem(inventoryReward.InventoryItemPath);
+
+                        if (container.ItemDetails != null)
                         {
-                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored local image: {container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path}");
+                            if (enableLogging) Logger.Info($"Trying to get local image for {container.ItemDetails.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
+
+                            if (await UpdateLocalImage("imagecache", container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path).ConfigureAwait(false))
+                            {
+                                if (enableLogging) Logger.Info($"Stored local image: {container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path}");
+                            }
+                            else
+                            {
+                                if (SettingsViewModel.Instance.EnableLogging) Logger.Error(container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path);
+                            }
                         }
                         else
                         {
-                            if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Failed to store local image: {container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path}");
+                            if (SettingsViewModel.Instance.EnableLogging) Logger.Error("Inventory item is null.");
                         }
                     }
                     else
                     {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Error("Inventory item is null.");
-                    }
-                }
-                else
-                {
-                    var item = await SafeAPICall(async () =>
-                        await HaloClient.GameCmsGetItem(inventoryReward.InventoryItemPath, HaloClient.ClearanceToken)
-                    );
+                        var item = await SafeAPICall(async () => await HaloClient.GameCmsGetItem(inventoryReward.InventoryItemPath, HaloClient.ClearanceToken).ConfigureAwait(false)).ConfigureAwait(false);
 
-                    if (item != null && item.Result != null)
-                    {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Trying to get local image for {item.Result.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
-
-                        if (await UpdateLocalImage("imagecache", item.Result.CommonData.DisplayPath.Media.MediaUrl.Path))
+                        if (item != null && item.Result != null)
                         {
-                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored local image: {item.Result.CommonData.DisplayPath.Media.MediaUrl.Path}");
-                        }
-                        else
-                        {
-                            if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Failed to store local image: {item.Result.CommonData.DisplayPath.Media.MediaUrl.Path}");
-                        }
+                            if (enableLogging) Logger.Info($"Trying to get local image for {item.Result.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
 
-                        DataHandler.UpdateInventoryItems(item.Response.Message, inventoryReward.InventoryItemPath);
-                        container.ItemDetails = item.Result;
+                            if (await UpdateLocalImage("imagecache", item.Result.CommonData.DisplayPath.Media.MediaUrl.Path).ConfigureAwait(false))
+                            {
+                                if (enableLogging) Logger.Info($"Stored local image: {item.Result.CommonData.DisplayPath.Media.MediaUrl.Path}");
+                            }
+                            else
+                            {
+                                if (SettingsViewModel.Instance.EnableLogging) Logger.Error(item.Result.CommonData.DisplayPath.Media.MediaUrl.Path);
+                            }
+
+                            DataHandler.UpdateInventoryItems(item.Response.Message, inventoryReward.InventoryItemPath);
+                            container.ItemDetails = item.Result;
+                        }
                     }
-                }
 
-                container.ImagePath = container.ItemDetails?.CommonData.DisplayPath.Media.MediaUrl.Path;
+                    container.ImagePath = container.ItemDetails?.CommonData.DisplayPath.Media.MediaUrl.Path;
 
-                try
-                {
                     lock (rewardContainers)
                     {
                         rewardContainers.Add(container);
@@ -1114,14 +1128,18 @@ namespace OpenSpartan.Workshop.Core
                 }
                 catch (Exception ex)
                 {
-
                     if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not set container item details for {inventoryReward.InventoryItemPath}. {ex.Message}");
                 }
-            }));
+                finally
+                {
+                    semaphore.Release();
+                }
+            }
+
+            await Task.WhenAll(inventoryItems.Select(ProcessInventoryItem)).ConfigureAwait(false);
 
             return rewardContainers;
         }
-
 
         internal static async Task<bool> UpdateLocalImage(string subDirectoryName, string imagePath)
         {
@@ -1220,14 +1238,14 @@ namespace OpenSpartan.Workshop.Core
                     // We want to populate the medal metadata before we do anything else.
                     _ = await PrepopulateMedalMetadata();
 
-                    Parallel.Invoke(    
+                    Parallel.Invoke(
                         async () => await PopulateMedalData(),
                         async () => await PopulateCsrImages(),
                         async () => await PopulateServiceRecordData(),
                         async () => await PopulateCareerData(),
                         async () => await PopulateUserInventory(),
                         async () => await PopulateCustomizationData(),
-                        async () => await PopulateDecorationData(),  
+                        async () => await PopulateDecorationData(),
                         async () =>
                         {
                             var matchRecordsOutcome = await PopulateMatchRecordsData();
