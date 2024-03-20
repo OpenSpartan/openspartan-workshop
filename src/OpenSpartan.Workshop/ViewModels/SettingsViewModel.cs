@@ -63,6 +63,23 @@ namespace OpenSpartan.Workshop.ViewModels
             }
         }
 
+        public bool UseBroker
+        {
+            get
+            { 
+                return Settings.UseBroker;
+            }
+            set
+            {
+                if (Settings.UseBroker != value)
+                {
+                    Settings.UseBroker = value;
+                    SettingsManager.StoreSettings(Settings);
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
         public WorkshopSettings Settings
         {
             get => _settings;
@@ -71,6 +88,7 @@ namespace OpenSpartan.Workshop.ViewModels
                 if (_settings != value)
                 {
                     _settings = value;
+                    SettingsManager.StoreSettings(Settings);
                     NotifyPropertyChanged();
                 }
             }

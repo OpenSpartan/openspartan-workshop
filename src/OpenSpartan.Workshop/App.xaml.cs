@@ -36,7 +36,7 @@ namespace OpenSpartan.Workshop
 
             LoadSettings();
 
-            var authResult = await UserContextManager.InitializeAllDataOnLaunch();
+            bool authResult = await UserContextManager.InitializeAllDataOnLaunch();
         }
 
         private async static void LoadSettings()
@@ -73,6 +73,7 @@ namespace OpenSpartan.Workshop
                     Release = Configuration.DefaultRelease,
                     SyncSettings = true,
                     EnableLogging = false,
+                    UseBroker = true,
                 };
             }
         }

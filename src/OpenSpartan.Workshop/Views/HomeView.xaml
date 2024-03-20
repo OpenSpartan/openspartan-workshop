@@ -25,7 +25,7 @@
                 </Rectangle>
 
                 <StackPanel VerticalAlignment="Top" Orientation="Horizontal" Margin="24,0,0,0">
-                    <Image Height="200" Source="{Binding AdornmentImage}"></Image>
+                    <Image Height="200" Source="{Binding AdornmentImage}" Margin="0,-1,0,12"></Image>
                     <Grid Margin="24,0,0,0">
                         <Image VerticalAlignment="Center" Height="180" Opacity="0.7" Source="{Binding Backdrop}"></Image>
                         <Grid Background="#2F2F2F" Height="100" VerticalAlignment="Center" MinWidth="500">

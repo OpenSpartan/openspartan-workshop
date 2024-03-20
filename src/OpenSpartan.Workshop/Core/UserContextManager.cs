@@ -23,7 +23,6 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Transactions;
 
 namespace OpenSpartan.Workshop.Core
 {
@@ -81,19 +80,25 @@ namespace OpenSpartan.Workshop.Core
 
         internal static async Task<AuthenticationResult> InitializePublicClientApplication()
         {
-            BrokerOptions options = new(BrokerOptions.OperatingSystems.Windows)
-            {
-                Title = "OpenSpartan Workshop"
-            };
+            
 
             var storageProperties = new StorageCreationPropertiesBuilder(Configuration.CacheFileName, Configuration.AppDataDirectory).Build();
 
-            var pca = PublicClientApplicationBuilder
+            var pcaBootstrap = PublicClientApplicationBuilder
                 .Create(Configuration.ClientID)
-                .WithAuthority(AadAuthorityAudience.PersonalMicrosoftAccount)
-                .WithParentActivityOrWindow(GetMainWindowHandle)
-                .WithBroker(options)
-                .Build();
+                .WithAuthority(AadAuthorityAudience.PersonalMicrosoftAccount);
+
+            if (SettingsViewModel.Instance.UseBroker)
+            {
+                BrokerOptions options = new(BrokerOptions.OperatingSystems.Windows)
+                {
+                    Title = "OpenSpartan Workshop"
+                };
+                
+                pcaBootstrap.WithParentActivityOrWindow(GetMainWindowHandle).WithBroker(options);
+            }
+
+            var pca = pcaBootstrap.Build();
 
             // This hooks up the cross-platform cache into MSAL
             var cacheHelper = await MsalCacheHelper.CreateAsync(storageProperties);
@@ -336,7 +341,7 @@ namespace OpenSpartan.Workshop.Core
                     return await HaloClient.StatsGetPlayerServiceRecord(HomeViewModel.Instance.Gamertag, LifecycleMode.Matchmade);
                 });
 
-                if (serviceRecordResult.Result != null && serviceRecordResult.Response.Code == 200)
+                if (serviceRecordResult != null && serviceRecordResult.Result != null && serviceRecordResult.Response.Code == 200)
                 {
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                     {
@@ -508,7 +513,7 @@ namespace OpenSpartan.Workshop.Core
 
                         await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                         {
-                            MatchesViewModel.Instance.MatchList = new IncrementalLoadingCollection<MatchesSource, MatchTableEntity>();
+                            MatchesViewModel.Instance.MatchList = [];
                         });
 
                         return result;
@@ -548,55 +553,64 @@ namespace OpenSpartan.Workshop.Core
 
                 await Parallel.ForEachAsync(matchIds, parallelOptions, async (matchId, token) =>
                 {
-                    token.ThrowIfCancellationRequested();
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    double completionProgress = matchCounter++ / (double)matchesTotal * 100.0;
-
-                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    try
                     {
-                        MatchesViewModel.Instance.MatchLoadingParameter = $"{matchId} ({matchCounter} out of {matchesTotal} - {completionProgress:#.00}%)";
-                    });
+                        token.ThrowIfCancellationRequested();
+                        cancellationToken.ThrowIfCancellationRequested();
 
-                    var matchStatsAvailability = DataHandler.GetMatchStatsAvailability(matchId.ToString());
+                        double completionProgress = matchCounter++ / (double)matchesTotal * 100.0;
 
-                    if (!matchStatsAvailability.MatchAvailable)
-                    {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Getting match stats for {matchId}...");
+                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        {
+                            MatchesViewModel.Instance.MatchLoadingParameter = $"{matchId} ({matchCounter} out of {matchesTotal} - {completionProgress:#.00}%)";
+                        });
 
-                        var matchStats = await GetMatchStats(matchId.ToString(), completionProgress);
-                        if (matchStats == null)
-                            return;
+                        var matchStatsAvailability = DataHandler.GetMatchStatsAvailability(matchId.ToString());
 
-                        var processedMatchAssetParameters = await DataHandler.UpdateMatchAssetRecords(matchStats.Result);
+                        if (!matchStatsAvailability.MatchAvailable)
+                        {
+                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Getting match stats for {matchId}...");
 
-                        bool matchStatsInsertionResult = DataHandler.InsertMatchStats(matchStats.Response.Message);
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info(matchStatsInsertionResult
-                            ? $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored match data for {matchId} in the database."
-                            : $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not store match {matchId} stats in the database.");
+                            var matchStats = await GetMatchStats(matchId.ToString(), completionProgress);
+                            if (matchStats == null)
+                                return;
+
+                            var processedMatchAssetParameters = await DataHandler.UpdateMatchAssetRecords(matchStats.Result);
+
+                            bool matchStatsInsertionResult = DataHandler.InsertMatchStats(matchStats.Response.Message);
+                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info(matchStatsInsertionResult
+                                ? $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored match data for {matchId} in the database."
+                                : $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not store match {matchId} stats in the database.");
+                        }
+                        else
+                        {
+                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} already available. Not requesting new data.");
+                        }
+
+                        if (!matchStatsAvailability.StatsAvailable)
+                        {
+                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Attempting to get player results for players for match {matchId}.");
+
+                            var playerStatsSnapshot = await GetPlayerStats(matchId.ToString());
+                            if (playerStatsSnapshot == null)
+                                return;
+
+                            var playerStatsInsertionResult = DataHandler.InsertPlayerMatchStats(matchId.ToString(), playerStatsSnapshot.Response.Message);
+
+                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info(playerStatsInsertionResult
+                                ? $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored player stats for {matchId}."
+                                : $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not store player stats for {matchId}.");
+                        }
+                        else
+                        {
+                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} player stats already available. Not requesting new data.");
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} already available. Not requesting new data.");
-                    }
-
-                    if (!matchStatsAvailability.StatsAvailable)
-                    {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Attempting to get player results for players for match {matchId}.");
-
-                        var playerStatsSnapshot = await GetPlayerStats(matchId.ToString());
-                        if (playerStatsSnapshot == null)
-                            return;
-
-                        var playerStatsInsertionResult = DataHandler.InsertPlayerMatchStats(matchId.ToString(), playerStatsSnapshot.Response.Message);
-
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info(playerStatsInsertionResult
-                            ? $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored player stats for {matchId}."
-                            : $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not store player stats for {matchId}.");
-                    }
-                    else
-                    {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} player stats already available. Not requesting new data.");
+                        // Because processing is parallelized, we don't quite want to error our right away and
+                        // stop processing other matches, so instead we will log an exception locally for investigation.
+                        if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Error storing {matchId} at {matchCounter}. {ex.Message}");
                     }
                 });
 
