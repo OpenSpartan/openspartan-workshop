@@ -116,42 +116,42 @@
                             </Grid>
                         </Grid>
 
-                        <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="36"></RowDefinition>
-                                <RowDefinition Height="*"></RowDefinition>
-                            </Grid.RowDefinitions>
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
 
-                            <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
-                                <TextBlock Text="Overall Experience" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                            </Grid>
-                            <Grid Grid.Row="1" Padding="8">
-                                <StackPanel>
-                                    <TextBlock Text="Earned To Date" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                                    <TextBlock Text="{Binding ExperienceEarnedToDate, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
-                                    <TextBlock Text="Remaining" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                                    <TextBlock Text="{Binding ExperienceRemaining, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
-                                    <TextBlock Text="Total Required" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                                    <TextBlock Text="{Binding ExperienceTotalRequired, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
-                                </StackPanel>
-                            </Grid>
+                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <TextBlock Text="Overall Hero Progression" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
                         </Grid>
-
-                        <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="36"></RowDefinition>
-                                <RowDefinition Height="*"></RowDefinition>
-                            </Grid.RowDefinitions>
-
-                            <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
-                                <TextBlock Text="Overall Hero Progression" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                            </Grid>
-                            <Grid Grid.Row="1">
-                                <ProgressRing Background="#2F2F2F" Height="110" Width="110" IsIndeterminate="False" Value="{Binding ExperienceProgress}" Maximum="1" Minimum="0"></ProgressRing>
-                                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding ExperienceProgress, Converter={StaticResource DoubleToPercentageStringConverter}}"></TextBlock>
-                            </Grid>
+                        <Grid Grid.Row="1">
+                            <ProgressRing Background="#2F2F2F" Height="110" Width="110" IsIndeterminate="False" Value="{Binding ExperienceProgress}" Maximum="1" Minimum="0"></ProgressRing>
+                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding ExperienceProgress, Converter={StaticResource DoubleToPercentageStringConverter}}"></TextBlock>
                         </Grid>
-                    </VariableSizedWrapGrid>
+                    </Grid>
+                    
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <TextBlock Text="Overall Experience" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                        </Grid>
+                        <Grid Grid.Row="1" Padding="8">
+                            <StackPanel>
+                                <TextBlock Text="Earned To Date" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                <TextBlock Text="{Binding ExperienceEarnedToDate, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                                <TextBlock Text="Remaining" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                <TextBlock Text="{Binding ExperienceRemaining, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                                <TextBlock Text="Total Required" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                <TextBlock Text="{Binding ExperienceTotalRequired, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </VariableSizedWrapGrid>
                 </StackPanel>
 
             <!-- Content -->
