@@ -1,5 +1,6 @@
 ﻿using Microsoft.UI.Xaml.Data;
 using System;
+using System.Globalization;
 
 namespace OpenSpartan.Workshop.Converters
 {
@@ -7,7 +8,7 @@ namespace OpenSpartan.Workshop.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            return string.Format("{0:n0}", value);
+            return string.Format(CultureInfo.InvariantCulture, "{0:n0}", value);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

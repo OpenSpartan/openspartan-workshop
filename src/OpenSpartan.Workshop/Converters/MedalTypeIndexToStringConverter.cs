@@ -1,5 +1,6 @@
 ﻿using Microsoft.UI.Xaml.Data;
 using System;
+using System.Globalization;
 
 namespace OpenSpartan.Workshop.Converters
 {
@@ -7,7 +8,7 @@ namespace OpenSpartan.Workshop.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            int typeIndex = System.Convert.ToInt32(value);
+            int typeIndex = System.Convert.ToInt32(value, CultureInfo.InvariantCulture);
             return typeIndex switch
             {
                 0 => "Spree",

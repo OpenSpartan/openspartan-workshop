@@ -10,15 +10,15 @@ namespace OpenSpartan.Workshop.ViewModels
 {
     internal class MedalMatchesViewModel : Observable, IDisposable
     {
-        public static MedalMatchesViewModel Instance { get; } = new MedalMatchesViewModel();
+        public static MedalMatchesViewModel? Instance { get; } = new MedalMatchesViewModel();
 
-        private MetadataLoadingState _matchLoadingState;
-        private IncrementalLoadingCollection<MedalMatchesSource, MatchTableEntity> _matchList;
-        private Medal _medal;
+        private MetadataLoadingState? _matchLoadingState;
+        private IncrementalLoadingCollection<MedalMatchesSource, MatchTableEntity>? _matchList;
+        private Medal? _medal;
 
-        public RelayCommand<long> NavigateCommand { get; }
+        public RelayCommand<long>? NavigateCommand { get; }
 
-        public event EventHandler<long> NavigationRequested;
+        public event EventHandler<long>? NavigationRequested;
 
         public MedalMatchesViewModel()
         {
@@ -40,7 +40,7 @@ namespace OpenSpartan.Workshop.ViewModels
             }
         }
 
-        public MetadataLoadingState MatchLoadingState
+        public MetadataLoadingState? MatchLoadingState
         {
             get => _matchLoadingState;
             set
@@ -54,7 +54,7 @@ namespace OpenSpartan.Workshop.ViewModels
             }
         }
 
-        public Medal Medal
+        public Medal? Medal
         { 
             get => _medal;
             set 
@@ -66,7 +66,7 @@ namespace OpenSpartan.Workshop.ViewModels
                 }
             } 
         }
-        public IncrementalLoadingCollection<MedalMatchesSource, MatchTableEntity> MatchList
+        public IncrementalLoadingCollection<MedalMatchesSource, MatchTableEntity>? MatchList
         {
             get => _matchList;
             set
@@ -79,7 +79,7 @@ namespace OpenSpartan.Workshop.ViewModels
             }
         }
 
-        public void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
+        public void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             OnPropertyChanged(propertyName);
         }
@@ -100,10 +100,7 @@ namespace OpenSpartan.Workshop.ViewModels
 
         private void CleanupManagedResources()
         {
-            if (this.MatchList != null)
-            {
-                this.MatchList.Clear();
-            }
+            this.MatchList?.Clear();
 
             this.MatchList = null;
             this.Medal = null;

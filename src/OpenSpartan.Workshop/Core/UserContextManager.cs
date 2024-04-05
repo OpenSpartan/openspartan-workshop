@@ -149,9 +149,11 @@ namespace OpenSpartan.Workshop.Core
 
         public static async Task<HaloApiResultContainer<T, RawResponseContainer>> SafeAPICall<T>(Func<Task<HaloApiResultContainer<T, RawResponseContainer>>> orionAPICall)
         {
+            HaloApiResultContainer<T, RawResponseContainer> result = null;
+
             try
             {
-                var result = await orionAPICall();
+                result = await orionAPICall();
 
                 if (result.Response.Code == 401)
                 {
@@ -172,7 +174,7 @@ namespace OpenSpartan.Workshop.Core
             catch (Exception ex)
             {
                 if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Failed to make Halo Infinite API call. {ex.Message}");
-                return null;
+                return result;
             }
         }
 
@@ -378,7 +380,7 @@ namespace OpenSpartan.Workshop.Core
                     if (backgroundImageResult.Result != null && backgroundImageResult.Response.Code == 200)
                     {
                         // Let's make sure that we create the directory if it does not exist.
-                        FileInfo file = new FileInfo(qualifiedBackgroundImagePath);
+                        FileInfo file = new(qualifiedBackgroundImagePath);
                         file.Directory.Create();
 
                         await System.IO.File.WriteAllBytesAsync(qualifiedBackgroundImagePath, backgroundImageResult.Result);
@@ -424,7 +426,7 @@ namespace OpenSpartan.Workshop.Core
 
                 if (emblem.Result != null)
                 {
-                    nameplate = emblemMapping.Result.GetValueOrDefault(emblem.Result.CommonData.Id)?.GetValueOrDefault(customizationResult.Result.Appearance.Emblem.ConfigurationId.ToString())
+                    nameplate = emblemMapping.Result.GetValueOrDefault(emblem.Result.CommonData.Id)?.GetValueOrDefault(customizationResult.Result.Appearance.Emblem.ConfigurationId.ToString(CultureInfo.InvariantCulture))
                                    ?? new EmblemMapping() { EmblemCmsPath = emblem.Result.CommonData.DisplayPath.Media.MediaUrl.Path, NameplateCmsPath = string.Empty, TextColor = "#FFF" };
                 }
 
@@ -495,7 +497,7 @@ namespace OpenSpartan.Workshop.Core
 
                             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                             {
-                                MatchesViewModel.Instance.MatchList = new IncrementalLoadingCollection<MatchesSource, MatchTableEntity>();
+                                MatchesViewModel.Instance.MatchList = [];
                             });
 
                             return result;
@@ -659,7 +661,7 @@ namespace OpenSpartan.Workshop.Core
 
         private static async Task<List<Guid>> GetPlayerMatchIds(string xuid, CancellationToken cancellationToken)
         {
-            List<Guid> matchIds = new List<Guid>();
+            List<Guid> matchIds = [];
             int queryStart = 0;
 
             var tasks = new ConcurrentBag<Task<List<Guid>>>();
@@ -672,7 +674,7 @@ namespace OpenSpartan.Workshop.Core
 
                 queryStart += MatchesPerPage;
 
-                if (tasks.Count == 8)
+                if (tasks.Count == 4)
                 {
                     var completedTasks = await Task.WhenAll(tasks);
                     tasks.Clear();
@@ -685,7 +687,7 @@ namespace OpenSpartan.Workshop.Core
 
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                     {
-                        MatchesViewModel.Instance.MatchLoadingParameter = matchIds.Count.ToString();
+                        MatchesViewModel.Instance.MatchLoadingParameter = matchIds.Count.ToString(CultureInfo.InvariantCulture);
                     });
 
                     if (completedTasks.LastOrDefault()?.Count == 0)
@@ -705,10 +707,66 @@ namespace OpenSpartan.Workshop.Core
 
         private static async Task<List<Guid>> GetMatchBatchAsync(string xuid, int start, int count)
         {
-            var matches = await SafeAPICall(() =>
-                HaloClient.StatsGetMatchHistory($"xuid({xuid})", start, count, Den.Dev.Orion.Models.HaloInfinite.MatchType.All));
+            List<Guid> successfulMatches = [];
+            List<(string xuid, int start, int count)> retryQueue = [];
 
-            return matches?.Result?.Results?.Select(item => item.MatchId).ToList() ?? new List<Guid>();
+            var matches = await SafeAPICall(async () => await HaloClient.StatsGetMatchHistory($"xuid({xuid})", start, count, Den.Dev.Orion.Models.HaloInfinite.MatchType.All));
+
+            if (matches.Response.Code == 200)
+            {
+                successfulMatches.AddRange(matches?.Result?.Results?.Select(item => item.MatchId) ?? Enumerable.Empty<Guid>());
+            }
+            else
+            {
+                if (SettingsViewModel.Instance.EnableLogging)
+                {
+                    Logger.Info($"Error getting match stats through the search endpoint. Adding to retry queue. XUID: {xuid}, START: {start}, COUNT: {count}. Response code: {matches.Response.Code}. Response message: {matches.Response.Message}");
+                }
+                retryQueue.Add((xuid, start, count));
+            }
+
+            // Process retry queue after processing successful requests
+            foreach (var retryRequest in retryQueue)
+            {
+                await ProcessRetry(retryRequest, successfulMatches);
+            }
+
+            return successfulMatches;
+        }
+
+        private static async Task ProcessRetry((string xuid, int start, int count) retryRequest, List<Guid> successfulMatches)
+        {
+            var retryAttempts = 0;
+            HaloApiResultContainer<MatchHistoryResponse, RawResponseContainer> retryMatches;
+
+            do
+            {
+                retryMatches = await SafeAPICall(async () => await HaloClient.StatsGetMatchHistory($"xuid({retryRequest.xuid})", retryRequest.start, retryRequest.count, Den.Dev.Orion.Models.HaloInfinite.MatchType.All));
+
+                if (retryMatches.Response.Code == 200)
+                {
+                    successfulMatches.AddRange(retryMatches?.Result?.Results?.Select(item => item.MatchId) ?? Enumerable.Empty<Guid>());
+                    break; // Break the loop if successful
+                }
+                else
+                {
+                    // Log the failure again or handle it appropriately
+                    if (SettingsViewModel.Instance.EnableLogging)
+                    {
+                        Logger.Info($"Error getting match stats through the search endpoint. Retry index: {retryAttempts}. XUID: {retryRequest.xuid}, START: {retryRequest.start}, COUNT: {retryRequest.count}. Response code: {retryMatches.Response.Code}. Response message: {retryMatches.Response.Message}");
+                    }
+                    retryAttempts++;
+                }
+            } while (retryAttempts < 3); // Retry up to 3 times
+
+            if (retryAttempts == 3)
+            {
+                // Log or handle the failure after 3 attempts
+                if (SettingsViewModel.Instance.EnableLogging)
+                {
+                    Logger.Info($"Failed to retrieve matches after 3 attempts. XUID: {retryRequest.xuid}, START: {retryRequest.start}, COUNT: {retryRequest.count}");
+                }
+            }
         }
 
         internal static async Task<bool> ReAcquireTokens()

@@ -7,11 +7,11 @@ using System.Text.Json;
 
 namespace OpenSpartan.Workshop.Core
 {
-    internal class SettingsManager
+    internal sealed class SettingsManager
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        internal static WorkshopSettings LoadSettings()
+        internal static WorkshopSettings? LoadSettings()
         {
             try
             {
@@ -26,6 +26,8 @@ namespace OpenSpartan.Workshop.Core
 
         internal static bool StoreSettings(WorkshopSettings settings)
         {
+            ArgumentNullException.ThrowIfNull(settings);
+
             try
             {
                 if (settings != null)

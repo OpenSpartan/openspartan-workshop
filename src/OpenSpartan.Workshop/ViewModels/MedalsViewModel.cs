@@ -40,7 +40,7 @@ namespace OpenSpartan.Workshop.ViewModels
             NavigationRequested?.Invoke(this, parameter);
         }
 
-        public void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
+        public void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             OnPropertyChanged(propertyName);
         }

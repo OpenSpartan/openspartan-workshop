@@ -1,5 +1,6 @@
 ﻿using Microsoft.UI.Xaml.Data;
 using System;
+using System.Globalization;
 
 namespace OpenSpartan.Workshop.Converters
 {
@@ -8,7 +9,7 @@ namespace OpenSpartan.Workshop.Converters
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             TimeSpan interval = (TimeSpan)value;
-            return string.Format("{0:D2}d {1:D2}hr {2:D2}min {3:D2}sec", interval.Days, interval.Hours, interval.Minutes, interval.Seconds);
+            return string.Format(CultureInfo.InvariantCulture, "{0:D2}d {1:D2}hr {2:D2}min {3:D2}sec", interval.Days, interval.Hours, interval.Minutes, interval.Seconds);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

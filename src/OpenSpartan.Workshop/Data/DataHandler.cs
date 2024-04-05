@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -18,7 +17,7 @@ using System.Xml;
 
 namespace OpenSpartan.Workshop.Data
 {
-    internal sealed class DataHandler
+    internal static class DataHandler
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 

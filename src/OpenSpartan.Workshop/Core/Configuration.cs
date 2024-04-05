@@ -3,18 +3,19 @@ using System.IO;
 
 namespace OpenSpartan.Workshop.Core
 {
-    internal class Configuration
+    internal sealed class Configuration
     {
-        // Endpoints
+        // Endpoint metadata.
         internal const string SettingsEndpoint = "https://wokrshop.api.openspartan.com/clientsettings";
         internal const string HaloWaypointPlayerEndpoint = "https://www.halowaypoint.com/halo-infinite/players";
         internal const string HaloWaypointCsrImageEndpoint = "https://www.halowaypoint.com/images/halo-infinite/csr/";
 
         // Build-related metadata.
-        internal const string Version = "1.0.3";
-        internal const string BuildId = "ESCHARUM-03052024";
+        internal const string Version = "1.0.4";
+        internal const string BuildId = "URDIDACT-03112024";
         internal const string PackageName = "OpenSpartan.Workshop";
 
+        // Authentication and setting-related metadata.
         internal static readonly string[] Scopes = ["Xboxlive.signin", "Xboxlive.offline_access"];
         internal const string ClientID = "1079e683-7752-435a-aa4a-3cfdd700de82";
         internal const string CacheFileName = "authcache.bin";
@@ -24,7 +25,7 @@ namespace OpenSpartan.Workshop.Core
         // API-related default metadata.
         internal const string DefaultRelease = "1.6";
         internal const string DefaultAPIVersion = "1";
-        internal const string DefaultHeaderImage = "progression/Switcher/Season_Switcher_S6_CSIII.png";
+        internal const string DefaultHeaderImage = "progression/Switcher/Season_Switcher_S6_YAPII.png";
 
         // Rank markers used to download the rank images.
         internal static readonly string[] HaloInfiniteRanks =
