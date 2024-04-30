@@ -15,6 +15,7 @@ using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -1115,7 +1116,6 @@ namespace OpenSpartan.Workshop.Core
         internal static async Task<List<RewardMetaContainer>> ExtractInventoryRewards(int rank, int playerRank, IEnumerable<InventoryAmount> inventoryItems, bool isFree)
         {
             List<RewardMetaContainer> rewardContainers = new(inventoryItems.Count());
-            bool enableLogging = SettingsViewModel.Instance.EnableLogging;
             var semaphore = new SemaphoreSlim(Environment.ProcessorCount);
 
             async Task ProcessInventoryItem(InventoryAmount inventoryReward)
@@ -1139,11 +1139,11 @@ namespace OpenSpartan.Workshop.Core
 
                         if (container.ItemDetails != null)
                         {
-                            if (enableLogging) Logger.Info($"Trying to get local image for {container.ItemDetails.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
+                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Trying to get local image for {container.ItemDetails.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
 
                             if (await UpdateLocalImage("imagecache", container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path).ConfigureAwait(false))
                             {
-                                if (enableLogging) Logger.Info($"Stored local image: {container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path}");
+                                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored local image: {container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path}");
                             }
                             else
                             {
@@ -1161,11 +1161,11 @@ namespace OpenSpartan.Workshop.Core
 
                         if (item != null && item.Result != null)
                         {
-                            if (enableLogging) Logger.Info($"Trying to get local image for {item.Result.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
+                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Trying to get local image for {item.Result.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
 
                             if (await UpdateLocalImage("imagecache", item.Result.CommonData.DisplayPath.Media.MediaUrl.Path).ConfigureAwait(false))
                             {
-                                if (enableLogging) Logger.Info($"Stored local image: {item.Result.CommonData.DisplayPath.Media.MediaUrl.Path}");
+                                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored local image: {item.Result.CommonData.DisplayPath.Media.MediaUrl.Path}");
                             }
                             else
                             {
@@ -1270,6 +1270,11 @@ namespace OpenSpartan.Workshop.Core
 
                 if (instantiationResult)
                 {
+                    if (string.IsNullOrWhiteSpace(HaloClient.ClearanceToken))
+                    {
+                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"The clearance is empty, so many API calls that depend on it may fail.");
+                    }
+
                     HomeViewModel.Instance.Gamertag = XboxUserContext.DisplayClaims.Xui[0].Gamertag;
                     HomeViewModel.Instance.Xuid = XboxUserContext.DisplayClaims.Xui[0].XUID;
 
