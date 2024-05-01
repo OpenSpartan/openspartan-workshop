@@ -80,6 +80,57 @@ namespace OpenSpartan.Workshop.ViewModels
             }
         }
 
+        public string Sandbox
+        {
+            get
+            {
+                return Settings.Sandbox;
+            }
+            set
+            {
+                if (Settings.Sandbox != value)
+                {
+                    Settings.Sandbox = value;
+                    SettingsManager.StoreSettings(Settings);
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public string Build
+        {
+            get
+            {
+                return Settings.Build;
+            }
+            set
+            {
+                if (Settings.Build != value)
+                {
+                    Settings.Build = value;
+                    SettingsManager.StoreSettings(Settings);
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public bool UseObanClearance
+        {
+            get
+            {
+                return Settings.UseObanClearance;
+            }
+            set
+            {
+                if (Settings.UseObanClearance != value)
+                {
+                    Settings.UseObanClearance = value;
+                    SettingsManager.StoreSettings(Settings);
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
         public WorkshopSettings Settings
         {
             get => _settings;

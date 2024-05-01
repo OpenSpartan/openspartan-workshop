@@ -23,9 +23,11 @@ namespace OpenSpartan.Workshop.Core
         internal static readonly string AppDataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), PackageName);
 
         // API-related default metadata.
-        internal const string DefaultRelease = "1.6";
+        internal const string DefaultRelease = "1.7";
         internal const string DefaultAPIVersion = "1";
-        internal const string DefaultHeaderImage = "progression/Switcher/Season_Switcher_S6_YAPII.png";
+        internal const string DefaultHeaderImage = "progression/Switcher/Season_Switcher_S7_BH.png";
+        internal const string DefaultSandbox = "UNUSED";
+        internal const string DefaultBuild = "257116.24.04.18.1334-2";
 
         // Rank markers used to download the rank images.
         internal static readonly string[] HaloInfiniteRanks =

@@ -12,6 +12,9 @@ namespace OpenSpartan.Workshop.Models
         private string _apiVersion;
         private string _headerImagePath;
         private bool _useBroker;
+        private string _sandbox;
+        private string _build;
+        private bool _useObanClearance;
 
         [JsonPropertyName("release")]
         public string Release
@@ -92,6 +95,48 @@ namespace OpenSpartan.Workshop.Models
                 if (_useBroker != value)
                 {
                     _useBroker = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        [JsonPropertyName("sandbox")]
+        public string Sandbox
+        {
+            get => _sandbox;
+            set
+            {
+                if (_sandbox != value)
+                {
+                    _sandbox = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        [JsonPropertyName("build")]
+        public string Build
+        {
+            get => _build;
+            set
+            {
+                if (_build != value)
+                {
+                    _build = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        [JsonPropertyName("useObanClearance")]
+        public bool UseObanClearance
+        {
+            get => _useObanClearance;
+            set
+            {
+                if (_useObanClearance != value)
+                {
+                    _useObanClearance = value;
                     NotifyPropertyChanged();
                 }
             }

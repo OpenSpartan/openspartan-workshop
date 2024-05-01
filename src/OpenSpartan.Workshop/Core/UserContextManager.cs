@@ -15,7 +15,6 @@ using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -216,15 +215,23 @@ namespace OpenSpartan.Workshop.Core
 
                 HaloClient = new(haloToken.Token, extendedTicket.DisplayClaims.Xui[0].XUID, userAgent: $"{Configuration.PackageName}/{Configuration.Version}-{Configuration.BuildId}");
 
-                string localClearance = string.Empty;
                 Task.Run(async () =>
                 {
-                    var clearance = (await SafeAPICall(async () => { return await HaloClient.SettingsActiveClearance(SettingsViewModel.Instance.Settings.Release); })).Result;
-                    if (clearance != null)
+                    PlayerClearance? clearance = null;
+
+                    if (SettingsViewModel.Instance.Settings.UseObanClearance)
                     {
-                        localClearance = clearance.FlightConfigurationId;
-                        HaloClient.ClearanceToken = localClearance;
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Your clearance is {localClearance} and it's set in the client.");
+                        clearance = (await SafeAPICall(async () => { return await HaloClient.SettingsActiveFlight(SettingsViewModel.Instance.Settings.Sandbox, SettingsViewModel.Instance.Settings.Build, SettingsViewModel.Instance.Settings.Release); })).Result;
+                    }
+                    else
+                    {
+                        clearance = (await SafeAPICall(async () => { return await HaloClient.SettingsActiveClearance(SettingsViewModel.Instance.Settings.Release); })).Result;
+                    }
+
+                    if (clearance != null && !string.IsNullOrWhiteSpace(clearance.FlightConfigurationId))
+                    {
+                        HaloClient.ClearanceToken = clearance.FlightConfigurationId;
+                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Your clearance is {clearance.FlightConfigurationId} and it's set in the client.");
                     }
                     else
                     {
@@ -1103,6 +1110,7 @@ namespace OpenSpartan.Workshop.Core
                 "rerollcurrency" => "progression/Currencies/1104-000-data-pad-e39bef84-2x2.png",
                 "xb" => "progression/Currencies/1103-000-xp-boost-5e92621a-2x2.png",
                 "cr" => "progression/Currencies/Credit_Coin-SM.png",
+                "softcurrency" => "progression/StoreContent/ToggleTiles/SpartanPoints_Common_4x4.png",
                 _ => string.Empty,
             };
         }

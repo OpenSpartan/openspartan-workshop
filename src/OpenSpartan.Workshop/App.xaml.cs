@@ -52,10 +52,11 @@ namespace OpenSpartan.Workshop
                         var settings = await UserContextManager.GetWorkshopSettings();
                         if (settings != null)
                         {
-                            // For now, we only have two settings that are returned by the API, so
-                            // no need to overwrite the entire object.
                             SettingsViewModel.Instance.Settings.Release = settings.Release;
                             SettingsViewModel.Instance.Settings.HeaderImagePath = settings.HeaderImagePath;
+                            SettingsViewModel.Instance.Settings.Build = settings.Build;
+                            SettingsViewModel.Instance.Settings.Sandbox = settings.Sandbox;
+                            SettingsViewModel.Instance.Settings.UseObanClearance = settings.UseObanClearance;
                         }    
                     }
                     catch (Exception ex)
@@ -71,9 +72,12 @@ namespace OpenSpartan.Workshop
                     APIVersion = Configuration.DefaultAPIVersion,
                     HeaderImagePath = Configuration.DefaultHeaderImage,
                     Release = Configuration.DefaultRelease,
+                    Sandbox = Configuration.DefaultSandbox,
+                    Build = Configuration.DefaultBuild,
                     SyncSettings = true,
                     EnableLogging = false,
                     UseBroker = true,
+                    UseObanClearance = false,
                 };
             }
         }

@@ -46,15 +46,18 @@
 		<Content Include="Assets\Wide310x150Logo.scale-200.png" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
+		<PackageReference Include="CommunityToolkit.WinUI.Collections" Version="8.0.240109" />
+		<PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.0.240109" />
+		<PackageReference Include="CommunityToolkit.WinUI.Converters" Version="8.0.240109" />
+		<PackageReference Include="CommunityToolkit.WinUI.UI.Controls.DataGrid" Version="7.1.2" />
 		<PackageReference Include="Den.Dev.Orion" Version="1.0.52" />
-		<PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.3" />
-		<PackageReference Include="Microsoft.Identity.Client" Version="4.60.1" />
-		<PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="4.60.1" />
-		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.240311000" />
+		<PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.4" />
+		<PackageReference Include="Microsoft.Identity.Client" Version="4.60.3" />
+		<PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="4.60.3" />
+		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.240404000" />
 		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.3233" />
-		<PackageReference Include="NLog" Version="5.2.8" />
-		<PackageReference Include="SkiaSharp" Version="2.88.7" />
+		<PackageReference Include="NLog" Version="5.3.1" />
+		<PackageReference Include="SkiaSharp" Version="2.88.8" />
 		<PackageReference Include="System.Net.Http" Version="4.3.4" />
 		<PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
 		<Manifest Include="$(ApplicationManifest)" />

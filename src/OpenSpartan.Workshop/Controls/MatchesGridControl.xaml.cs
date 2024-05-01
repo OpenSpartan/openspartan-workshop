@@ -1,10 +1,8 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using CommunityToolkit.WinUI.UI.Controls;
 using System.Collections;
 using OpenSpartan.Workshop.Core;
-using System;
-using Microsoft.UI.Xaml.Media;
+using CommunityToolkit.WinUI.UI.Controls;
 
 namespace OpenSpartan.Workshop.Controls
 {

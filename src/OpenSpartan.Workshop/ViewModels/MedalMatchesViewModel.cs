@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.WinUI;
+﻿using CommunityToolkit.WinUI.Collections;
 using Den.Dev.Orion.Models.HaloInfinite;
 using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Data;

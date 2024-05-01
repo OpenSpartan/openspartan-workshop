@@ -8,6 +8,7 @@
     mc:Ignorable="d"
     NavigationCacheMode="Enabled"
     xmlns:viewmodels="using:OpenSpartan.Workshop.ViewModels"
+    xmlns:winui="using:CommunityToolkit.WinUI.Controls"
     DataContext="{x:Bind viewmodels:SettingsViewModel.Instance}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
@@ -29,91 +30,89 @@
         </Grid>
 
         <StackPanel Margin="24,12,24,0" Grid.Row="1">
+            <StackPanel Margin="0,12,0,0">
+                <winui:SettingsExpander Header="Application Details" Description="Details about this version of OpenSpartan Workshop.">
+                    <winui:SettingsExpander.HeaderIcon>
+                        <FontIcon FontSize="14" Glyph="&#xE783;"/>
+                    </winui:SettingsExpander.HeaderIcon>
+                    
+                    <winui:SettingsExpander.Items>
+                        <winui:SettingsCard Header="Release Name" Description="OpenSpartan Workshop"></winui:SettingsCard>
+                        <winui:SettingsCard Header="Version" Description="{Binding Version}"></winui:SettingsCard>
+                    </winui:SettingsExpander.Items>
+                </winui:SettingsExpander>
+                
+                <winui:SettingsExpander Header="User Details" Description="Information about the user authenticated to OpenSpartan Workshop.">
+                    <winui:SettingsExpander.HeaderIcon>
+                        <FontIcon FontSize="14" Glyph="&#xE716;"/>
+                    </winui:SettingsExpander.HeaderIcon>
+
+                    <Button Width="100" x:Name="btnLogOut" Click="btnLogOut_Click">Log Out</Button>
+
+                    <winui:SettingsExpander.Items>
+                        <winui:SettingsCard Header="Gamertag" Description="{Binding Gamertag}"></winui:SettingsCard>
+                        <winui:SettingsCard Header="XUID" Description="{Binding Xuid}"></winui:SettingsCard>
+                    </winui:SettingsExpander.Items>
+                </winui:SettingsExpander>
+
+                <winui:SettingsCard Header="Data Files" Description="Open Windows Explorer to the location where the local database is stored.">
+                    <winui:SettingsCard.HeaderIcon>
+                        <FontIcon FontSize="14" Glyph="&#xEC50;"/>
+                    </winui:SettingsCard.HeaderIcon>
+
+                    <Button Width="100" x:Name="btnViewFiles" Click="btnViewFiles_Click">View Files</Button>
+                </winui:SettingsCard>
+
+                <winui:SettingsCard Header="Logging" Description="Determines whether local logs are generated for diagnostics.">
+                    <winui:SettingsCard.HeaderIcon>
+                        <FontIcon FontSize="14" Glyph="&#xECC6;"/>
+                    </winui:SettingsCard.HeaderIcon>
+
+                    <ToggleSwitch IsOn="{Binding EnableLogging, Mode=TwoWay}"></ToggleSwitch>
+                </winui:SettingsCard>
+
+                <winui:SettingsCard Header="Authentication Broker" Description="Allows you to choose whether you want to use native authentication controls or a web browser.">
+                    <winui:SettingsCard.HeaderIcon>
+                        <FontIcon FontSize="14" Glyph="&#xE72E;"/>
+                    </winui:SettingsCard.HeaderIcon>
+
+                    <ToggleSwitch IsOn="{Binding UseBroker, Mode=TwoWay}"></ToggleSwitch>
+                </winui:SettingsCard>
+
+                <winui:SettingsExpander Header="Sync Settings" Description="Get basic metadata through the OpenSpartan Workshop API or specify it directly.">
+                    <winui:SettingsExpander.HeaderIcon>
+                        <FontIcon FontSize="14" Glyph="&#xE895;"/>
+                    </winui:SettingsExpander.HeaderIcon>
+
+                    <ToggleSwitch IsOn="{Binding SyncSettings, Mode=TwoWay}"></ToggleSwitch>
+
+                    <winui:SettingsExpander.Items>
+                        <winui:SettingsCard Header="Release" Description="Halo Infinite release identifier for which clearance is obtained.">
+                            <TextBox Width="320" Text="{Binding Release, Mode=TwoWay}" IsEnabled="{Binding SyncSettings, Converter={StaticResource BoolNegativeConverter}}"></TextBox>
+                        </winui:SettingsCard>
+                        <winui:SettingsCard Header="Build" Description="Halo Infinite build identifier for which clearance is obtained.">
+                            <TextBox Width="320" Text="{Binding Build, Mode=TwoWay}" IsEnabled="{Binding SyncSettings, Converter={StaticResource BoolNegativeConverter}}"></TextBox>
+                        </winui:SettingsCard>
+                        <winui:SettingsCard Header="Sandbox" Description="Halo Infinite sandbox identifier for which clearance is obtained.">
+                            <TextBox Width="320" Text="{Binding Sandbox, Mode=TwoWay}" IsEnabled="{Binding SyncSettings, Converter={StaticResource BoolNegativeConverter}}"></TextBox>
+                        </winui:SettingsCard>
+                        <winui:SettingsCard Header="Use OBAN Clearance Endpoint" Description="Determines the endpoint to get the player clearance. OBAN endpoint is used by the game itself.">
+                            <ToggleSwitch Width="320" IsOn="{Binding UseObanClearance, Mode=TwoWay}" IsEnabled="{Binding SyncSettings, Converter={StaticResource BoolNegativeConverter}}"></ToggleSwitch>
+                        </winui:SettingsCard>
+                    </winui:SettingsExpander.Items>
+                </winui:SettingsExpander>
+            </StackPanel>
+
             <!--Application details-->
-            <StackPanel>
-                <TextBlock Text="Application Details" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
+            <StackPanel Margin="12,12,0,0">
+                <TextBlock Text="Feedback" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
                 <StackPanel Margin="0,4,0,0">
-                    <TextBlock>OpenSpartan Workshop</TextBlock>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock>Version:</TextBlock>
-                        <TextBlock Margin="4,0,0,0" Text="{Binding Version}"></TextBlock>
-                    </StackPanel>
                     <TextBlock>Report issues or request features <Hyperlink NavigateUri="https://github.com/OpenSpartan/openspartan-workshop/issues" x:Name="lnkGitHub">on GitHub</Hyperlink>.</TextBlock>
                     <TextBlock>Built with ❤️ by <Hyperlink NavigateUri="https://den.dev">Den Delimarsky</Hyperlink> as an unofficial Halo Infinite companion app.</TextBlock>
                 </StackPanel>
             </StackPanel>
-
-            <!--Application details-->
-            <StackPanel Margin="0,12,0,0">
-                <TextBlock Text="User Details" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
-
-                <InfoBar IsClosable="False" Margin="0,4,0,4" IsOpen="True" Width="400" HorizontalAlignment="Left" Severity="Warning" Message="Logging out does not delete your existing data."></InfoBar>
-                
-                <StackPanel Margin="0,4,0,0">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="100"></ColumnDefinition>
-                            <ColumnDefinition Width="200"></ColumnDefinition>
-                        </Grid.ColumnDefinitions>
-
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="24"></RowDefinition>
-                            <RowDefinition Height="24"></RowDefinition>
-                        </Grid.RowDefinitions>
-
-                        <TextBlock>Gamertag:</TextBlock>
-                        <TextBlock Margin="4,0,0,0" Text="{Binding Gamertag}" Grid.Column="1"></TextBlock>
-
-                        <TextBlock Grid.Row="1">XUID:</TextBlock>
-                        <TextBlock Margin="4,0,0,0" Text="{Binding Xuid}" Grid.Row="1" Grid.Column="1"></TextBlock>
-                    </Grid>
-
-                    <Button Margin="0,8,0,0" Width="100" x:Name="btnLogOut" Click="btnLogOut_Click">Log Out</Button>
-                </StackPanel>
-            </StackPanel>
-
-            <!--Data details-->
-            <StackPanel Margin="0,12,0,0">
-                <TextBlock Text="Data" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
-                <Button Margin="0,8,0,0" Width="100" x:Name="btnViewFiles" Click="btnViewFiles_Click">View Files</Button>
-            </StackPanel>
-
-            <!--Logging-->
-            <StackPanel Margin="0,12,0,0">
-                <TextBlock Text="Logging" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
-                <InfoBar IsClosable="False" Margin="0,4,0,4" IsOpen="True" Width="400" HorizontalAlignment="Left" Severity="Informational" Message="Logging is only needed for diagnostic purposes. It's generally OK to leave this off."></InfoBar>
-                <RadioButton IsChecked="{Binding EnableLogging, Mode=TwoWay}">Logging is enabled</RadioButton>
-                <RadioButton IsChecked="{Binding EnableLogging, Converter={StaticResource BoolNegativeConverter}, Mode=TwoWay}">Logging is disabled</RadioButton>
-            </StackPanel>
-
-            <!--API Settings-->
-            <StackPanel Margin="0,12,0,0">
-                <TextBlock Text="API Settings" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
-
-                <InfoBar IsClosable="False"  Margin="0,4,0,4" IsOpen="True" Width="400" HorizontalAlignment="Left" Severity="Warning" Message="Make sure you know what you're doing. Setting bad values may result in failure to acquire new data."></InfoBar>
-
-                <StackPanel Margin="0,4,0,0">
-                    <RadioButton IsChecked="{Binding SyncSettings, Mode=TwoWay}">Sync with OpenSpartan Workshop API settings</RadioButton>
-                    <RadioButton IsChecked="{Binding SyncSettings, Converter={StaticResource BoolNegativeConverter}, Mode=TwoWay}">Set directly</RadioButton>
-
-                    <Grid Margin="0,8,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="100"></ColumnDefinition>
-                            <ColumnDefinition Width="200"></ColumnDefinition>
-                        </Grid.ColumnDefinitions>
-
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="40"></RowDefinition>
-                        </Grid.RowDefinitions>
-
-                        <TextBlock VerticalAlignment="Center" Grid.Column="0" Grid.Row="0" Foreground="{Binding SyncSettings, Converter={StaticResource BoolToDisabledBrushConverter}}">Release:</TextBlock>
-
-                        <TextBox VerticalAlignment="Center" Grid.Column="1" Grid.Row="0" Width="320" Margin="4,0,0,0" Text="{Binding Release, Mode=TwoWay}" IsEnabled="{Binding SyncSettings, Converter={StaticResource BoolNegativeConverter}}"></TextBox>
-                    </Grid>
-                </StackPanel>
-            </StackPanel>
-
-            <StackPanel Margin="0,12,0,0">
+            
+            <StackPanel Margin="12,12,0,0">
                 <TextBlock Text="Disclaimers" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
                 <TextBlock>This application is not an official Halo Infinite client. Use at your own risk.</TextBlock>
                 <TextBlock>The author of this application is not liable for any damages, including the termination or banning of Xbox Live/Microsoft accounts.</TextBlock>

@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="using:OpenSpartan.Workshop.Models"
     xmlns:converters="using:OpenSpartan.Workshop.Converters"
-    xmlns:winuiconverters="using:CommunityToolkit.WinUI.UI.Converters"
+    xmlns:winuiconverters="using:CommunityToolkit.WinUI.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
     xmlns:localcontrols="using:OpenSpartan.Workshop.Controls"
