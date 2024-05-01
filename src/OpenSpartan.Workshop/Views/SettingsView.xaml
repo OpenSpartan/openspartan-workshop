@@ -30,8 +30,7 @@
         </Grid>
 
         <StackPanel Margin="24,12,24,0" Grid.Row="1">
-            <StackPanel Margin="0,12,0,0">
-                <winui:SettingsExpander Header="Application Details" Description="Details about this version of OpenSpartan Workshop.">
+            <winui:SettingsExpander Header="Application Details" Description="Details about this version of OpenSpartan Workshop.">
                     <winui:SettingsExpander.HeaderIcon>
                         <FontIcon FontSize="14" Glyph="&#xE783;"/>
                     </winui:SettingsExpander.HeaderIcon>
@@ -79,29 +78,28 @@
                     <ToggleSwitch IsOn="{Binding UseBroker, Mode=TwoWay}"></ToggleSwitch>
                 </winui:SettingsCard>
 
-                <winui:SettingsExpander Header="Sync Settings" Description="Get basic metadata through the OpenSpartan Workshop API or specify it directly.">
-                    <winui:SettingsExpander.HeaderIcon>
-                        <FontIcon FontSize="14" Glyph="&#xE895;"/>
-                    </winui:SettingsExpander.HeaderIcon>
+            <winui:SettingsExpander Header="Sync Settings" Description="Get basic metadata through the OpenSpartan Workshop API or specify it directly.">
+                <winui:SettingsExpander.HeaderIcon>
+                    <FontIcon FontSize="14" Glyph="&#xE895;"/>
+                </winui:SettingsExpander.HeaderIcon>
 
-                    <ToggleSwitch IsOn="{Binding SyncSettings, Mode=TwoWay}"></ToggleSwitch>
+                <ToggleSwitch IsOn="{Binding SyncSettings, Mode=TwoWay}"></ToggleSwitch>
 
-                    <winui:SettingsExpander.Items>
-                        <winui:SettingsCard Header="Release" Description="Halo Infinite release identifier for which clearance is obtained.">
-                            <TextBox Width="320" Text="{Binding Release, Mode=TwoWay}" IsEnabled="{Binding SyncSettings, Converter={StaticResource BoolNegativeConverter}}"></TextBox>
-                        </winui:SettingsCard>
-                        <winui:SettingsCard Header="Build" Description="Halo Infinite build identifier for which clearance is obtained.">
-                            <TextBox Width="320" Text="{Binding Build, Mode=TwoWay}" IsEnabled="{Binding SyncSettings, Converter={StaticResource BoolNegativeConverter}}"></TextBox>
-                        </winui:SettingsCard>
-                        <winui:SettingsCard Header="Sandbox" Description="Halo Infinite sandbox identifier for which clearance is obtained.">
-                            <TextBox Width="320" Text="{Binding Sandbox, Mode=TwoWay}" IsEnabled="{Binding SyncSettings, Converter={StaticResource BoolNegativeConverter}}"></TextBox>
-                        </winui:SettingsCard>
-                        <winui:SettingsCard Header="Use OBAN Clearance Endpoint" Description="Determines the endpoint to get the player clearance. OBAN endpoint is used by the game itself.">
-                            <ToggleSwitch Width="320" IsOn="{Binding UseObanClearance, Mode=TwoWay}" IsEnabled="{Binding SyncSettings, Converter={StaticResource BoolNegativeConverter}}"></ToggleSwitch>
-                        </winui:SettingsCard>
-                    </winui:SettingsExpander.Items>
-                </winui:SettingsExpander>
-            </StackPanel>
+                <winui:SettingsExpander.Items>
+                    <winui:SettingsCard Header="Release" Description="Halo Infinite release identifier for which clearance is obtained.">
+                        <TextBox Width="320" Text="{Binding Release, Mode=TwoWay}" IsEnabled="{Binding SyncSettings, Converter={StaticResource BoolNegativeConverter}}"></TextBox>
+                    </winui:SettingsCard>
+                    <winui:SettingsCard Header="Build" Description="Halo Infinite build identifier for which clearance is obtained.">
+                        <TextBox Width="320" Text="{Binding Build, Mode=TwoWay}" IsEnabled="{Binding SyncSettings, Converter={StaticResource BoolNegativeConverter}}"></TextBox>
+                    </winui:SettingsCard>
+                    <winui:SettingsCard Header="Sandbox" Description="Halo Infinite sandbox identifier for which clearance is obtained.">
+                        <TextBox Width="320" Text="{Binding Sandbox, Mode=TwoWay}" IsEnabled="{Binding SyncSettings, Converter={StaticResource BoolNegativeConverter}}"></TextBox>
+                    </winui:SettingsCard>
+                    <winui:SettingsCard Header="Use OBAN Clearance Endpoint" Description="Determines the endpoint to get the player clearance. OBAN endpoint is used by the game itself.">
+                        <ToggleSwitch Width="320" IsOn="{Binding UseObanClearance, Mode=TwoWay}" IsEnabled="{Binding SyncSettings, Converter={StaticResource BoolNegativeConverter}}"></ToggleSwitch>
+                    </winui:SettingsCard>
+                </winui:SettingsExpander.Items>
+            </winui:SettingsExpander>
 
             <!--Application details-->
             <StackPanel Margin="12,12,0,0">
