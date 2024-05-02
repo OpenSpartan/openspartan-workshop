@@ -976,6 +976,14 @@ namespace OpenSpartan.Workshop.Core
             })).Result;
         }
 
+        public static async Task<SeasonCalendar?> GetSeasonCalendar()
+        {
+            return (await SafeAPICall(async () =>
+            {
+                return await HaloClient.GameCmsGetSeasonCalendar();
+            })).Result;
+        }
+
         public static async Task<CurrencyDefinition?> GetInGameCurrency(string currencyId)
         {
             return (await SafeAPICall(async () =>
@@ -988,15 +996,33 @@ namespace OpenSpartan.Workshop.Core
         {
             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.BattlePassLoadingState = MetadataLoadingState.Loading);
 
+            // First, we get the raw season calendar to get the list of all available events that
+            // were registered in the Halo Infinite API.
+            var seasonCalendar = await GetSeasonCalendar();
+
+            // Once the season calendar is obtained, we want to capture the metadata for every
+            // single season entry. Events can be populated directly as part of the battle pass query
+            // down the line.
+            Dictionary<string, SeasonRewardTrack>? seasonRewardTracks = await GetSeasonRewardTrackMetadata(seasonCalendar);
+
+            // Then, we get the operations that are available for a given player. This is slightly
+            // different than the data in the season calendar, so we need both. If no player operations are
+            // returned, we can abort.
             var operations = await GetOperations();
             if (operations == null) return false;
 
+            // Let's get the data for each of the operations.
             foreach (var operation in operations.OperationRewardTracks)
             {
+                // Tell the user that the operations are currently being loaded by changing the
+                // loading parameter to the reward track path.
                 cancellationToken.ThrowIfCancellationRequested();
                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.BattlePassLoadingParameter = operation.RewardTrackPath);
 
-                var compoundEvent = new OperationCompoundModel { RewardTrack = operation };
+                // We can now also pull the metadata from the previously declared
+                // calendar container.
+                var compoundEvent = new OperationCompoundModel { RewardTrack = operation, SeasonRewardTrack = seasonRewardTracks.GetValueOrDefault(operation.RewardTrackPath) };
+
                 var isRewardTrackAvailable = DataHandler.IsOperationRewardTrackAvailable(operation.RewardTrackPath);
 
                 if (isRewardTrackAvailable)
@@ -1025,6 +1051,42 @@ namespace OpenSpartan.Workshop.Core
             }
 
             return true;
+        }
+
+        private static async Task<Dictionary<string, SeasonRewardTrack>?> GetSeasonRewardTrackMetadata(SeasonCalendar? seasonCalendar)
+        {
+            if (seasonCalendar == null || seasonCalendar.Seasons == null || seasonCalendar.Seasons.Count == 0)
+                return null;
+
+            var seasonRewardTracks = new Dictionary<string, SeasonRewardTrack>();
+
+            foreach (var season in seasonCalendar.Seasons)
+            {
+                if (string.IsNullOrWhiteSpace(season.SeasonMetadata) || string.IsNullOrWhiteSpace(season.OperationTrackPath))
+                    continue;
+
+                var result = await SafeAPICall(async () =>
+                    await HaloClient.GameCmsGetSeasonRewardTrack(season.SeasonMetadata, HaloClient.ClearanceToken)
+                );
+
+                if (result?.Result != null)
+                {
+                    seasonRewardTracks.Add(season.OperationTrackPath, result.Result);
+
+                    // If we have the metadata, let's also make sure that we download the relevant images.
+                    await UpdateLocalImage("imagecache", result.Result.SummaryBackgroundPath);
+                    await UpdateLocalImage("imagecache", result.Result.BattlePassSeasonUpsellBackgroundImage);
+                    await UpdateLocalImage("imagecache", result.Result.ChallengesBackgroundPath);
+                    await UpdateLocalImage("imagecache", result.Result.BattlePassLogoImage);
+                    await UpdateLocalImage("imagecache", result.Result.SeasonLogoImage);
+                    await UpdateLocalImage("imagecache", result.Result.RitualLogoImage);
+                    await UpdateLocalImage("imagecache", result.Result.StorefrontBackgroundImage);
+                    await UpdateLocalImage("imagecache", result.Result.CardBackgroundImage);
+                    await UpdateLocalImage("imagecache", result.Result.ProgressionBackgroundImage);
+                }
+            }
+
+            return seasonRewardTracks.Count > 0 ? seasonRewardTracks : null;
         }
 
         internal static async Task<bool> PopulateUserInventory()
@@ -1209,6 +1271,8 @@ namespace OpenSpartan.Workshop.Core
 
         internal static async Task<bool> UpdateLocalImage(string subDirectoryName, string imagePath)
         {
+            if (string.IsNullOrWhiteSpace(imagePath))
+                return false;
 
             string qualifiedImagePath = Path.Join(Configuration.AppDataDirectory, subDirectoryName, imagePath);
 

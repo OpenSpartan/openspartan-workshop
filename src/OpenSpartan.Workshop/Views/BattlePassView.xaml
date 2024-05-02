@@ -15,7 +15,9 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="64"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
-            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="64"></RowDefinition>
+            <RowDefinition Height="500"></RowDefinition>
+            <RowDefinition Height="64"></RowDefinition>
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0" Margin="24,24,0,0">
@@ -39,7 +41,9 @@
             <TextBlock Grid.Column="1" Text="{Binding BattlePassLoadingString}" VerticalAlignment="Center"></TextBlock>
         </Grid>
 
-        <NavigationView ItemInvoked="nvBattlePassDetails_ItemInvoked" Name="nvBattlePassDetails" MenuItemsSource="{Binding BattlePasses}" Grid.Row="2" Margin="4" PaneDisplayMode="Top" IsSettingsVisible="False" IsBackButtonVisible="Collapsed" IsBackEnabled="False">
+        <TextBlock Margin="24,24,0,0" Grid.Row="2" Text="Seasons" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
+        
+        <NavigationView ItemInvoked="nvBattlePassDetails_ItemInvoked" Name="nvBattlePassDetails" MenuItemsSource="{Binding BattlePasses}" Grid.Row="3" Margin="4" PaneDisplayMode="Top" IsSettingsVisible="False" IsBackButtonVisible="Collapsed" IsBackEnabled="False">
             <NavigationView.MenuItemTemplate>
                 <DataTemplate>
                     <NavigationViewItem Content="{Binding RewardTrackMetadata.Name.Value}" Tag="{Binding RewardTrack.RewardTrackPath}"/>
@@ -48,5 +52,7 @@
 
             <Frame x:Name="ContentFrame" Background="#202020"/>
         </NavigationView>
+
+        <TextBlock Margin="24,24,0,0" Grid.Row="4" Text="Events" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
     </Grid>
 </Page>

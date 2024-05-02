@@ -7,14 +7,35 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     NavigationCacheMode="Enabled"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    xmlns:converters="using:OpenSpartan.Workshop.Converters">
 
     <Page.Resources>
         <CollectionViewSource x:Key="cvsBattlePassItems" IsSourceGrouped="True" Source="{Binding Rewards}"/>
+        <converters:ServicePathToLocalPathConverter x:Key="ServicePathToLocalPathConverter"></converters:ServicePathToLocalPathConverter>
     </Page.Resources>
 
     <Grid>
-        <GridView Margin="24,0,8,0" Tag="{Binding Path=Key, Source={StaticResource cvsBattlePassItems}}" ManipulationMode="System" x:Name="grdBattlePassDetails" ItemsSource="{Binding Source={StaticResource cvsBattlePassItems}}" ScrollViewer.HorizontalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollMode="Enabled" ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.VerticalScrollMode="Disabled">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="80"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+
+        <Grid Margin="24,0,8,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+
+            <Image Source="{Binding SeasonRewardTrack.SeasonLogoImage, Converter={StaticResource ServicePathToLocalPathConverter}}"></Image>
+            
+            <StackPanel Grid.Column="1">
+                <TextBlock Text="{Binding SeasonRewardTrack.Description.Value}"></TextBlock>
+                <TextBlock Text="{Binding SeasonRewardTrack.DateRange.Value}"></TextBlock>
+            </StackPanel>
+        </Grid>
+        
+        <GridView Grid.Row="1" Margin="24,0,8,0" Tag="{Binding Path=Key, Source={StaticResource cvsBattlePassItems}}" ManipulationMode="System" x:Name="grdBattlePassDetails" ItemsSource="{Binding Source={StaticResource cvsBattlePassItems}}" ScrollViewer.HorizontalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollMode="Enabled" ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.VerticalScrollMode="Disabled">
             <GridView.ItemTemplate>
                 <DataTemplate>
                     <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
@@ -24,11 +45,6 @@
                         </Grid.RowDefinitions>
 
                         <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"></ColumnDefinition>
-                                <ColumnDefinition Width="64"></ColumnDefinition>
-                            </Grid.ColumnDefinitions>
-
                             <TextBlock Text="{Binding ItemDetails.CommonData.Title.Value}" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
                         </Grid>
 
