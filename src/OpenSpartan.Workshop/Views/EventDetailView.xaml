@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Page
-    x:Class="OpenSpartan.Workshop.Views.BattlePassDetailView"
+    x:Class="OpenSpartan.Workshop.Views.EventDetailView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:OpenSpartan.Workshop.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:converters="using:OpenSpartan.Workshop.Converters"
     mc:Ignorable="d"
-    NavigationCacheMode="Enabled"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
-    xmlns:converters="using:OpenSpartan.Workshop.Converters">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Page.Resources>
-        <CollectionViewSource x:Key="cvsBattlePassItems" IsSourceGrouped="True" Source="{Binding Rewards}"/>
+        <CollectionViewSource x:Key="cvsEventItems" IsSourceGrouped="True" Source="{Binding Rewards}"/>
         <converters:ServicePathToLocalPathConverter x:Key="ServicePathToLocalPathConverter"></converters:ServicePathToLocalPathConverter>
     </Page.Resources>
 
@@ -23,24 +23,20 @@
 
         <Grid Margin="24,8,0,0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="100"></ColumnDefinition>
-                <ColumnDefinition Width="400"></ColumnDefinition>
+                <ColumnDefinition Width="500"></ColumnDefinition>
             </Grid.ColumnDefinitions>
 
             <Grid Grid.ColumnSpan="2" CornerRadius="4">
-                <Image VerticalAlignment="Center" Stretch="UniformToFill" Source="{Binding SeasonRewardTrack.CardBackgroundImage, Converter={StaticResource ServicePathToLocalPathConverter}}"></Image>
+                <Image VerticalAlignment="Center" Stretch="UniformToFill" Source="{Binding RewardTrackMetadata.SummaryImagePath, Converter={StaticResource ServicePathToLocalPathConverter}}"></Image>
                 <Rectangle Fill="Black" Stretch="Fill" Opacity=".6"></Rectangle>
             </Grid>
-            
-            <Image Margin="12" Source="{Binding SeasonRewardTrack.SeasonLogoImage, Converter={StaticResource ServicePathToLocalPathConverter}}"></Image>
-            
-            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,12,0">
-                <TextBlock Text="{Binding SeasonRewardTrack.Description.Value}" TextWrapping="Wrap"></TextBlock>
-                <TextBlock Text="{Binding SeasonRewardTrack.DateRange.Value}" FontWeight="Bold"></TextBlock>
+
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="24,0,12,0">
+                <TextBlock Text="{Binding RewardTrackMetadata.DateRange.Value}" FontWeight="Bold"></TextBlock>
             </StackPanel>
         </Grid>
-        
-        <GridView Grid.Row="1" Margin="24,0,8,0" Tag="{Binding Path=Key, Source={StaticResource cvsBattlePassItems}}" ManipulationMode="System" x:Name="grdBattlePassDetails" ItemsSource="{Binding Source={StaticResource cvsBattlePassItems}}" ScrollViewer.HorizontalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollMode="Enabled" ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.VerticalScrollMode="Disabled">
+
+        <GridView Grid.Row="1" Margin="24,0,8,0" Tag="{Binding Path=Key, Source={StaticResource cvsEventItems}}" ManipulationMode="System" x:Name="grdEventItemDetails" ItemsSource="{Binding Source={StaticResource cvsEventItems}}" ScrollViewer.HorizontalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollMode="Enabled" ScrollViewer.VerticalScrollBarVisibility="Hidden" ScrollViewer.VerticalScrollMode="Disabled">
             <GridView.ItemTemplate>
                 <DataTemplate>
                     <Grid Background="#404040" BorderThickness="2" CornerRadius="4">

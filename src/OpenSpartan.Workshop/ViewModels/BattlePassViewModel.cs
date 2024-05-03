@@ -10,15 +10,18 @@ namespace OpenSpartan.Workshop.ViewModels
         private MetadataLoadingState _battlePassLoadingState;
         private string _battlePassLoadingParameter;
         private string _currentlySelectedBattlePass;
+        private string _currentlySelectedEvent;
 
         public static BattlePassViewModel Instance { get; } = new BattlePassViewModel();
 
         private BattlePassViewModel()
         {
             BattlePasses = [];
+            Events = [];
         }
 
         private ObservableCollection<OperationCompoundModel> _battlePasses;
+        private ObservableCollection<OperationCompoundModel> _events;
 
         public ObservableCollection<OperationCompoundModel> BattlePasses
         {
@@ -33,6 +36,19 @@ namespace OpenSpartan.Workshop.ViewModels
             }
         }
 
+        public ObservableCollection<OperationCompoundModel> Events
+        {
+            get => _events;
+            set
+            {
+                if (_events != value)
+                {
+                    _events = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
         public string CurrentlySelectedBattlepass
         {
             get => _currentlySelectedBattlePass;
@@ -41,6 +57,19 @@ namespace OpenSpartan.Workshop.ViewModels
                 if (_currentlySelectedBattlePass != value)
                 {
                     _currentlySelectedBattlePass = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public string CurrentlySelectedEvent
+        {
+            get => _currentlySelectedEvent;
+            set
+            {
+                if (_currentlySelectedEvent != value)
+                {
+                    _currentlySelectedEvent = value;
                     NotifyPropertyChanged();
                 }
             }

@@ -1,4 +1,5 @@
 ﻿using OpenSpartan.Workshop.Core;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
@@ -6,18 +7,26 @@ namespace OpenSpartan.Workshop.Models
 {
     internal sealed class WorkshopSettings : Observable
     {
-        private string _release;
-        private bool _syncSettings;
-        private bool _enableLogging;
-        private string _apiVersion;
-        private string _headerImagePath;
-        private bool _useBroker;
-        private string _sandbox;
-        private string _build;
-        private bool _useObanClearance;
+        private string? _release;
+        private bool? _syncSettings;
+        private bool? _enableLogging;
+        private string? _apiVersion;
+        private string? _headerImagePath;
+        private bool? _useBroker;
+        private string? _sandbox;
+        private string? _build;
+        private bool? _useObanClearance;
+        private List<string>? _extraRitualEvents;
+        private List<string>? _excludedOperations;
+
+        public WorkshopSettings()
+        {
+            _excludedOperations = [];
+            _extraRitualEvents = [];
+        }
 
         [JsonPropertyName("release")]
-        public string Release
+        public string? Release
         {
             get => _release;
             set
@@ -31,7 +40,7 @@ namespace OpenSpartan.Workshop.Models
         }
 
         [JsonPropertyName("syncsettings")]
-        public bool SyncSettings
+        public bool? SyncSettings
         {
             get => _syncSettings;
             set
@@ -45,7 +54,7 @@ namespace OpenSpartan.Workshop.Models
         }
 
         [JsonPropertyName("enablelogging")]
-        public bool EnableLogging
+        public bool? EnableLogging
         {
             get => _enableLogging;
             set
@@ -59,7 +68,7 @@ namespace OpenSpartan.Workshop.Models
         }
 
         [JsonPropertyName("apiversion")]
-        public string APIVersion
+        public string? APIVersion
         {
             get => _apiVersion;
             set
@@ -73,7 +82,7 @@ namespace OpenSpartan.Workshop.Models
         }
 
         [JsonPropertyName("headerimagepath")]
-        public string HeaderImagePath
+        public string? HeaderImagePath
         {
             get => _headerImagePath;
             set
@@ -87,7 +96,7 @@ namespace OpenSpartan.Workshop.Models
         }
 
         [JsonPropertyName("usebroker")]
-        public bool UseBroker
+        public bool? UseBroker
         {
             get => _useBroker;
             set
@@ -101,7 +110,7 @@ namespace OpenSpartan.Workshop.Models
         }
 
         [JsonPropertyName("sandbox")]
-        public string Sandbox
+        public string? Sandbox
         {
             get => _sandbox;
             set
@@ -115,7 +124,7 @@ namespace OpenSpartan.Workshop.Models
         }
 
         [JsonPropertyName("build")]
-        public string Build
+        public string? Build
         {
             get => _build;
             set
@@ -129,7 +138,7 @@ namespace OpenSpartan.Workshop.Models
         }
 
         [JsonPropertyName("useObanClearance")]
-        public bool UseObanClearance
+        public bool? UseObanClearance
         {
             get => _useObanClearance;
             set
@@ -137,6 +146,34 @@ namespace OpenSpartan.Workshop.Models
                 if (_useObanClearance != value)
                 {
                     _useObanClearance = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        [JsonPropertyName("extraRitualEvents")]
+        public List<string>? ExtraRitualEvents
+        {
+            get => _extraRitualEvents;
+            set
+            {
+                if (_extraRitualEvents != value)
+                {
+                    _extraRitualEvents = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        [JsonPropertyName("excludedOperations")]
+        public List<string>? ExcludedOperations
+        {
+            get => _excludedOperations;
+            set
+            {
+                if (_excludedOperations != value)
+                {
+                    _excludedOperations = value;
                     NotifyPropertyChanged();
                 }
             }

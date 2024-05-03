@@ -53,12 +53,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"WAL journaling mode not set.");
+                    if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"WAL journaling mode not set.");
                 }
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Journaling mode modification exception: {ex.Message}");
+                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Journaling mode modification exception: {ex.Message}");
             }
 
             return null;
@@ -91,7 +91,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Database bootstrapping failure: {ex.Message}");
+                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Database bootstrapping failure: {ex.Message}");
                 return false;
             }
         }
@@ -119,11 +119,11 @@ namespace OpenSpartan.Workshop.Data
 
             if (outcome > 0)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Info("Indices provisioned.");
+                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info("Indices provisioned.");
             }
             else
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Warn("Indices could not be set up. If this is not the first run, then those are likely already configured.");
+                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Warn("Indices could not be set up. If this is not the first run, then those are likely already configured.");
             }
         }
 
@@ -151,7 +151,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Error inserting service record entry. {ex.Message}");
+                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Error inserting service record entry. {ex.Message}");
                 return false;
             }
         }
@@ -179,12 +179,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Warn($"No rows returned for distinct match IDs.");
+                    if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Warn($"No rows returned for distinct match IDs.");
                 }
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining unique match IDs. {ex.Message}");
+                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining unique match IDs. {ex.Message}");
             }
 
             return null;
@@ -215,12 +215,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Warn($"No rows returned for operations.");
+                    if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Warn($"No rows returned for operations.");
                 }
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining operations from database. {ex.Message}");
+                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining operations from database. {ex.Message}");
             }
 
             return null;
@@ -278,12 +278,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Warn($"No rows returned for player match IDs.");
+                    if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Warn($"No rows returned for player match IDs.");
                 }
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining matches. {ex.Message}");
+                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining matches. {ex.Message}");
             }
 
             return null;
@@ -371,7 +371,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining match and stats availability. {ex.Message}");
+                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining match and stats availability. {ex.Message}");
             }
 
             return (false, false); // Default values if the data retrieval fails
@@ -398,7 +398,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred inserting player match and stats. {ex.Message}");
+                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred inserting player match and stats. {ex.Message}");
             }
 
             return false;
@@ -424,7 +424,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred inserting match and stats. {ex.Message}");
+                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred inserting match and stats. {ex.Message}");
             }
 
             return false;
@@ -501,7 +501,7 @@ namespace OpenSpartan.Workshop.Data
 
                         if (insertionResult > 0)
                         {
-                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored map: {result.MatchInfo.MapVariant.AssetId}/{result.MatchInfo.MapVariant.VersionId}");
+                            if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored map: {result.MatchInfo.MapVariant.AssetId}/{result.MatchInfo.MapVariant.VersionId}");
                         }
                     }
                 }
@@ -521,7 +521,7 @@ namespace OpenSpartan.Workshop.Data
 
                             if (insertionResult > 0)
                             {
-                                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored playlist: {result.MatchInfo.Playlist.AssetId}/{result.MatchInfo.Playlist.VersionId}");
+                                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored playlist: {result.MatchInfo.Playlist.AssetId}/{result.MatchInfo.Playlist.VersionId}");
                             }
                         }
                     }
@@ -542,7 +542,7 @@ namespace OpenSpartan.Workshop.Data
 
                             if (insertionResult > 0)
                             {
-                                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored playlist + map mode pair: {result.MatchInfo.PlaylistMapModePair.AssetId}/{result.MatchInfo.PlaylistMapModePair.VersionId}");
+                                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored playlist + map mode pair: {result.MatchInfo.PlaylistMapModePair.AssetId}/{result.MatchInfo.PlaylistMapModePair.VersionId}");
                             }
                         }
                     }
@@ -564,7 +564,7 @@ namespace OpenSpartan.Workshop.Data
 
                             if (insertionResult > 0)
                             {
-                                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored game variant: {result.MatchInfo.UgcGameVariant.AssetId}/{result.MatchInfo.UgcGameVariant.VersionId}");
+                                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored game variant: {result.MatchInfo.UgcGameVariant.AssetId}/{result.MatchInfo.UgcGameVariant.VersionId}");
                             }
                         }
 
@@ -593,7 +593,7 @@ namespace OpenSpartan.Workshop.Data
 
                         if (insertionResult > 0)
                         {
-                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored engine game variant: {engineGameVariant.Result.AssetId}/{engineGameVariant.Result.VersionId}");
+                            if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored engine game variant: {engineGameVariant.Result.AssetId}/{engineGameVariant.Result.VersionId}");
                         }
                     }
                 }
@@ -602,7 +602,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Error updating match stats. {ex.Message}");
+                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Error updating match stats. {ex.Message}");
                 return false;
             }
         }
@@ -636,12 +636,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Warn($"No rows returned for medals.");
+                    if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Warn($"No rows returned for medals.");
                 }
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining medals from the database. {ex.Message}");
+                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining medals from the database. {ex.Message}");
             }
 
             return null;
@@ -663,7 +663,7 @@ namespace OpenSpartan.Workshop.Data
 
             if (insertionResult > 0)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored reward track {path}.");
+                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored reward track {path}.");
                 return true;
             }
             else
@@ -688,7 +688,7 @@ namespace OpenSpartan.Workshop.Data
 
             if (insertionResult > 0)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored inventory item {path}.");
+                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored inventory item {path}.");
                 return true;
             }
             else
@@ -776,12 +776,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"No rows returned for inventory items query.");
+                    if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"No rows returned for inventory items query.");
                 }
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining inventory items. {ex.Message}");
+                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining inventory items. {ex.Message}");
             }
 
             return null;
@@ -810,11 +810,11 @@ namespace OpenSpartan.Workshop.Data
 
                     if (insertionResult > 0)
                     {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored owned inventory item {item.ItemId}.");
+                        if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored owned inventory item {item.ItemId}.");
                     }
                     else
                     {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not store owned inventory item {item.ItemId}.");
+                        if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not store owned inventory item {item.ItemId}.");
                     }
                 }
 
@@ -822,7 +822,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Error inserting owned inventory items. {ex.Message}");
+                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Error inserting owned inventory items. {ex.Message}");
                 return false;
             }
         }

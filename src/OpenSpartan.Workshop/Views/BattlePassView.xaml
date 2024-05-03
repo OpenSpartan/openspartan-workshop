@@ -18,6 +18,7 @@
             <RowDefinition Height="64"></RowDefinition>
             <RowDefinition Height="500"></RowDefinition>
             <RowDefinition Height="64"></RowDefinition>
+            <RowDefinition Height="500"></RowDefinition>
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0" Margin="24,24,0,0">
@@ -50,9 +51,20 @@
                 </DataTemplate>
             </NavigationView.MenuItemTemplate>
 
-            <Frame x:Name="ContentFrame" Background="#202020"/>
+            <Frame x:Name="BattlePassContentFrame" Background="#202020"/>
         </NavigationView>
 
+        <!-- Events -->
         <TextBlock Margin="24,24,0,0" Grid.Row="4" Text="Events" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
+
+        <NavigationView ItemInvoked="nvEventDetails_ItemInvoked"  Name="nvEventDetails" MenuItemsSource="{Binding Events}" Grid.Row="5" Margin="4" PaneDisplayMode="Top" IsSettingsVisible="False" IsBackButtonVisible="Collapsed" IsBackEnabled="False">
+            <NavigationView.MenuItemTemplate>
+                <DataTemplate>
+                    <NavigationViewItem Content="{Binding RewardTrackMetadata.Name.Value}" Tag="{Binding RewardTrack.RewardTrackPath}"/>
+                </DataTemplate>
+            </NavigationView.MenuItemTemplate>
+
+            <Frame x:Name="EventContentFrame" Background="#202020"/>
+        </NavigationView>
     </Grid>
 </Page>

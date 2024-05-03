@@ -50,7 +50,7 @@ namespace OpenSpartan.Workshop.Views
                 }
                 catch (Exception ex)
                 {
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not log out by deleting the credential cache file. {ex.Message}");
+                    if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not log out by deleting the credential cache file. {ex.Message}");
                 }
             }
         }

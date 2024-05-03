@@ -19,7 +19,7 @@ namespace OpenSpartan.Workshop.Core
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not load settings. {ex.Message}");
+                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not load settings. {ex.Message}");
                 return null;
             }
         }
@@ -43,7 +43,7 @@ namespace OpenSpartan.Workshop.Core
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not store settings. {ex.Message}");
+                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not store settings. {ex.Message}");
                 return false;
             }
         }

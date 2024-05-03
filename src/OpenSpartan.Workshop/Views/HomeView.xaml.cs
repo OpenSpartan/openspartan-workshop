@@ -24,7 +24,7 @@ namespace OpenSpartan.Workshop.Views
 
             if (!success)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error("Could not open the profile on Halo Waypoint.");
+                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error("Could not open the profile on Halo Waypoint.");
             }
         }
 

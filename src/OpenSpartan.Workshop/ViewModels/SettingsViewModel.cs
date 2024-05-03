@@ -12,7 +12,7 @@ namespace OpenSpartan.Workshop.ViewModels
 
         public static string Xuid => HomeViewModel.Instance.Xuid;
 
-        public bool SyncSettings
+        public bool? SyncSettings
         {
             get
             {
@@ -46,7 +46,7 @@ namespace OpenSpartan.Workshop.ViewModels
             }
         }
 
-        public bool EnableLogging
+        public bool? EnableLogging
         {
             get
             {
@@ -63,7 +63,7 @@ namespace OpenSpartan.Workshop.ViewModels
             }
         }
 
-        public bool UseBroker
+        public bool? UseBroker
         {
             get
             { 
@@ -114,7 +114,7 @@ namespace OpenSpartan.Workshop.ViewModels
             }
         }
 
-        public bool UseObanClearance
+        public bool? UseObanClearance
         {
             get
             {

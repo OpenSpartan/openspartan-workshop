@@ -22,6 +22,7 @@
 		<None Remove="CustomImages\OpenSpartan.Workshop.ico" />
 		<None Remove="Views\BattlePassDetailView.xaml" />
 		<None Remove="Views\BattlePassView.xaml" />
+		<None Remove="Views\EventDetailView.xaml" />
 		<None Remove="Views\HomeView.xaml" />
 		<None Remove="Views\MatchesView.xaml" />
 		<None Remove="Views\MedalMatchesView.xaml" />
@@ -173,6 +174,9 @@
 		<None Update="Queries\VerifyTableAvailability.sql">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+		<Page Update="Views\EventDetailView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
 		<Page Update="Views\MedalMatchesView.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</Page>

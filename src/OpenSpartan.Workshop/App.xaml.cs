@@ -45,11 +45,13 @@ namespace OpenSpartan.Workshop
             if (File.Exists(settingsPath))
             {
                 SettingsViewModel.Instance.Settings = SettingsManager.LoadSettings();
-                if (SettingsViewModel.Instance.Settings.SyncSettings)
+                if ((bool)SettingsViewModel.Instance.Settings.SyncSettings)
                 {
                     try
                     {
                         var settings = await UserContextManager.GetWorkshopSettings();
+                        SettingsManager.StoreSettings(settings);
+
                         if (settings != null)
                         {
                             SettingsViewModel.Instance.Settings.Release = settings.Release;
@@ -61,7 +63,7 @@ namespace OpenSpartan.Workshop
                     }
                     catch (Exception ex)
                     {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not load settings remotely. {ex.Message}\nWill use previously-configured settings..");
+                        if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not load settings remotely. {ex.Message}\nWill use previously-configured settings..");
                     }
                 }
             }
