@@ -44,7 +44,11 @@ namespace OpenSpartan.Workshop
             var settingsPath = Path.Combine(Configuration.AppDataDirectory, Configuration.SettingsFileName);
             if (File.Exists(settingsPath))
             {
+                // Make sure that we default logging to true prior to settings
+                // being loaded so that we can capture any errors that might be
+                // happening with settings initialization.
                 SettingsViewModel.Instance.Settings = SettingsManager.LoadSettings();
+
                 if ((bool)SettingsViewModel.Instance.Settings.SyncSettings)
                 {
                     try

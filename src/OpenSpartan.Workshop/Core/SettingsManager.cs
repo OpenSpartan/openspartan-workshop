@@ -19,7 +19,9 @@ namespace OpenSpartan.Workshop.Core
             }
             catch (Exception ex)
             {
-                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not load settings. {ex.Message}");
+                // Assume that here we cannot check for settings yet and we need to
+                // always log an error.
+                Logger.Error($"Could not load settings. {ex.Message}");
                 return null;
             }
         }
