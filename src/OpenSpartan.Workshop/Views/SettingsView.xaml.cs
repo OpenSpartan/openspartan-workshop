@@ -6,7 +6,6 @@ using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Windows.Forms;
 
 namespace OpenSpartan.Workshop.Views
 {
@@ -21,9 +20,19 @@ namespace OpenSpartan.Workshop.Views
 
         private async void btnLogOut_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
         {
-            var result = MessageBox.Show("Are you sure you want to log out?", "OpenSpartan Workshop", MessageBoxButtons.YesNo);
+            ContentDialog deleteFileDialog = new ContentDialog
+            {
+                Title = "Log out",
+                Content = "Are you sure you want to log out?",
+                PrimaryButtonText = "Yes",
+                CloseButtonText = "No"
+            };
 
-            if (result == DialogResult.Yes)
+            ContentDialogResult result = await deleteFileDialog.ShowAsync();
+
+            // Delete the file if the user clicked the primary button.
+            /// Otherwise, do nothing.
+            if (result == ContentDialogResult.Primary)
             {
                 try
                 {
