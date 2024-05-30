@@ -25,7 +25,9 @@ namespace OpenSpartan.Workshop.Views
                 Title = "Log out",
                 Content = "Are you sure you want to log out?",
                 PrimaryButtonText = "Yes",
-                CloseButtonText = "No"
+                CloseButtonText = "No",
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = this.Content.XamlRoot
             };
 
             ContentDialogResult result = await deleteFileDialog.ShowAsync();

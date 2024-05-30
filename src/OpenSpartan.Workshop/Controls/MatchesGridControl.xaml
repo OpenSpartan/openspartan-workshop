@@ -28,6 +28,7 @@
         <converters:MedalNameIdToPathConverter x:Key="MedalNameIdToPathConverter"/>
         <converters:MedalDifficultyToBrushConverter x:Key="MedalDifficultyToBrushConverter"/>
         <converters:CommaAfterThousandsConverter x:Key="CommaAfterThousandsConverter"/>
+        <converters:SingleValueAvailabilityToVisibilityConverter x:Key="SingleValueAvailabilityToVisibilityConverter"/>
     </UserControl.Resources>
 
     <Grid>
@@ -66,7 +67,7 @@
                                     <ColumnDefinition Width="50"></ColumnDefinition>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="12,0,0,0" Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Kills}"></TextBlock>
-                                <FontIcon FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center" Margin="4" Glyph="{Binding KillPerformance, Converter={StaticResource PerformanceToGlyphConverter}}" Foreground="{Binding KillPerformance, Converter={StaticResource PerformanceToColorConverter}}"/>
+                                <FontIcon Visibility="{Binding ExpectedKills, Converter={StaticResource SingleValueAvailabilityToVisibilityConverter}}" FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center" Margin="4" Glyph="{Binding KillPerformance, Converter={StaticResource PerformanceToGlyphConverter}}" Foreground="{Binding KillPerformance, Converter={StaticResource PerformanceToColorConverter}}"/>
                             </Grid>
                         </DataTemplate>
                     </controls:DataGridTemplateColumn.CellTemplate>
@@ -81,7 +82,7 @@
                                     <ColumnDefinition Width="50"></ColumnDefinition>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="12,0,0,0" Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Deaths}"></TextBlock>
-                                <FontIcon FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center" Margin="4" Glyph="{Binding DeathPerformance, Converter={StaticResource PerformanceToGlyphConverter}}" Foreground="{Binding DeathPerformance, Converter={StaticResource PerformanceToColorConverter}}"/>
+                                <FontIcon Visibility="{Binding ExpectedDeaths, Converter={StaticResource SingleValueAvailabilityToVisibilityConverter}}" FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center" Margin="4" Glyph="{Binding DeathPerformance, Converter={StaticResource PerformanceToGlyphConverter}}" Foreground="{Binding DeathPerformance, Converter={StaticResource PerformanceToColorConverter}}"/>
                             </Grid>
                         </DataTemplate>
                     </controls:DataGridTemplateColumn.CellTemplate>
