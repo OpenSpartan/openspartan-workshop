@@ -29,6 +29,7 @@
         <converters:MedalDifficultyToBrushConverter x:Key="MedalDifficultyToBrushConverter"/>
         <converters:CommaAfterThousandsConverter x:Key="CommaAfterThousandsConverter"/>
         <converters:SingleValueAvailabilityToVisibilityConverter x:Key="SingleValueAvailabilityToVisibilityConverter"/>
+        <converters:ListCountToVisibilityConverter x:Key="ListCountToVisibilityConverter"/>
     </UserControl.Resources>
 
     <Grid>
@@ -273,7 +274,7 @@
                                         <RowDefinition Height="*"></RowDefinition>
                                     </Grid.RowDefinitions>
 
-                                    <TextBlock Text="Medals" FontWeight="Bold" Grid.Row="0" Margin="0,23,0,8"/>
+                                    <TextBlock Text="Medals" Visibility="{Binding PlayerTeamStats[0].Stats.CoreStats.Medals, Converter={StaticResource ListCountToVisibilityConverter}}" FontWeight="Bold" Grid.Row="0" Margin="0,23,0,8"/>
 
                                     <GridView Grid.Row="1" ItemsSource="{Binding PlayerTeamStats[0].Stats.CoreStats.Medals}" Width="446">
                                         <GridView.ItemTemplate>
