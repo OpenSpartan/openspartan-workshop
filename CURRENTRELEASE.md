@@ -8,5 +8,7 @@
 - [#28] Add support for authenticating without using the authentication broker.
 - [#25] Medal headers are no longer rendered for matches where medals were not earned.
 - Minigame modes (e.g., [Survive The Undead](https://www.halowaypoint.com/news/combat-workshop-survive-the-undead)) now correctly render in the match list and don't show an integer representation.
+- Improved logging - it's now easier to trace where exactly an issue surfaced.
+- [#23] Fixes missing medals not rendered in match stats.
 
 Refer to [**getting started guide**](https://openspartan.com/docs/workshop/guides/get-started/) to start using OpenSpartan Workshop.

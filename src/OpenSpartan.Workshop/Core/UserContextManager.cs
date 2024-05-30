@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,7 +29,7 @@ namespace OpenSpartan.Workshop.Core
 {
     internal static class UserContextManager
     {
-        private static HaloApiResultContainer<MedalMetadata, RawResponseContainer> MedalMetadata;
+        private static MedalMetadata MedalMetadata;
 
         private const int MatchesPerPage = 25;
 
@@ -60,21 +61,25 @@ namespace OpenSpartan.Workshop.Core
             return WinRT.Interop.WindowNative.GetWindowHandle(DispatcherWindow);
         }
 
-        internal static async Task<bool> PrepopulateMedalMetadata()
+        internal static async Task<MedalMetadata?> PrepopulateMedalMetadata()
         {
             try
             {
                 LogEngine.Log($"Attempting to populate medata metadata...");
 
-                MedalMetadata = await SafeAPICall(async () => await HaloClient.GameCmsGetMedalMetadata());
+                var metadata = await SafeAPICall(async () => await HaloClient.GameCmsGetMedalMetadata());
+                if (metadata != null && metadata.Result != null)
+                {
+                    return metadata.Result;
+                }
 
+                return null;
                 LogEngine.Log($"Medal metadata populated.");
-                return true;
             }
             catch (Exception ex)
             {
                 LogEngine.Log($"Could not populate medal metadata. {ex.Message}", LogSeverity.Error);
-                return false;
+                return null;
             }
         }
 
@@ -853,20 +858,20 @@ namespace OpenSpartan.Workshop.Core
             }
         }
 
-        internal static List<Medal>? EnrichMedalMetadata(List<Medal> medals)
+        internal static List<Medal>? EnrichMedalMetadata(List<Medal> medals, [CallerMemberName] string caller = null)
         {
             try
             {
-                LogEngine.Log("Getting medal metadata...");
+                LogEngine.Log($"Enriching medal metadata on behalf of {caller}...");
 
-                if (MedalMetadata?.Result?.Medals == null || MedalMetadata.Result.Medals.Count == 0)
+                if (MedalMetadata == null || MedalMetadata.Medals == null || MedalMetadata.Medals.Count == 0)
                     return null;
 
                 var richMedals = medals
-                    .Where(medal => MedalMetadata.Result.Medals.Any(metaMedal => metaMedal.NameId == medal.NameId))
+                    .Where(medal => MedalMetadata.Medals.Any(metaMedal => metaMedal.NameId == medal.NameId))
                     .Select(medal =>
                     {
-                        var metaMedal = MedalMetadata.Result.Medals.First(c => c.NameId == medal.NameId);
+                        var metaMedal = MedalMetadata.Medals.First(c => c.NameId == medal.NameId);
                         medal.Name = metaMedal.Name;
                         medal.Description = metaMedal.Description;
                         medal.DifficultyIndex = metaMedal.DifficultyIndex;
@@ -895,14 +900,14 @@ namespace OpenSpartan.Workshop.Core
             {
                 LogEngine.Log("Getting medal metadata...");
 
-                if (MedalMetadata?.Result?.Medals == null || MedalMetadata.Result.Medals.Count == 0)
+                if (MedalMetadata == null || MedalMetadata.Medals == null || MedalMetadata.Medals.Count == 0)
                     return false;
 
                 var medals = DataHandler.GetMedals();
                 if (medals == null)
                     return false;
 
-                var compoundMedals = medals.Join(MedalMetadata.Result.Medals, earned => earned.NameId, references => references.NameId, (earned, references) => new Medal()
+                var compoundMedals = medals.Join(MedalMetadata.Medals, earned => earned.NameId, references => references.NameId, (earned, references) => new Medal()
                 {
                     Count = earned.Count,
                     Description = references.Description,
@@ -925,7 +930,7 @@ namespace OpenSpartan.Workshop.Core
 
                 string qualifiedMedalPath = Path.Combine(Configuration.AppDataDirectory, "imagecache", "medals");
 
-                var spriteRequestResult = await SafeAPICall(async () => await HaloClient.GameCmsGetGenericWaypointFile(MedalMetadata.Result.Sprites.ExtraLarge.Path));
+                var spriteRequestResult = await SafeAPICall(async () => await HaloClient.GameCmsGetGenericWaypointFile(MedalMetadata.Sprites.ExtraLarge.Path));
 
                 var spriteContent = spriteRequestResult?.Result;
                 if (spriteContent != null)
@@ -934,7 +939,10 @@ namespace OpenSpartan.Workshop.Core
                     SkiaSharp.SKBitmap bmp = SkiaSharp.SKBitmap.Decode(ms);
                     using var pixmap = bmp.PeekPixels();
 
-                    foreach (var medal in compoundMedals)
+                    // We want to download all medals that are available
+                    // in the stack. That way, we don't have to fiddle with
+                    // individual missing medals later on.
+                    foreach (var medal in MedalMetadata.Medals)
                     {
                         string medalImagePath = Path.Combine(qualifiedMedalPath, $"{medal.NameId}.png");
                         EnsureDirectoryExists(medalImagePath);
@@ -1454,7 +1462,7 @@ namespace OpenSpartan.Workshop.Core
                     });
 
                     // We want to populate the medal metadata before we do anything else.
-                    _ = await PrepopulateMedalMetadata();
+                    MedalMetadata = await PrepopulateMedalMetadata();
 
                     Parallel.Invoke(
                         async () => await PopulateMedalData(),

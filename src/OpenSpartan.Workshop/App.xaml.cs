@@ -53,7 +53,6 @@ namespace OpenSpartan.Workshop
                     try
                     {
                         var settings = await UserContextManager.GetWorkshopSettings();
-                        SettingsManager.StoreSettings(settings);
 
                         if (settings != null)
                         {
@@ -72,7 +71,7 @@ namespace OpenSpartan.Workshop
             }
             else
             {
-                SettingsViewModel.Instance.Settings = new Models.WorkshopSettings
+                SettingsViewModel.Instance.Settings = new WorkshopSettings
                 {
                     APIVersion = Configuration.DefaultAPIVersion,
                     HeaderImagePath = Configuration.DefaultHeaderImage,
