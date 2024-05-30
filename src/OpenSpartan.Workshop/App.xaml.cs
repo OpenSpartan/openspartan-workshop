@@ -1,6 +1,7 @@
 ﻿using Microsoft.UI.Xaml;
 using NLog;
 using OpenSpartan.Workshop.Core;
+using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.IO;
@@ -9,8 +10,6 @@ namespace OpenSpartan.Workshop
 {
     public partial class App : Application
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         public Window MainWindow { get => m_window; }
 
         /// <summary>
@@ -67,7 +66,7 @@ namespace OpenSpartan.Workshop
                     }
                     catch (Exception ex)
                     {
-                        if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not load settings remotely. {ex.Message}\nWill use previously-configured settings..");
+                        LogEngine.Log($"Could not load settings remotely. {ex.Message}\nWill use previously-configured settings..", LogSeverity.Error);
                     }
                 }
             }

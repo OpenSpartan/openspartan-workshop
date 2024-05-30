@@ -9,7 +9,6 @@ using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Broker;
 using Microsoft.Identity.Client.Extensions.Msal;
 using Microsoft.UI.Xaml;
-using NLog;
 using OpenSpartan.Workshop.Data;
 using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.ViewModels;
@@ -32,8 +31,6 @@ namespace OpenSpartan.Workshop.Core
         private static HaloApiResultContainer<MedalMetadata, RawResponseContainer> MedalMetadata;
 
         private const int MatchesPerPage = 25;
-
-        private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 
         private static readonly HttpClient WorkshopHttpClient = new()
         {
@@ -67,14 +64,16 @@ namespace OpenSpartan.Workshop.Core
         {
             try
             {
-                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"Attempting to populate medata metadata...");
+                LogEngine.Log($"Attempting to populate medata metadata...");
+
                 MedalMetadata = await SafeAPICall(async () => await HaloClient.GameCmsGetMedalMetadata());
-                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"Medal metadata populated.");
+
+                LogEngine.Log($"Medal metadata populated.");
                 return true;
             }
             catch (Exception ex)
             {
-                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not populate medal metadata. {ex.Message}");
+                LogEngine.Log($"Could not populate medal metadata. {ex.Message}", LogSeverity.Error);
                 return false;
             }
         }
@@ -125,7 +124,7 @@ namespace OpenSpartan.Workshop.Core
                 catch (MsalClientException)
                 {
                     // Authentication was not successsful, we have no token.
-                    if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error("Authentication was not successful.");
+                    LogEngine.Log("Authentication was not successful.", LogSeverity.Error);
                 }
             }
 
@@ -162,7 +161,7 @@ namespace OpenSpartan.Workshop.Core
 
                     if (!tokenResult)
                     {
-                        if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error("Could not reacquire tokens.");
+                        LogEngine.Log("Could not reacquire tokens.", LogSeverity.Error);
 
                         return default;
                     }
@@ -174,7 +173,7 @@ namespace OpenSpartan.Workshop.Core
             }
             catch (Exception ex)
             {
-                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Failed to make Halo Infinite API call. {ex.Message}");
+                LogEngine.Log($"Failed to make Halo Infinite API call. {ex.Message}", LogSeverity.Error);
                 return result;
             }
         }
@@ -232,11 +231,11 @@ namespace OpenSpartan.Workshop.Core
                     if (clearance != null && !string.IsNullOrWhiteSpace(clearance.FlightConfigurationId))
                     {
                         HaloClient.ClearanceToken = clearance.FlightConfigurationId;
-                        if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"Your clearance is {clearance.FlightConfigurationId} and it's set in the client.");
+                        LogEngine.Log($"Your clearance is {clearance.FlightConfigurationId} and it's set in the client.");
                     }
                     else
                     {
-                        if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error("Could not obtain the clearance.");
+                        LogEngine.Log("Could not obtain the clearance.", LogSeverity.Error);
                     }
                 }).GetAwaiter().GetResult();
 
@@ -307,7 +306,7 @@ namespace OpenSpartan.Workshop.Core
                         }
                         else
                         {
-                            if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error("Could not get the career snapshot - it's null in the view model.");
+                            LogEngine.Log("Could not get the career snapshot - it's null in the view model.", LogSeverity.Error);
                         }
                     });
                 }
@@ -316,7 +315,7 @@ namespace OpenSpartan.Workshop.Core
             }
             catch (Exception ex)
             {
-                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred: {ex.Message}");
+                LogEngine.Log($"An error occurred: {ex.Message}", LogSeverity.Error);
                 return false;
             }
         }
@@ -467,7 +466,7 @@ namespace OpenSpartan.Workshop.Core
             }
             catch (Exception ex)
             {
-                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not populate customization data. {ex.Message}");
+                LogEngine.Log($"Could not populate customization data. {ex.Message}", LogSeverity.Error);
                 return false;
             }
         }
@@ -513,12 +512,12 @@ namespace OpenSpartan.Workshop.Core
                         }
                         else
                         {
-                            if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info("No matches to update.");
+                            LogEngine.Log("No matches to update.");
                         }
                     }
                     else
                     {
-                        if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info("No matches found locally, so need to re-hydrate the database.");
+                        LogEngine.Log("No matches found locally, so need to re-hydrate the database.");
 
                         var result = await UpdateMatchRecords(distinctMatchIds, MatchLoadingCancellationTracker.Token);
 
@@ -540,7 +539,7 @@ namespace OpenSpartan.Workshop.Core
                     MatchesViewModel.Instance.MatchLoadingParameter = "0";
                 });
 
-                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Error processing matches. {ex.Message}");
+                LogEngine.Log($"Error processing matches. {ex.Message}", LogSeverity.Error);
                 return false;
             }
         }
@@ -580,7 +579,7 @@ namespace OpenSpartan.Workshop.Core
 
                         if (!matchStatsAvailability.MatchAvailable)
                         {
-                            if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Getting match stats for {matchId}...");
+                            LogEngine.Log($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Getting match stats for {matchId}...");
 
                             var matchStats = await GetMatchStats(matchId.ToString(), completionProgress);
                             if (matchStats == null)
@@ -589,18 +588,18 @@ namespace OpenSpartan.Workshop.Core
                             var processedMatchAssetParameters = await DataHandler.UpdateMatchAssetRecords(matchStats.Result);
 
                             bool matchStatsInsertionResult = DataHandler.InsertMatchStats(matchStats.Response.Message);
-                            if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info(matchStatsInsertionResult
+                            LogEngine.Log(matchStatsInsertionResult
                                 ? $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored match data for {matchId} in the database."
                                 : $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not store match {matchId} stats in the database.");
                         }
                         else
                         {
-                            if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} already available. Not requesting new data.");
+                            LogEngine.Log($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} already available. Not requesting new data.");
                         }
 
                         if (!matchStatsAvailability.StatsAvailable)
                         {
-                            if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Attempting to get player results for players for match {matchId}.");
+                            LogEngine.Log($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Attempting to get player results for players for match {matchId}.");
 
                             var playerStatsSnapshot = await GetPlayerStats(matchId.ToString());
                             if (playerStatsSnapshot == null)
@@ -608,20 +607,20 @@ namespace OpenSpartan.Workshop.Core
 
                             var playerStatsInsertionResult = DataHandler.InsertPlayerMatchStats(matchId.ToString(), playerStatsSnapshot.Response.Message);
 
-                            if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info(playerStatsInsertionResult
+                            LogEngine.Log(playerStatsInsertionResult
                                 ? $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored player stats for {matchId}."
                                 : $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not store player stats for {matchId}.");
                         }
                         else
                         {
-                            if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} player stats already available. Not requesting new data.");
+                            LogEngine.Log($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} player stats already available. Not requesting new data.");
                         }
                     }
                     catch (Exception ex)
                     {
                         // Because processing is parallelized, we don't quite want to error our right away and
                         // stop processing other matches, so instead we will log an exception locally for investigation.
-                        if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Error storing {matchId} at {matchCounter}. {ex.Message}");
+                        LogEngine.Log($"Error storing {matchId} at {matchCounter}. {ex.Message}", LogSeverity.Error);
                     }
                 });
 
@@ -629,7 +628,7 @@ namespace OpenSpartan.Workshop.Core
             }
             catch (Exception ex)
             {
-                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Error storing matches. {ex.Message}");
+                LogEngine.Log($"Error storing matches. {ex.Message}", LogSeverity.Error);
                 return false;
             }
         }
@@ -639,7 +638,7 @@ namespace OpenSpartan.Workshop.Core
             var matchStats = await SafeAPICall(async () => await HaloClient.StatsGetMatchStats(matchId));
             if (matchStats == null || matchStats.Result == null)
             {
-                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"[{completionProgress:#.00}%] [Error] Getting match stats failed for {matchId}.");
+                LogEngine.Log($"[{completionProgress:#.00}%] [Error] Getting match stats failed for {matchId}.", LogSeverity.Error);
                 return null;
             }
 
@@ -651,7 +650,7 @@ namespace OpenSpartan.Workshop.Core
             var matchStats = await HaloClient.StatsGetMatchStats(matchId);
             if (matchStats == null || matchStats.Result == null || matchStats.Result.Players == null)
             {
-                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"[Error] Could not obtain player stats for match {matchId} because the match metadata was unavailable.");
+                LogEngine.Log($"[Error] Could not obtain player stats for match {matchId} because the match metadata was unavailable.", LogSeverity.Error);
                 return null;
             }
 
@@ -661,7 +660,7 @@ namespace OpenSpartan.Workshop.Core
             var playerStatsSnapshot = await SafeAPICall(async () => await HaloClient.SkillGetMatchPlayerResult(matchId, targetPlayers!));
             if (playerStatsSnapshot == null || playerStatsSnapshot.Result == null || playerStatsSnapshot.Result.Value == null)
             {
-                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not obtain player stats for match {matchId}. Requested {targetPlayers.Count} XUIDs.");
+                LogEngine.Log($"Could not obtain player stats for match {matchId}. Requested {targetPlayers.Count} XUIDs.", LogSeverity.Error);
                 return null;
             }
 
@@ -709,7 +708,7 @@ namespace OpenSpartan.Workshop.Core
 
             if ((bool)SettingsViewModel.Instance.EnableLogging)
             {
-                Logger.Info($"Ended indexing at {matchIds.Count} total matchmade games.");
+                LogEngine.Log($"Ended indexing at {matchIds.Count} total matchmade games.");
             }
             return matchIds;
         }
@@ -729,7 +728,7 @@ namespace OpenSpartan.Workshop.Core
             {
                 if ((bool)SettingsViewModel.Instance.EnableLogging)
                 {
-                    Logger.Info($"Error getting match stats through the search endpoint. Adding to retry queue. XUID: {xuid}, START: {start}, COUNT: {count}. Response code: {matches.Response.Code}. Response message: {matches.Response.Message}");
+                    LogEngine.Log($"Error getting match stats through the search endpoint. Adding to retry queue. XUID: {xuid}, START: {start}, COUNT: {count}. Response code: {matches.Response.Code}. Response message: {matches.Response.Message}", LogSeverity.Error);
                 }
                 retryQueue.Add((xuid, start, count));
             }
@@ -762,7 +761,7 @@ namespace OpenSpartan.Workshop.Core
                     // Log the failure again or handle it appropriately
                     if ((bool)SettingsViewModel.Instance.EnableLogging)
                     {
-                        Logger.Info($"Error getting match stats through the search endpoint. Retry index: {retryAttempts}. XUID: {retryRequest.xuid}, START: {retryRequest.start}, COUNT: {retryRequest.count}. Response code: {retryMatches.Response.Code}. Response message: {retryMatches.Response.Message}");
+                        LogEngine.Log($"Error getting match stats through the search endpoint. Retry index: {retryAttempts}. XUID: {retryRequest.xuid}, START: {retryRequest.start}, COUNT: {retryRequest.count}. Response code: {retryMatches.Response.Code}. Response message: {retryMatches.Response.Message}", LogSeverity.Error);
                     }
                     retryAttempts++;
                 }
@@ -771,10 +770,7 @@ namespace OpenSpartan.Workshop.Core
             if (retryAttempts == 3)
             {
                 // Log or handle the failure after 3 attempts
-                if ((bool)SettingsViewModel.Instance.EnableLogging)
-                {
-                    Logger.Info($"Failed to retrieve matches after 3 attempts. XUID: {retryRequest.xuid}, START: {retryRequest.start}, COUNT: {retryRequest.count}");
-                }
+                LogEngine.Log($"Failed to retrieve matches after 3 attempts. XUID: {retryRequest.xuid}, START: {retryRequest.start}, COUNT: {retryRequest.count}", LogSeverity.Error);    
             }
         }
 
@@ -820,7 +816,7 @@ namespace OpenSpartan.Workshop.Core
                 }
                 else
                 {
-                    if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error("Could not get the list of matches for the specified parameters.");
+                    LogEngine.Log("Could not get the list of matches for the specified parameters.", LogSeverity.Error);
                 }
             }
         }
@@ -852,7 +848,7 @@ namespace OpenSpartan.Workshop.Core
                 }
                 else
                 {
-                    if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error("Could not get the list of matches for the specified parameters.");
+                    LogEngine.Log("Could not get the list of matches for the specified parameters.", LogSeverity.Error);
                 }
             }
         }
@@ -861,8 +857,7 @@ namespace OpenSpartan.Workshop.Core
         {
             try
             {
-                if ((bool)SettingsViewModel.Instance.EnableLogging)
-                    Logger.Info("Getting medal metadata...");
+                LogEngine.Log("Getting medal metadata...");
 
                 if (MedalMetadata?.Result?.Medals == null || MedalMetadata.Result.Medals.Count == 0)
                     return null;
@@ -886,8 +881,7 @@ namespace OpenSpartan.Workshop.Core
             }
             catch (Exception ex)
             {
-                if ((bool)SettingsViewModel.Instance.EnableLogging)
-                    Logger.Error($"Could not enrich medal metadata. Error: {ex.Message}");
+                LogEngine.Log($"Could not enrich medal metadata. Error: {ex.Message}", LogSeverity.Error);
 
                 return null;
             }
@@ -899,7 +893,7 @@ namespace OpenSpartan.Workshop.Core
         {
             try
             {
-                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info("Getting medal metadata...");
+                LogEngine.Log("Getting medal metadata...");
 
                 if (MedalMetadata?.Result?.Medals == null || MedalMetadata.Result.Medals.Count == 0)
                     return false;
@@ -954,16 +948,16 @@ namespace OpenSpartan.Workshop.Core
                             var subset = pixmap.ExtractSubset(rectI);
                             using var data = subset.Encode(SkiaSharp.SKPngEncoderOptions.Default);
                             await System.IO.File.WriteAllBytesAsync(medalImagePath, data.ToArray());
-                            if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"Wrote medal to file: {medalImagePath}");
+                            LogEngine.Log($"Wrote medal to file: {medalImagePath}");
                         }
                     }
 
-                    if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info("Got medals.");
+                    LogEngine.Log("Got medals.");
                 }
             }
             catch (Exception ex)
             {
-                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not obtain medal metadata. Error: {ex.Message}");
+                LogEngine.Log($"Could not obtain medal metadata. Error: {ex.Message}", LogSeverity.Error);
                 return false;
             }
             return true;
@@ -1059,7 +1053,7 @@ namespace OpenSpartan.Workshop.Core
                         compoundOperation.RewardTrackMetadata = operationDetails;
                     }
                     compoundOperation.Rewards = new(await GetFlattenedRewards(operationDetails.Ranks, operation.CurrentProgress.Rank));
-                    if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"{operation.RewardTrackPath} (Local) - Completed");
+                    LogEngine.Log($"{operation.RewardTrackPath} (Local) - Completed");
                 }
                 else
                 {
@@ -1070,7 +1064,7 @@ namespace OpenSpartan.Workshop.Core
                     }
                     compoundOperation.RewardTrackMetadata = apiResult.Result;
                     compoundOperation.Rewards = new(await GetFlattenedRewards(apiResult.Result.Ranks, operation.CurrentProgress.Rank));
-                    if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"{operation.RewardTrackPath} - Completed");
+                    LogEngine.Log($"{operation.RewardTrackPath} - Completed");
                 }
 
                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.BattlePasses.Add(compoundOperation));
@@ -1105,7 +1099,7 @@ namespace OpenSpartan.Workshop.Core
                     // For events, there is no "Current Progress" indicator the same way we have it for operations, so
                     // we're using a dummy value of -1.
                     compoundEvent.Rewards = new(await GetFlattenedRewards(eventDetails.Ranks, -1));
-                    if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"{eventEntry.RewardTrackPath} (Local) - Completed");
+                    LogEngine.Log($"{eventEntry.RewardTrackPath} (Local) - Completed");
                 }
                 else
                 {
@@ -1116,7 +1110,7 @@ namespace OpenSpartan.Workshop.Core
                     }
                     compoundEvent.RewardTrackMetadata = apiResult.Result;
                     compoundEvent.Rewards = new(await GetFlattenedRewards(apiResult.Result.Ranks, -1));
-                    if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"{eventEntry.RewardTrackPath} - Completed");
+                    LogEngine.Log($"{eventEntry.RewardTrackPath} - Completed");
                 }
 
                 // Let's make sure that we also download the image for the event, if available.
@@ -1209,7 +1203,7 @@ namespace OpenSpartan.Workshop.Core
                 rewards.AddRange(paidInventoryRewards);
                 rewards.AddRange(paidCurrencyRewards);
 
-                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"Rank {rewardBucket.Rank} - Completed");
+                LogEngine.Log($"Rank {rewardBucket.Rank} - Completed");
             }
 
             return rewards.GroupBy(x => x.Ranks.Item1);
@@ -1269,7 +1263,7 @@ namespace OpenSpartan.Workshop.Core
         private static async Task WriteImageToFileAsync(string path, byte[] imageData)
         {
             await System.IO.File.WriteAllBytesAsync(path, imageData);
-            if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info("Stored local image: " + path);
+            LogEngine.Log("Stored local image: " + path);
         }
 
         internal static async Task<List<RewardMetaContainer>> ExtractInventoryRewards(int rank, int playerRank, IEnumerable<InventoryAmount> inventoryItems, bool isFree)
@@ -1298,20 +1292,20 @@ namespace OpenSpartan.Workshop.Core
 
                         if (container.ItemDetails != null)
                         {
-                            if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"Trying to get local image for {container.ItemDetails.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
+                            LogEngine.Log($"Trying to get local image for {container.ItemDetails.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
 
                             if (await UpdateLocalImage("imagecache", container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path).ConfigureAwait(false))
                             {
-                                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored local image: {container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path}");
+                                LogEngine.Log($"Stored local image: {container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path}");
                             }
                             else
                             {
-                                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error(container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path);
+                                LogEngine.Log(container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path, LogSeverity.Error);
                             }
                         }
                         else
                         {
-                            if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error("Inventory item is null.");
+                            LogEngine.Log("Inventory item is null.", LogSeverity.Error);
                         }
                     }
                     else
@@ -1320,15 +1314,15 @@ namespace OpenSpartan.Workshop.Core
 
                         if (item != null && item.Result != null)
                         {
-                            if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"Trying to get local image for {item.Result.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
+                            LogEngine.Log($"Trying to get local image for {item.Result.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
 
                             if (await UpdateLocalImage("imagecache", item.Result.CommonData.DisplayPath.Media.MediaUrl.Path).ConfigureAwait(false))
                             {
-                                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored local image: {item.Result.CommonData.DisplayPath.Media.MediaUrl.Path}");
+                                LogEngine.Log($"Stored local image: {item.Result.CommonData.DisplayPath.Media.MediaUrl.Path}");
                             }
                             else
                             {
-                                if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error(item.Result.CommonData.DisplayPath.Media.MediaUrl.Path);
+                                LogEngine.Log(item.Result.CommonData.DisplayPath.Media.MediaUrl.Path, LogSeverity.Error);
                             }
 
                             DataHandler.UpdateInventoryItems(item.Response.Message, inventoryReward.InventoryItemPath);
@@ -1345,7 +1339,7 @@ namespace OpenSpartan.Workshop.Core
                 }
                 catch (Exception ex)
                 {
-                    if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not set container item details for {inventoryReward.InventoryItemPath}. {ex.Message}");
+                    LogEngine.Log($"Could not set container item details for {inventoryReward.InventoryItemPath}. {ex.Message}", LogSeverity.Error);
                 }
                 finally
                 {
@@ -1403,13 +1397,13 @@ namespace OpenSpartan.Workshop.Core
                 {
                     try
                     {
-                        if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"Downloading image for {rank}...");
+                        LogEngine.Log($"Downloading image for {rank}...");
                         byte[] imageBytes = await WorkshopHttpClient.GetByteArrayAsync(new Uri($"{Configuration.HaloWaypointCsrImageEndpoint}/{rank}.png"));
                         await System.IO.File.WriteAllBytesAsync(qualifiedRankImagePath, imageBytes);
                     }
                     catch (Exception ex)
                     {
-                        if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"Could not download and store rank image for {rank}. {ex.Message}");
+                        LogEngine.Log($"Could not download and store rank image for {rank}. {ex.Message}", LogSeverity.Error);
                     }
                 }
             }
@@ -1433,7 +1427,7 @@ namespace OpenSpartan.Workshop.Core
                 {
                     if (string.IsNullOrWhiteSpace(HaloClient.ClearanceToken))
                     {
-                        if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info($"The clearance is empty, so many API calls that depend on it may fail.");
+                        LogEngine.Log($"The clearance is empty, so many API calls that depend on it may fail.");
                     }
 
                     HomeViewModel.Instance.Gamertag = XboxUserContext.DisplayClaims.Xui[0].Gamertag;
@@ -1444,11 +1438,11 @@ namespace OpenSpartan.Workshop.Core
 
                     if (journalingMode.Equals("wal", StringComparison.Ordinal))
                     {
-                        if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Info("Successfully set WAL journaling mode.");
+                        LogEngine.Log("Successfully set WAL journaling mode.");
                     }
                     else
                     {
-                        if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error("Could not set WAL journaling mode.");
+                        LogEngine.Log("Could not set WAL journaling mode.", LogSeverity.Warning);
                     }
 
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>

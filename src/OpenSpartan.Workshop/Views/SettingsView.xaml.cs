@@ -11,8 +11,6 @@ namespace OpenSpartan.Workshop.Views
 {
     public sealed partial class SettingsView : Page
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         public SettingsView()
         {
             InitializeComponent();
@@ -61,7 +59,7 @@ namespace OpenSpartan.Workshop.Views
                 }
                 catch (Exception ex)
                 {
-                    if ((bool)SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not log out by deleting the credential cache file. {ex.Message}");
+                    LogEngine.Log($"Could not log out by deleting the credential cache file. {ex.Message}", Models.LogSeverity.Error);
                 }
             }
         }
