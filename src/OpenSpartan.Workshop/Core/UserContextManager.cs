@@ -892,8 +892,6 @@ namespace OpenSpartan.Workshop.Core
             }
         }
 
-
-
         internal static async Task<bool> PopulateMedalData()
         {
             try
@@ -903,6 +901,7 @@ namespace OpenSpartan.Workshop.Core
                 if (MedalMetadata == null || MedalMetadata.Medals == null || MedalMetadata.Medals.Count == 0)
                     return false;
 
+                // This gets the medals that are locally stored.
                 var medals = DataHandler.GetMedals();
                 if (medals == null)
                     return false;
@@ -1464,10 +1463,13 @@ namespace OpenSpartan.Workshop.Core
                     // We want to populate the medal metadata before we do anything else.
                     MedalMetadata = await PrepopulateMedalMetadata();
 
+                    // Service Record data should be pulled early to make sure that we
+                    // get the latest medals quickly before everything else is populated.
+                    _ = await PopulateServiceRecordData();
+
                     Parallel.Invoke(
                         async () => await PopulateMedalData(),
                         async () => await PopulateCsrImages(),
-                        async () => await PopulateServiceRecordData(),
                         async () => await PopulateCareerData(),
                         async () => await PopulateUserInventory(),
                         async () => await PopulateCustomizationData(),
