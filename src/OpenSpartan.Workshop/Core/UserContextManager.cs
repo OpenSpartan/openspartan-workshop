@@ -970,6 +970,14 @@ namespace OpenSpartan.Workshop.Core
             return true;
         }
 
+        public static async Task<RewardTrack?> GetRewardTrackMetadata(string eventType, string trackId)
+        {
+            return (await SafeAPICall(async () =>
+            {
+                return await HaloClient.EconomyGetRewardTrack($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})", eventType, $"{trackId}");
+            })).Result;
+        }
+
         public static async Task<OperationRewardTrackSnapshot?> GetOperations()
         {
             return (await SafeAPICall(async () =>
@@ -1102,10 +1110,14 @@ namespace OpenSpartan.Workshop.Core
                     {
                         compoundEvent.RewardTrackMetadata = eventDetails;
                     }
-                    
+
                     // For events, there is no "Current Progress" indicator the same way we have it for operations, so
                     // we're using a dummy value of -1.
-                    compoundEvent.Rewards = new(await GetFlattenedRewards(eventDetails.Ranks, -1));
+
+                    // We want to get the current progress for the evnet.
+                    var rewardTrack = await GetRewardTrackMetadata("event", compoundEvent.RewardTrackMetadata.TrackId);
+
+                    compoundEvent.Rewards = new(await GetFlattenedRewards(eventDetails.Ranks, (rewardTrack != null ? rewardTrack.CurrentProgress.Rank : -1)));
                     LogEngine.Log($"{eventEntry.RewardTrackPath} (Local) - Completed");
                 }
                 else
