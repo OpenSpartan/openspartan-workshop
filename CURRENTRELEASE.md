@@ -11,5 +11,8 @@
 - Improved logging - it's now easier to trace where exactly an issue surfaced.
 - [#23] Fixes missing medals not rendered in match stats.
 - [#27] Unnecessary medal label not rendered in match overview when no medals are earned.
+- [#35] Event progress is now shown the same way you would see it for operations.
+- [#4] Battle pass item metadata is now shown whenever the user taps on an item.
+- All currency now displays titles in the battle pass view.
 
 Refer to [**getting started guide**](https://openspartan.com/docs/workshop/guides/get-started/) to start using OpenSpartan Workshop.
