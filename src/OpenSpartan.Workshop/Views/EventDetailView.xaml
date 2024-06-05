@@ -73,10 +73,10 @@
                                         <ColumnDefinition Width="*"></ColumnDefinition>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel>
-                                        <TextBlock VerticalAlignment="Center" Text="Amount:"></TextBlock>
+                                        <TextBlock VerticalAlignment="Center" Text="Value:"></TextBlock>
                                     </StackPanel>
                                     <StackPanel Grid.Column="1">
-                                        <TextBlock Text="{Binding Amount, Converter={StaticResource CommaAfterThousandsConverter}}"></TextBlock>
+                                        <TextBlock Text="{Binding ItemValue, Converter={StaticResource CommaAfterThousandsConverter}}"></TextBlock>
                                     </StackPanel>
                                 </Grid>
                             </localcontrols:AutoClosingTeachingTip.Content>

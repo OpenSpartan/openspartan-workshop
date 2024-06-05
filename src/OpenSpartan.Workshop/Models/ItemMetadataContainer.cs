@@ -3,7 +3,7 @@ using System;
 
 namespace OpenSpartan.Workshop.Models
 {
-    internal sealed class RewardMetaContainer
+    internal sealed class ItemMetadataContainer
     {
         public bool IsFree { get; set; }
 
@@ -15,8 +15,16 @@ namespace OpenSpartan.Workshop.Models
 
         public string ImagePath { get; set; }
 
-        public int Amount { get; set; }
+        /// <summary>
+        /// Gets or sets the numeric value associated with the currency
+        /// or item cost.
+        /// </summary>
+        public int ItemValue { get; set; }
 
-        public RewardType Type { get; set; }
+        public ItemClass Type { get; set; }
+
+        public string ItemType { get; set; }
+
+        public string ItemPath { get; set; }
     }
 }

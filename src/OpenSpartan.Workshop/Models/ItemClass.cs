@@ -1,6 +1,6 @@
 ﻿namespace OpenSpartan.Workshop.Models
 {
-    public enum RewardType
+    public enum ItemClass
     {
         StandardReward = 0,
         SpartanPoints = 1,

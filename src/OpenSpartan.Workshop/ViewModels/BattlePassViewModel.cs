@@ -11,6 +11,8 @@ namespace OpenSpartan.Workshop.ViewModels
         private string _battlePassLoadingParameter;
         private string _currentlySelectedBattlePass;
         private string _currentlySelectedEvent;
+        private ObservableCollection<OperationCompoundModel> _battlePasses;
+        private ObservableCollection<OperationCompoundModel> _events;
 
         public static BattlePassViewModel Instance { get; } = new BattlePassViewModel();
 
@@ -19,9 +21,6 @@ namespace OpenSpartan.Workshop.ViewModels
             BattlePasses = [];
             Events = [];
         }
-
-        private ObservableCollection<OperationCompoundModel> _battlePasses;
-        private ObservableCollection<OperationCompoundModel> _events;
 
         public ObservableCollection<OperationCompoundModel> BattlePasses
         {

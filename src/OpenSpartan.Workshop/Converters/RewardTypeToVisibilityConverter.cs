@@ -9,14 +9,14 @@ namespace OpenSpartan.Workshop.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            RewardType type = (RewardType)value;
+            ItemClass type = (ItemClass)value;
             return type switch
             {
-                RewardType.XPGrant or
-                RewardType.SpartanPoints or
-                RewardType.Credits or
-                RewardType.XPBoost or
-                RewardType.ChallengeReroll => Visibility.Visible,
+                ItemClass.XPGrant or
+                ItemClass.SpartanPoints or
+                ItemClass.Credits or
+                ItemClass.XPBoost or
+                ItemClass.ChallengeReroll => Visibility.Visible,
                 _ => Visibility.Collapsed,
             };
         }

@@ -63,6 +63,11 @@
                         <FontIcon Glyph="&#xF133;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem Content="Exchange" x:Name="nviExchange" Tag="OpenSpartan.Workshop.Views.ExchangeView">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE719;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
             </NavigationView.MenuItems>
 
             <Frame x:Name="ContentFrame"/>

@@ -15,6 +15,7 @@ using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -85,7 +86,7 @@ namespace OpenSpartan.Workshop.Core
 
         internal static async Task<AuthenticationResult> InitializePublicClientApplication()
         {
-            
+
 
             var storageProperties = new StorageCreationPropertiesBuilder(Configuration.CacheFileName, Configuration.AppDataDirectory).Build();
 
@@ -99,7 +100,7 @@ namespace OpenSpartan.Workshop.Core
                 {
                     Title = "OpenSpartan Workshop"
                 };
-                
+
                 pcaBootstrap.WithParentActivityOrWindow(GetMainWindowHandle).WithBroker(options);
             }
 
@@ -332,7 +333,7 @@ namespace OpenSpartan.Workshop.Core
             file.Directory.Create();
         }
 
-        private static async Task DownloadAndSetImage(string imageName, string imagePath, Action setImageAction)
+        private static async Task DownloadAndSetImage(string imageName, string imagePath, Action setImageAction = null)
         {
             if (!System.IO.File.Exists(imagePath))
             {
@@ -343,7 +344,10 @@ namespace OpenSpartan.Workshop.Core
                 }
             }
 
-            await DispatcherWindow.DispatcherQueue.EnqueueAsync(setImageAction);
+            if (setImageAction != null)
+            {
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(setImageAction);
+            }
         }
 
         internal static async Task<bool> PopulateServiceRecordData()
@@ -775,7 +779,7 @@ namespace OpenSpartan.Workshop.Core
             if (retryAttempts == 3)
             {
                 // Log or handle the failure after 3 attempts
-                LogEngine.Log($"Failed to retrieve matches after 3 attempts. XUID: {retryRequest.xuid}, START: {retryRequest.start}, COUNT: {retryRequest.count}", LogSeverity.Error);    
+                LogEngine.Log($"Failed to retrieve matches after 3 attempts. XUID: {retryRequest.xuid}, START: {retryRequest.start}, COUNT: {retryRequest.count}", LogSeverity.Error);
             }
         }
 
@@ -1089,7 +1093,7 @@ namespace OpenSpartan.Workshop.Core
             // play the same event over many weeks (e.g., they would enable you to play 10 levels per week).
             // For the purposes of this experience, we can just select the distinct events based on reward
             // paths (they are are the same, regardless of which which it happ
-            foreach (var eventEntry in seasonCalendar.Events.DistinctBy(x=> x.RewardTrackPath))
+            foreach (var eventEntry in seasonCalendar.Events.DistinctBy(x => x.RewardTrackPath))
             {
                 // Tell the user that the operations are currently being loaded by changing the
                 // loading parameter to the reward track path.
@@ -1138,7 +1142,7 @@ namespace OpenSpartan.Workshop.Core
                     // Some images, like in the example of Noble Intentions event, do not end with an extension. This is not
                     // at all a common occurrence, so I am just making sure that I check it ahead of time in this one special
                     // instance.
-                    if (!compoundEvent.RewardTrackMetadata.SummaryImagePath.EndsWith(".png",StringComparison.InvariantCultureIgnoreCase)
+                    if (!compoundEvent.RewardTrackMetadata.SummaryImagePath.EndsWith(".png", StringComparison.InvariantCultureIgnoreCase)
                         && !compoundEvent.RewardTrackMetadata.SummaryImagePath.EndsWith(".jpg", StringComparison.InvariantCultureIgnoreCase)
                         && !compoundEvent.RewardTrackMetadata.SummaryImagePath.EndsWith(".jpeg", StringComparison.InvariantCultureIgnoreCase))
                     {
@@ -1205,9 +1209,9 @@ namespace OpenSpartan.Workshop.Core
             return false;
         }
 
-        internal static async Task<IEnumerable<IGrouping<int, RewardMetaContainer>>> GetFlattenedRewards(List<RankSnapshot> rankSnapshots, int currentPlayerRank)
+        internal static async Task<IEnumerable<IGrouping<int, ItemMetadataContainer>>> GetFlattenedRewards(List<RankSnapshot> rankSnapshots, int currentPlayerRank)
         {
-            List<RewardMetaContainer> rewards = [];
+            List<ItemMetadataContainer> rewards = [];
 
             foreach (var rewardBucket in rankSnapshots)
             {
@@ -1228,17 +1232,17 @@ namespace OpenSpartan.Workshop.Core
             return rewards.GroupBy(x => x.Ranks.Item1);
         }
 
-        internal static async Task<List<RewardMetaContainer>> ExtractCurrencyRewards(int rank, int playerRank, IEnumerable<CurrencyAmount> currencyItems, bool isFree)
+        internal static async Task<List<ItemMetadataContainer>> ExtractCurrencyRewards(int rank, int playerRank, IEnumerable<CurrencyAmount> currencyItems, bool isFree)
         {
-            List<RewardMetaContainer> rewardContainers = new();
+            List<ItemMetadataContainer> rewardContainers = new();
 
             foreach (var currencyReward in currencyItems)
             {
-                RewardMetaContainer container = new()
+                ItemMetadataContainer container = new()
                 {
                     Ranks = new Tuple<int, int>(rank, playerRank),
                     IsFree = isFree,
-                    Amount = currencyReward.Amount,
+                    ItemValue = currencyReward.Amount,
                     CurrencyDetails = await GetInGameCurrency(currencyReward.CurrencyPath)
                 };
 
@@ -1247,19 +1251,19 @@ namespace OpenSpartan.Workshop.Core
                     switch (container.CurrencyDetails.Id.ToLower(CultureInfo.InvariantCulture))
                     {
                         case "rerollcurrency":
-                            container.Type = RewardType.ChallengeReroll;
+                            container.Type = ItemClass.ChallengeReroll;
                             break;
                         case "xpgrant":
-                            container.Type = RewardType.XPGrant;
+                            container.Type = ItemClass.XPGrant;
                             break;
                         case "xb":
-                            container.Type = RewardType.XPBoost;
+                            container.Type = ItemClass.XPBoost;
                             break;
                         case "cr":
-                            container.Type = RewardType.Credits;
+                            container.Type = ItemClass.Credits;
                             break;
                         case "softcurrency":
-                            container.Type = RewardType.SpartanPoints;
+                            container.Type = ItemClass.SpartanPoints;
                             break;
                     }
 
@@ -1285,15 +1289,15 @@ namespace OpenSpartan.Workshop.Core
             return rewardContainers;
         }
 
-        private static string GetCurrencyImageLocation(RewardType type)
+        private static string GetCurrencyImageLocation(ItemClass type)
         {
             return type switch
             {
-                RewardType.ChallengeReroll => "progression/Currencies/1104-000-data-pad-e39bef84-2x2.png", // Challenge swap
-                RewardType.XPGrant => "progression/Currencies/1102-000-xp-grant-c77c6396-2x2.png", // XP grant
-                RewardType.XPBoost => "progression/Currencies/1103-000-xp-boost-5e92621a-2x2.png", // XP boost
-                RewardType.Credits => "progression/Currencies/Credit_Coin-SM.png", // Credit coins
-                RewardType.SpartanPoints => "progression/StoreContent/ToggleTiles/SpartanPoints_Common_2x2.png", // Spartan points
+                ItemClass.ChallengeReroll => "progression/Currencies/1104-000-data-pad-e39bef84-2x2.png", // Challenge swap
+                ItemClass.XPGrant => "progression/Currencies/1102-000-xp-grant-c77c6396-2x2.png", // XP grant
+                ItemClass.XPBoost => "progression/Currencies/1103-000-xp-boost-5e92621a-2x2.png", // XP boost
+                ItemClass.Credits => "progression/Currencies/Credit_Coin-SM.png", // Credit coins
+                ItemClass.SpartanPoints => "progression/StoreContent/ToggleTiles/SpartanPoints_Common_2x2.png", // Spartan points
                 _ => string.Empty,
             };
         }
@@ -1304,9 +1308,9 @@ namespace OpenSpartan.Workshop.Core
             LogEngine.Log("Stored local image: " + path);
         }
 
-        internal static async Task<List<RewardMetaContainer>> ExtractInventoryRewards(int rank, int playerRank, IEnumerable<InventoryAmount> inventoryItems, bool isFree)
+        internal static async Task<List<ItemMetadataContainer>> ExtractInventoryRewards(int rank, int playerRank, IEnumerable<InventoryAmount> inventoryItems, bool isFree)
         {
-            List<RewardMetaContainer> rewardContainers = new(inventoryItems.Count());
+            List<ItemMetadataContainer> rewardContainers = new(inventoryItems.Count());
             SemaphoreSlim semaphore = new(Environment.ProcessorCount);
 
             async Task ProcessInventoryItem(InventoryAmount inventoryReward)
@@ -1317,12 +1321,12 @@ namespace OpenSpartan.Workshop.Core
                 {
                     bool inventoryItemLocallyAvailable = DataHandler.IsInventoryItemAvailable(inventoryReward.InventoryItemPath);
 
-                    var container = new RewardMetaContainer
+                    var container = new ItemMetadataContainer
                     {
                         Ranks = Tuple.Create(rank, playerRank),
                         IsFree = isFree,
-                        Amount = inventoryReward.Amount,
-                        Type = RewardType.StandardReward,
+                        ItemValue = inventoryReward.Amount,
+                        Type = ItemClass.StandardReward,
                     };
 
                     if (inventoryItemLocallyAvailable)
@@ -1450,6 +1454,92 @@ namespace OpenSpartan.Workshop.Core
             return true;
         }
 
+        internal static async Task<bool> PopulateExchangeData()
+        {
+            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            {
+                ExchangeViewModel.Instance.ExchangeLoadingState = MetadataLoadingState.Loading;
+            });
+
+            var exchangeOfferings = await SafeAPICall(async () =>
+            {
+                return await HaloClient.EconomyGetSoftCurrencyStore($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})");
+            });
+
+            if (exchangeOfferings != null && exchangeOfferings.Result != null)
+            {
+                foreach (var offering in exchangeOfferings.Result.Offerings)
+                {
+                    // We're only interested in offerings that have items attached to them.
+                    // Other items are not relevant, and we can skip them (there are no currency
+                    // or seasonal offers attached to Exchange items.
+                    if (offering != null && offering.IncludedItems.Any())
+                    {
+                        // Current Exchange offering can contain more items in one (e.g., logos)
+                        // but ultimately maps to just one item.
+                        var item = offering.IncludedItems.FirstOrDefault();
+
+                        if (item != null)
+                        {
+                            var itemMetadata = await SafeAPICall(async () =>
+                            {
+                                return await HaloClient.GameCmsGetItem(item.ItemPath, HaloClient.ClearanceToken);
+                            });
+
+                            if (itemMetadata != null)
+                            {
+                                string folderPath = !string.IsNullOrWhiteSpace(itemMetadata.Result.CommonData.DisplayPath.FolderPath) ? itemMetadata.Result.CommonData.DisplayPath.FolderPath : itemMetadata.Result.CommonData.DisplayPath.Media.FolderPath;
+                                string fileName = !string.IsNullOrWhiteSpace(itemMetadata.Result.CommonData.DisplayPath.FileName) ? itemMetadata.Result.CommonData.DisplayPath.FileName : itemMetadata.Result.CommonData.DisplayPath.Media.FileName;
+
+                                var metadataContainer = new ItemMetadataContainer
+                                {
+                                    ItemType = item.ItemType,
+                                    // There is usually just one price, since it's just one offering. There may be
+                                    // several included items (e.g., shoulder pads) but the price should still be the
+                                    // same regardless, at least from the current Exchange implementation.
+                                    // If for some reason there is no price assigned, we will default to -1.
+                                    ItemValue = (offering.Prices != null && offering.Prices.Any()) ? offering.Prices[0].Cost : -1,
+                                    ImagePath = (!string.IsNullOrWhiteSpace(folderPath) && !string.IsNullOrWhiteSpace(fileName)) ? Path.Combine(folderPath, fileName).Replace("\\", "/") : itemMetadata.Result.CommonData.DisplayPath.Media.MediaUrl.Path,
+                                    ItemDetails = new InGameItem()
+                                    {
+                                        CommonData = itemMetadata.Result.CommonData,
+                                    },
+                                };
+
+                                if (Path.IsPathRooted(metadataContainer.ImagePath))
+                                {
+                                    metadataContainer.ImagePath = metadataContainer.ImagePath.TrimStart(Path.DirectorySeparatorChar);
+                                    metadataContainer.ImagePath = metadataContainer.ImagePath.TrimStart(Path.AltDirectorySeparatorChar);
+                                }
+
+                                string qualifiedItemImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", metadataContainer.ImagePath);
+
+                                EnsureDirectoryExists(qualifiedItemImagePath);
+
+                                await DownloadAndSetImage(metadataContainer.ImagePath, qualifiedItemImagePath);
+
+                                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                                {
+                                    ExchangeViewModel.Instance.ExchangeItems.Add(metadataContainer);
+                                });
+
+                                LogEngine.Log($"Got item for Exchange listing: {item.ItemPath}");
+                            }
+                        }
+                    }
+                }
+
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                {
+                    ExchangeViewModel.Instance.ExchangeLoadingState = MetadataLoadingState.Completed;
+                });
+
+                return true;
+            }
+
+            return false;
+        }
+
         internal static async Task<bool> InitializeAllDataOnLaunch()
         {
             var authResult = await InitializePublicClientApplication();
@@ -1501,6 +1591,7 @@ namespace OpenSpartan.Workshop.Core
 
                     Parallel.Invoke(
                         async () => await PopulateMedalData(),
+                        async () => await PopulateExchangeData(),
                         async () => await PopulateCsrImages(),
                         async () => await PopulateCareerData(),
                         async () => await PopulateUserInventory(),

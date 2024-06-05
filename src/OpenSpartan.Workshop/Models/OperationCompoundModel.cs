@@ -15,7 +15,7 @@ namespace OpenSpartan.Workshop.Models
 
         public RewardTrackMetadata? RewardTrackMetadata { get; set; }
 
-        public ObservableCollection<IGrouping<int, RewardMetaContainer>>? Rewards { get; set; }
+        public ObservableCollection<IGrouping<int, ItemMetadataContainer>>? Rewards { get; set; }
 
         public SeasonRewardTrack? SeasonRewardTrack { get; set; }
     }
