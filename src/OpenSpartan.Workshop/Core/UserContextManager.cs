@@ -1244,7 +1244,26 @@ namespace OpenSpartan.Workshop.Core
 
                 if (container.CurrencyDetails != null)
                 {
-                    string currencyImageLocation = GetCurrencyImageLocation(container.CurrencyDetails.Id.ToLower(CultureInfo.InvariantCulture));
+                    switch (container.CurrencyDetails.Id.ToLower(CultureInfo.InvariantCulture))
+                    {
+                        case "rerollcurrency":
+                            container.Type = RewardType.ChallengeReroll;
+                            break;
+                        case "xpgrant":
+                            container.Type = RewardType.XPGrant;
+                            break;
+                        case "xb":
+                            container.Type = RewardType.XPBoost;
+                            break;
+                        case "cr":
+                            container.Type = RewardType.Credits;
+                            break;
+                        case "softcurrency":
+                            container.Type = RewardType.SpartanPoints;
+                            break;
+                    }
+
+                    string currencyImageLocation = GetCurrencyImageLocation(container.Type);
 
                     container.ImagePath = currencyImageLocation;
 
@@ -1266,15 +1285,15 @@ namespace OpenSpartan.Workshop.Core
             return rewardContainers;
         }
 
-        private static string GetCurrencyImageLocation(string currencyId)
+        private static string GetCurrencyImageLocation(RewardType type)
         {
-            return currencyId switch
+            return type switch
             {
-                "rerollcurrency" => "progression/Currencies/1104-000-data-pad-e39bef84-2x2.png", // Challenge swap
-                "xpgrant" => "progression/Currencies/1102-000-xp-grant-c77c6396-2x2.png", // XP grant
-                "xb" => "progression/Currencies/1103-000-xp-boost-5e92621a-2x2.png", // XP boost
-                "cr" => "progression/Currencies/Credit_Coin-SM.png", // Credit coins
-                "softcurrency" => "progression/StoreContent/ToggleTiles/SpartanPoints_Common_2x2.png", // Spartan points
+                RewardType.ChallengeReroll => "progression/Currencies/1104-000-data-pad-e39bef84-2x2.png", // Challenge swap
+                RewardType.XPGrant => "progression/Currencies/1102-000-xp-grant-c77c6396-2x2.png", // XP grant
+                RewardType.XPBoost => "progression/Currencies/1103-000-xp-boost-5e92621a-2x2.png", // XP boost
+                RewardType.Credits => "progression/Currencies/Credit_Coin-SM.png", // Credit coins
+                RewardType.SpartanPoints => "progression/StoreContent/ToggleTiles/SpartanPoints_Common_2x2.png", // Spartan points
                 _ => string.Empty,
             };
         }
@@ -1303,6 +1322,7 @@ namespace OpenSpartan.Workshop.Core
                         Ranks = Tuple.Create(rank, playerRank),
                         IsFree = isFree,
                         Amount = inventoryReward.Amount,
+                        Type = RewardType.StandardReward,
                     };
 
                     if (inventoryItemLocallyAvailable)

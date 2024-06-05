@@ -16,5 +16,7 @@ namespace OpenSpartan.Workshop.Models
         public string ImagePath { get; set; }
 
         public int Amount { get; set; }
+
+        public RewardType Type { get; set; }
     }
 }

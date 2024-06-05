@@ -152,6 +152,8 @@
             <converters:OutcomeToForegroundConverter x:Key="OutcomeToForegroundConverter"/>
             <converters:PerformanceToGlyphConverter x:Key="PerformanceToGlyphConverter"/>
             <converters:PerformanceToColorConverter x:Key="PerformanceToColorConverter"/>
+            <converters:RewardTypeToStringConverter x:Key="RewardTypeToStringConverter"/>
+            <converters:RewardTypeToVisibilityConverter x:Key="RewardTypeToVisibilityConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
