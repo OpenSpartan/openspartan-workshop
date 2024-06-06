@@ -333,12 +333,22 @@ namespace OpenSpartan.Workshop.Core
             file.Directory.Create();
         }
 
-        private static async Task DownloadAndSetImage(string imageName, string imagePath, Action setImageAction = null)
+        private static async Task DownloadAndSetImage(string imageName, string imagePath, Action setImageAction = null, bool isOnWaypoint = false)
         {
             if (!System.IO.File.Exists(imagePath))
             {
-                var image = await SafeAPICall(async () => await HaloClient.GameCmsGetImage(imageName));
-                if (image.Result != null && image.Response.Code == 200)
+                HaloApiResultContainer<byte[], RawResponseContainer> image = null;
+
+                if (isOnWaypoint)
+                {
+                    image = await SafeAPICall(async () => await HaloClient.GameCmsGetGenericWaypointFile(imageName));
+                }
+                else
+                {
+                    image = await SafeAPICall(async () => await HaloClient.GameCmsGetImage(imageName));
+                }
+
+                if (image != null && image.Result != null && image.Response.Code == 200)
                 {
                     await System.IO.File.WriteAllBytesAsync(imagePath, image.Result);
                 }
@@ -462,7 +472,8 @@ namespace OpenSpartan.Workshop.Core
                     file = new(qualifiedEmblemImagePath); file.Directory.Create();
                     file = new(qualifiedBackdropImagePath); file.Directory.Create();
 
-                    await DownloadAndSetImage(nameplate.NameplateCmsPath, qualifiedNameplateImagePath, () => HomeViewModel.Instance.Nameplate = qualifiedNameplateImagePath);
+                    // The nameplate image is downloaded from the Waypoint APIs.
+                    await DownloadAndSetImage(nameplate.NameplateCmsPath, qualifiedNameplateImagePath, () => HomeViewModel.Instance.Nameplate = qualifiedNameplateImagePath, true);
                     await DownloadAndSetImage(emblem.Result.CommonData.DisplayPath.Media.MediaUrl.Path, qualifiedEmblemImagePath, () => HomeViewModel.Instance.Emblem = qualifiedEmblemImagePath);
                     await DownloadAndSetImage(backdrop.Result.ImagePath.Media.MediaUrl.Path, qualifiedBackdropImagePath, () => HomeViewModel.Instance.Backdrop = qualifiedBackdropImagePath);
 
@@ -1478,6 +1489,11 @@ namespace OpenSpartan.Workshop.Core
                         // Current Exchange offering can contain more items in one (e.g., logos)
                         // but ultimately maps to just one item.
                         var item = offering.IncludedItems.FirstOrDefault();
+
+                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        {
+                            ExchangeViewModel.Instance.ExpirationDate = exchangeOfferings.Result.StorefrontExpirationDate;
+                        });
 
                         if (item != null)
                         {

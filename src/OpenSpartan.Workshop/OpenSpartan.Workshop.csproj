@@ -18,8 +18,10 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<None Remove="Controls\MatchesGridControl.xaml" />
+		<None Remove="CustomImages\cr.svg" />
 		<None Remove="CustomImages\logo-icon.png" />
 		<None Remove="CustomImages\OpenSpartan.Workshop.ico" />
+		<None Remove="CustomImages\sp.svg" />
 		<None Remove="Views\BattlePassDetailView.xaml" />
 		<None Remove="Views\BattlePassView.xaml" />
 		<None Remove="Views\EventDetailView.xaml" />
@@ -37,6 +39,9 @@
 		<EmbeddedResource Include="CustomImages\OpenSpartan.Workshop.ico">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</EmbeddedResource>
+		<Content Include="CustomImages\cr.svg">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
 		<Content Include="CustomImages\OpenSpartan.Workshop.ico" />
 	</ItemGroup>
 	<ItemGroup>
@@ -46,6 +51,9 @@
 		<Content Include="Assets\Square44x44Logo.scale-200.png" />
 		<Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
 		<Content Include="Assets\Wide310x150Logo.scale-200.png" />
+		<Content Include="CustomImages\sp.svg">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.WinUI.Collections" Version="8.0.240109" />

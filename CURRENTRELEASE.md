@@ -14,5 +14,7 @@
 - [#35] Event progress is now shown the same way you would see it for operations.
 - [#4] Battle pass item metadata is now shown whenever the user taps on an item.
 - All currency now displays titles in the battle pass view.
+- Fixed the bug where the nameplate was not being rendered even though the image is available.
+- [#31] Data from [The Exchange](https://www.halowaypoint.com/news/welcome-to-the-exchange) is now rendered in a separate tab, allowing convenient tracking of what's currently on the market.
 
 Refer to [**getting started guide**](https://openspartan.com/docs/workshop/guides/get-started/) to start using OpenSpartan Workshop.

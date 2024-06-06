@@ -1,4 +1,5 @@
-﻿using OpenSpartan.Workshop.Core;
+﻿using Den.Dev.Orion.Models;
+using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Models;
 using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
@@ -7,6 +8,7 @@ namespace OpenSpartan.Workshop.ViewModels
 {
     internal class ExchangeViewModel : Observable
     {
+        private APIFormattedDate _expirationDate;
         private MetadataLoadingState _exchangeLoadingState;
         private ObservableCollection<ItemMetadataContainer> _exchangeItems;
 
@@ -25,6 +27,19 @@ namespace OpenSpartan.Workshop.ViewModels
                 if (_exchangeItems != value)
                 {
                     _exchangeItems = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public APIFormattedDate ExpirationDate
+        {
+            get => _expirationDate;
+            set
+            {
+                if (_expirationDate != value)
+                {
+                    _expirationDate = value;
                     NotifyPropertyChanged();
                 }
             }

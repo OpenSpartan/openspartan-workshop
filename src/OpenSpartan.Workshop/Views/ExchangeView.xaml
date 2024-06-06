@@ -32,7 +32,13 @@
                         <FontIcon FontSize="14" Glyph="&#xE72C;"/>
                     </Button>
                 </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="-2,0,0,0">
+                    <TextBlock Foreground="#adb5bd" Text="Expires:" Margin="0,0,4,0"></TextBlock>
+                    <TextBlock Foreground="#adb5bd" FontWeight="Bold" Text="{Binding ExpirationDate.ISO8601Date, Converter={StaticResource ISO8601ToLocalDateStringConverter}}"></TextBlock>
+                </StackPanel>
             </Grid>
+            
 
             <!--Informational state-->
             <Grid Visibility="{Binding ExchangeLoadingState, Converter={StaticResource MetadataLoadingStateToVisibilityConverter}}" Margin="20,0,24,24" Background="#404040" BorderThickness="2" CornerRadius="4" Height="36" Grid.Row="1">
@@ -46,13 +52,14 @@
                 <TextBlock Grid.Column="1" Text="Loading available store offerings..." VerticalAlignment="Center"></TextBlock>
             </Grid>
 
-            <GridView Grid.Row="2" Margin="24,0,8,0" ManipulationMode="System" x:Name="grdExchangeItems" ItemsSource="{Binding ExchangeItems}">
+            <GridView Grid.Row="2" Margin="24,0,24,24" ManipulationMode="System" x:Name="grdExchangeItems" ItemsSource="{Binding ExchangeItems}" FlowDirection="LeftToRight" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Auto">
                 <GridView.ItemTemplate>
                     <DataTemplate>
-                        <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid Background="#404040" BorderThickness="2" CornerRadius="4" Tapped="ExchangeItem_Tapped">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="36"></RowDefinition>
                                 <RowDefinition Height="*"></RowDefinition>
+                                <RowDefinition Height="40"></RowDefinition>
                             </Grid.RowDefinitions>
 
                             <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
@@ -61,6 +68,13 @@
 
                             <Grid Grid.Row="1" Padding="8">
                                 <Image Height="192" Width="192" Source="{Binding ImagePath, Converter={StaticResource ServicePathToLocalPathConverter}}"/>
+                            </Grid>
+
+                            <Grid Grid.Row="2" Background="#5B6163">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Image Source="/CustomImages/sp.svg" Height="24" Margin="0,0,8,0" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                    <TextBlock Text="{Binding ItemValue, Converter={StaticResource CommaAfterThousandsConverter}}" VerticalAlignment="Center" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                </StackPanel>
                             </Grid>
 
                             <localcontrols:AutoClosingTeachingTip Title="{Binding Converter={StaticResource RewardTypeToStringConverter}}"
@@ -90,21 +104,9 @@
 
                 <GridView.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <ItemsWrapGrid MaximumRowsOrColumns="10" AreStickyGroupHeadersEnabled="True"  Orientation="Vertical" />
+                        <ItemsWrapGrid Orientation="Horizontal" />
                     </ItemsPanelTemplate>
                 </GridView.ItemsPanel>
-
-                <GridView.GroupStyle>
-                    <GroupStyle HidesIfEmpty="True">
-                        <GroupStyle.HeaderTemplate>
-                            <DataTemplate>
-                                <Grid Margin="0">
-                                    <TextBlock Text="{Binding Key}" Style="{StaticResource TitleTextBlockStyle}"/>
-                                </Grid>
-                            </DataTemplate>
-                        </GroupStyle.HeaderTemplate>
-                    </GroupStyle>
-                </GridView.GroupStyle>
             </GridView>
         </Grid>
     </Grid>

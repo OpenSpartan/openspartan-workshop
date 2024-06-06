@@ -154,6 +154,7 @@
             <converters:PerformanceToColorConverter x:Key="PerformanceToColorConverter"/>
             <converters:RewardTypeToStringConverter x:Key="RewardTypeToStringConverter"/>
             <converters:RewardTypeToVisibilityConverter x:Key="RewardTypeToVisibilityConverter" />
+            <converters:ISO8601ToLocalDateStringConverter x:Key="ISO8601ToLocalDateStringConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
