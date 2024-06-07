@@ -155,6 +155,12 @@
             <converters:RewardTypeToStringConverter x:Key="RewardTypeToStringConverter"/>
             <converters:RewardTypeToVisibilityConverter x:Key="RewardTypeToVisibilityConverter" />
             <converters:ISO8601ToLocalDateStringConverter x:Key="ISO8601ToLocalDateStringConverter" />
+            <converters:SingleValueAvailabilityToVisibilityConverter x:Key="SingleValueAvailabilityToVisibilityConverter"/>
+            <converters:ListCountToVisibilityConverter x:Key="ListCountToVisibilityConverter"/>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <converters:RankIdentifierToPathConverter x:Key="RankIdentifierToPathConverter"/>
+            <converters:StringAvailabilityToVisibilityConverter x:Key="StringAvailabilityToVisibilityConverter"/>
+            <converters:CsrProgressStateConverter x:Key="CsrProgressStateConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

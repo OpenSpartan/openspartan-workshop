@@ -3,6 +3,7 @@
         MS.MatchId,
         MS.Teams,
         json_extract(MS.MatchInfo, '$.StartTime') AS StartTime,
+        json_extract(MS.MatchInfo, '$.EndTime') AS EndTime,
         json_extract(MS.MatchInfo, '$.Duration') AS Duration,
         json_extract(MS.MatchInfo, '$.GameVariantCategory') AS GameVariantCategory,
         json_extract(MS.MatchInfo, '$.MapVariant.AssetId') AS Map,
@@ -50,6 +51,7 @@ SELECTIVE_MATCHES AS (
         MatchId,
         Teams,
         StartTime,
+        EndTime,
         Duration,
         "Rank",
         Outcome,
@@ -71,6 +73,7 @@ SELECT
     SM.MatchId,
     SM.Teams,
     SM.StartTime,
+    SM.EndTime,
     SM.Duration,
     SM."Rank",
     SM.Outcome,
@@ -107,4 +110,4 @@ LEFT JOIN
 GROUP BY
     SM.MatchId
 ORDER BY
-    StartTime DESC;
+    EndTime DESC;

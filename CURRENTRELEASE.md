@@ -16,5 +16,7 @@
 - All currency now displays titles in the battle pass view.
 - Fixed the bug where the nameplate was not being rendered even though the image is available.
 - [#31] Data from [The Exchange](https://www.halowaypoint.com/news/welcome-to-the-exchange) is now rendered in a separate tab, allowing convenient tracking of what's currently on the market.
+- Matches in the matches list are now ordered by their end time, making it easier to parse the last games.
+- [#21] Added an experimental loose search setting, that speeds up match updates. It's disabled by default but can significantly improve match update performance after matches are already populated in the database.
 
 Refer to [**getting started guide**](https://openspartan.com/docs/workshop/guides/get-started/) to start using OpenSpartan Workshop.

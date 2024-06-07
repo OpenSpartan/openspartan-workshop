@@ -15,6 +15,7 @@ using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -694,7 +695,14 @@ namespace OpenSpartan.Workshop.Core
 
             var tasks = new ConcurrentBag<Task<List<Guid>>>();
 
-            while (true)
+            bool hitMatchThreshold = false;
+            int fullyMatchedBatches = 0;
+            int matchThreshold = 4;
+
+            // If EnableLooseMatchSearch is enabled, we need to also check that the
+            // threshold for successful matches is not hit.
+            while (true &&
+                ((SettingsViewModel.Instance.EnableLooseMatchSearch || hitMatchThreshold) && (fullyMatchedBatches < matchThreshold)))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -711,6 +719,15 @@ namespace OpenSpartan.Workshop.Core
                     foreach (var batch in completedTasks)
                     {
                         matchIds.AddRange(batch);
+
+                        if (SettingsViewModel.Instance.EnableLooseMatchSearch)
+                        {
+                            var matchingMatchesInDb = DataHandler.GetExistingMatchCount(batch);
+                            if (matchingMatchesInDb == batch.Count)
+                            {
+                                fullyMatchedBatches++;
+                            }
+                        }
                     }
 
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
@@ -733,6 +750,13 @@ namespace OpenSpartan.Workshop.Core
             return matchIds;
         }
 
+        /// <summary>
+        /// Gets the matches asynchronously from the Halo Infinite API.
+        /// </summary>
+        /// <param name="xuid"></param>
+        /// <param name="start"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
         private static async Task<List<Guid>> GetMatchBatchAsync(string xuid, int start, int count)
         {
             List<Guid> successfulMatches = [];
@@ -822,7 +846,7 @@ namespace OpenSpartan.Workshop.Core
                 }
                 else
                 {
-                    date = MatchesViewModel.Instance.MatchList.Min(a => a.StartTime).ToString("o", CultureInfo.InvariantCulture);
+                    date = MatchesViewModel.Instance.MatchList.Min(a => a.EndTime).ToString("o", CultureInfo.InvariantCulture);
                     matches = DataHandler.GetMatches($"xuid({HomeViewModel.Instance.Xuid})", date, 10);
                 }
 
@@ -854,7 +878,7 @@ namespace OpenSpartan.Workshop.Core
                 }
                 else
                 {
-                    date = MedalMatchesViewModel.Instance.MatchList.Min(a => a.StartTime).ToString("o", CultureInfo.InvariantCulture);
+                    date = MedalMatchesViewModel.Instance.MatchList.Min(a => a.EndTime).ToString("o", CultureInfo.InvariantCulture);
                     matches = DataHandler.GetMatchesWithMedal($"xuid({HomeViewModel.Instance.Xuid})", medalNameId, date, 10);
                 }
 
@@ -1469,6 +1493,7 @@ namespace OpenSpartan.Workshop.Core
         {
             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
             {
+                ExchangeViewModel.Instance.ExchangeItems = new ObservableCollection<ItemMetadataContainer>();
                 ExchangeViewModel.Instance.ExchangeLoadingState = MetadataLoadingState.Loading;
             });
 

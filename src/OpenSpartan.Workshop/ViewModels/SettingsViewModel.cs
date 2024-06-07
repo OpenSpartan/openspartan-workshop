@@ -12,6 +12,23 @@ namespace OpenSpartan.Workshop.ViewModels
 
         public static string Xuid => HomeViewModel.Instance.Xuid;
 
+        public bool EnableLooseMatchSearch
+        {
+            get
+            {
+                return Settings.EnableLooseMatchSearch;
+            }
+            set
+            {
+                if (Settings.EnableLooseMatchSearch != value)
+                {
+                    Settings.EnableLooseMatchSearch = value;
+                    SettingsManager.StoreSettings(Settings);
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
         public bool SyncSettings
         {
             get

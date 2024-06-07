@@ -16,6 +16,7 @@ namespace OpenSpartan.Workshop.Models
         private string _sandbox;
         private string _build;
         private bool _useObanClearance;
+        private bool _enableLooseMatchSearch;
         private List<string> _extraRitualEvents;
         private List<string> _excludedOperations;
 
@@ -104,6 +105,20 @@ namespace OpenSpartan.Workshop.Models
                 if (_useBroker != value)
                 {
                     _useBroker = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        [JsonPropertyName("loosematchsearch")]
+        public bool EnableLooseMatchSearch
+        {
+            get => _enableLooseMatchSearch;
+            set
+            {
+                if (_enableLooseMatchSearch != value)
+                {
+                    _enableLooseMatchSearch = value;
                     NotifyPropertyChanged();
                 }
             }

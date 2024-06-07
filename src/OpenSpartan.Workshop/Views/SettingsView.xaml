@@ -31,53 +31,61 @@
 
         <StackPanel Margin="24,12,24,0" Grid.Row="1">
             <winui:SettingsExpander Header="Application Details" Description="Details about this version of OpenSpartan Workshop.">
-                    <winui:SettingsExpander.HeaderIcon>
-                        <FontIcon FontSize="14" Glyph="&#xE783;"/>
-                    </winui:SettingsExpander.HeaderIcon>
-                    
-                    <winui:SettingsExpander.Items>
-                        <winui:SettingsCard Header="Release Name" Description="OpenSpartan Workshop"></winui:SettingsCard>
-                        <winui:SettingsCard Header="Version" Description="{Binding Version}"></winui:SettingsCard>
-                    </winui:SettingsExpander.Items>
-                </winui:SettingsExpander>
-                
-                <winui:SettingsExpander Header="User Details" Description="Information about the user authenticated to OpenSpartan Workshop.">
-                    <winui:SettingsExpander.HeaderIcon>
-                        <FontIcon FontSize="14" Glyph="&#xE716;"/>
-                    </winui:SettingsExpander.HeaderIcon>
+                <winui:SettingsExpander.HeaderIcon>
+                    <FontIcon FontSize="14" Glyph="&#xE783;"/>
+                </winui:SettingsExpander.HeaderIcon>
 
-                    <Button Width="100" x:Name="btnLogOut" Click="btnLogOut_Click">Log Out</Button>
+                <winui:SettingsExpander.Items>
+                    <winui:SettingsCard Header="Release Name" Description="OpenSpartan Workshop"></winui:SettingsCard>
+                    <winui:SettingsCard Header="Version" Description="{Binding Version}"></winui:SettingsCard>
+                </winui:SettingsExpander.Items>
+            </winui:SettingsExpander>
 
-                    <winui:SettingsExpander.Items>
-                        <winui:SettingsCard Header="Gamertag" Description="{Binding Gamertag}"></winui:SettingsCard>
-                        <winui:SettingsCard Header="XUID" Description="{Binding Xuid}"></winui:SettingsCard>
-                    </winui:SettingsExpander.Items>
-                </winui:SettingsExpander>
+            <winui:SettingsExpander Header="User Details" Description="Information about the user authenticated to OpenSpartan Workshop.">
+                <winui:SettingsExpander.HeaderIcon>
+                    <FontIcon FontSize="14" Glyph="&#xE716;"/>
+                </winui:SettingsExpander.HeaderIcon>
 
-                <winui:SettingsCard Header="Data Files" Description="Open Windows Explorer to the location where the local database is stored.">
-                    <winui:SettingsCard.HeaderIcon>
-                        <FontIcon FontSize="14" Glyph="&#xEC50;"/>
-                    </winui:SettingsCard.HeaderIcon>
+                <Button Width="100" x:Name="btnLogOut" Click="btnLogOut_Click">Log Out</Button>
 
-                    <Button Width="100" x:Name="btnViewFiles" Click="btnViewFiles_Click">View Files</Button>
-                </winui:SettingsCard>
+                <winui:SettingsExpander.Items>
+                    <winui:SettingsCard Header="Gamertag" Description="{Binding Gamertag}"></winui:SettingsCard>
+                    <winui:SettingsCard Header="XUID" Description="{Binding Xuid}"></winui:SettingsCard>
+                </winui:SettingsExpander.Items>
+            </winui:SettingsExpander>
 
-                <winui:SettingsCard Header="Logging" Description="Determines whether local logs are generated for diagnostics.">
-                    <winui:SettingsCard.HeaderIcon>
-                        <FontIcon FontSize="14" Glyph="&#xECC6;"/>
-                    </winui:SettingsCard.HeaderIcon>
+            <winui:SettingsCard Header="Data Files" Description="Open Windows Explorer to the location where the local database is stored.">
+                <winui:SettingsCard.HeaderIcon>
+                    <FontIcon FontSize="14" Glyph="&#xEC50;"/>
+                </winui:SettingsCard.HeaderIcon>
 
-                    <ToggleSwitch IsOn="{Binding EnableLogging, Mode=TwoWay}"></ToggleSwitch>
-                </winui:SettingsCard>
+                <Button Width="100" x:Name="btnViewFiles" Click="btnViewFiles_Click">View Files</Button>
+            </winui:SettingsCard>
 
-                <winui:SettingsCard Header="Authentication Broker" Description="Allows you to choose whether you want to use native authentication controls or a web browser.">
-                    <winui:SettingsCard.HeaderIcon>
-                        <FontIcon FontSize="14" Glyph="&#xE72E;"/>
-                    </winui:SettingsCard.HeaderIcon>
+            <winui:SettingsCard Header="Logging" Description="Determines whether local logs are generated for diagnostics.">
+                <winui:SettingsCard.HeaderIcon>
+                    <FontIcon FontSize="14" Glyph="&#xECC6;"/>
+                </winui:SettingsCard.HeaderIcon>
 
-                    <ToggleSwitch IsOn="{Binding UseBroker, Mode=TwoWay}"></ToggleSwitch>
-                </winui:SettingsCard>
+                <ToggleSwitch IsOn="{Binding EnableLogging, Mode=TwoWay}"></ToggleSwitch>
+            </winui:SettingsCard>
 
+            <winui:SettingsCard Header="Authentication Broker" Description="Allows you to choose whether you want to use native authentication controls or a web browser.">
+                <winui:SettingsCard.HeaderIcon>
+                    <FontIcon FontSize="14" Glyph="&#xE72E;"/>
+                </winui:SettingsCard.HeaderIcon>
+
+                <ToggleSwitch IsOn="{Binding UseBroker, Mode=TwoWay}"></ToggleSwitch>
+            </winui:SettingsCard>
+
+            <winui:SettingsCard Header="Loose Match Search" Description="If all your matches are already stored locally, allows scanning only for the first few updates that are not in the database. This enables faster match updates, but may miss metadata for matches that were not captured in previous runs.">
+                <winui:SettingsCard.HeaderIcon>
+                    <FontIcon FontSize="14" Glyph="&#xECC5;"/>
+                </winui:SettingsCard.HeaderIcon>
+
+                <ToggleSwitch IsOn="{Binding EnableLooseMatchSearch, Mode=TwoWay}"></ToggleSwitch>
+            </winui:SettingsCard>
+            
             <winui:SettingsExpander Header="Sync Settings" Description="Get basic metadata through the OpenSpartan Workshop API or specify it directly.">
                 <winui:SettingsExpander.HeaderIcon>
                     <FontIcon FontSize="14" Glyph="&#xE895;"/>
@@ -109,7 +117,7 @@
                     <TextBlock>Built with ❤️ by <Hyperlink NavigateUri="https://den.dev">Den Delimarsky</Hyperlink> as an unofficial Halo Infinite companion app.</TextBlock>
                 </StackPanel>
             </StackPanel>
-            
+
             <StackPanel Margin="12,12,0,0">
                 <TextBlock Text="Disclaimers" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
                 <TextBlock>This application is not an official Halo Infinite client. Use at your own risk.</TextBlock>

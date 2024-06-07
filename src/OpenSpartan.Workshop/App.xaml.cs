@@ -34,8 +34,7 @@ namespace OpenSpartan.Workshop
             LogManager.Setup().LoadConfigurationFromFile("NLog.config");
 
             LoadSettings();
-
-            bool authResult = await UserContextManager.InitializeAllDataOnLaunch();
+            _ = await UserContextManager.InitializeAllDataOnLaunch();
         }
 
         private async static void LoadSettings()
@@ -82,6 +81,7 @@ namespace OpenSpartan.Workshop
                     EnableLogging = false,
                     UseBroker = true,
                     UseObanClearance = false,
+                    EnableLooseMatchSearch = false,
                 };
             }
         }

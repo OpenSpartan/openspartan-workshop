@@ -28,7 +28,7 @@
 
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="Exchange" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
-                    <Button Height="36" VerticalAlignment="Center" Margin="4">
+                    <Button Height="36" VerticalAlignment="Center" Margin="4" Click="btnRefreshExchange_Click">
                         <FontIcon FontSize="14" Glyph="&#xE72C;"/>
                     </Button>
                 </StackPanel>

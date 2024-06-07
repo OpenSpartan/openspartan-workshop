@@ -1,6 +1,7 @@
 ﻿using Den.Dev.Orion.Converters;
 using Den.Dev.Orion.Models.HaloInfinite;
 using Microsoft.Data.Sqlite;
+using Microsoft.UI.Xaml.Controls;
 using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.ViewModels;
@@ -9,8 +10,10 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
 
@@ -223,6 +226,39 @@ namespace OpenSpartan.Workshop.Data
             return null;
         }
 
+        internal static int GetExistingMatchCount(IEnumerable<Guid> matchIds)
+        {
+            try
+            {
+                using SqliteConnection connection = new($"Data Source={DatabasePath}");
+                connection.Open();
+
+                // In this context, we want the command to be literal rather than parameterized.
+                using var command = connection.CreateCommand();
+                command.CommandText = GetQuery("Select", "ExistingMatchCount").Replace("$MatchGUIDList", string.Join(", ", matchIds.Select(g => $"'{g}'")), StringComparison.InvariantCultureIgnoreCase);
+
+                using SqliteDataReader reader = command.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        var resultOrdinal = reader.GetOrdinal("ExistingMatchCount");
+                        return reader.IsDBNull(resultOrdinal) ? -1 : reader.GetFieldValue<int>(resultOrdinal);
+                    }
+                }
+                else
+                {
+                    LogEngine.Log($"No rows returned for existing match metadata.", LogSeverity.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogEngine.Log($"An error occurred obtaining match records from database. {ex.Message}", LogSeverity.Error);
+            }
+
+            return -1;
+        }
+
         internal static List<MatchTableEntity> GetMatches(string playerXuid, string boundaryTime, int boundaryLimit)
         {
             return GetMatchesInternal(playerXuid, null, boundaryTime, boundaryLimit);
@@ -290,6 +326,7 @@ namespace OpenSpartan.Workshop.Data
         {
             var matchOrdinal = reader.GetOrdinal("MatchId");
             var startTimeOrdinal = reader.GetOrdinal("StartTime");
+            var endTimeOrdinal = reader.GetOrdinal("EndTime");
             var rankOrdinal = reader.GetOrdinal("Rank");
             var outcomeOrdinal = reader.GetOrdinal("Outcome");
             var gameVariantCategoryOrdinal = reader.GetOrdinal("GameVariantCategory");
@@ -319,6 +356,7 @@ namespace OpenSpartan.Workshop.Data
             {
                 MatchId = reader.IsDBNull(matchOrdinal) ? string.Empty : reader.GetFieldValue<string>(matchOrdinal),
                 StartTime = reader.IsDBNull(startTimeOrdinal) ? DateTimeOffset.UnixEpoch : reader.GetFieldValue<DateTimeOffset>(startTimeOrdinal).ToLocalTime(),
+                EndTime = reader.IsDBNull(startTimeOrdinal) ? DateTimeOffset.UnixEpoch : reader.GetFieldValue<DateTimeOffset>(endTimeOrdinal).ToLocalTime(),
                 Rank = reader.IsDBNull(rankOrdinal) ? 0 : reader.GetFieldValue<int>(rankOrdinal),
                 Outcome = reader.IsDBNull(outcomeOrdinal) ? Outcome.DidNotFinish : reader.GetFieldValue<Outcome>(outcomeOrdinal),
                 Category = reader.IsDBNull(gameVariantCategoryOrdinal) ? GameVariantCategory.None : reader.GetFieldValue<GameVariantCategory>(gameVariantCategoryOrdinal),

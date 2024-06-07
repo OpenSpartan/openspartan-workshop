@@ -10,6 +10,8 @@ namespace OpenSpartan.Workshop.Models
 
         public DateTimeOffset StartTime { get; set; }
 
+        public DateTimeOffset EndTime { get; set; }
+
         public List<Team> Teams { get; set; }
 
         public TimeSpan Duration { get; set; }

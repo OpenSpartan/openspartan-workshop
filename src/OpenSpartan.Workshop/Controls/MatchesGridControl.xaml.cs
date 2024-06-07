@@ -37,7 +37,7 @@ namespace OpenSpartan.Workshop.Controls
         }
 
         public MatchesGridControl()
-        {
+        { 
             this.InitializeComponent();
         }
 
