@@ -68,6 +68,11 @@
                         <FontIcon Glyph="&#xE719;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem Content="Season Calendar" x:Name="nviSeasonCalendar" Tag="OpenSpartan.Workshop.Views.SeasonCalendarView">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE787;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
             </NavigationView.MenuItems>
 
             <Frame x:Name="ContentFrame"/>

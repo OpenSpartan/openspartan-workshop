@@ -18,6 +18,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<None Remove="Controls\MatchesGridControl.xaml" />
+		<None Remove="Controls\SeasonCalendarControl.xaml" />
 		<None Remove="CustomImages\cr.svg" />
 		<None Remove="CustomImages\logo-icon.png" />
 		<None Remove="CustomImages\OpenSpartan.Workshop.ico" />
@@ -30,6 +31,7 @@
 		<None Remove="Views\MatchesView.xaml" />
 		<None Remove="Views\MedalMatchesView.xaml" />
 		<None Remove="Views\MedalsView.xaml" />
+		<None Remove="Views\SeasonCalendarView.xaml" />
 		<None Remove="Views\SettingsView.xaml" />
 	</ItemGroup>
 	<ItemGroup>
@@ -84,6 +86,9 @@
 	<ItemGroup>
 		<Page Update="Controls\MatchesGridControl.xaml">
 			<Generator>MSBuild:Compile</Generator>
+		</Page>
+		<Page Update="Controls\SeasonCalendarControl.xaml">
+		  <Generator>MSBuild:Compile</Generator>
 		</Page>
 		<None Update="NLog.config">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -187,6 +192,9 @@
 		<None Update="Queries\VerifyTableAvailability.sql">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+		<Page Update="Views\SeasonCalendarView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
 		<Page Update="Views\ExchangeView.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</Page>

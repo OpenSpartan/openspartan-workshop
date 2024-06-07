@@ -24,6 +24,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -852,8 +853,7 @@ namespace OpenSpartan.Workshop.Core
 
                 if (matches != null)
                 {
-                    var dispatcherWindow = ((Application.Current as App)?.MainWindow) as MainWindow;
-                    await dispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                     {
                         MatchesViewModel.Instance.MatchList.AddRange(matches);
                     });
@@ -863,6 +863,62 @@ namespace OpenSpartan.Workshop.Core
                     LogEngine.Log("Could not get the list of matches for the specified parameters.", LogSeverity.Error);
                 }
             }
+        }
+
+        internal static async Task<bool> PopulateCSRSeasonCalendar()
+        {
+            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            {
+                SeasonCalendarViewModel.Instance.CalendarLoadingState = MetadataLoadingState.Loading;
+                SeasonCalendarViewModel.Instance.SeasonDays = [];
+            });
+
+            var calendar = await SafeAPICall(async () => await HaloClient.GameCmsGetCSRCalendar());
+
+            if (calendar != null && calendar.Result != null)
+            {
+                for (int i = 0; i < calendar.Result.Seasons.Count; i++)
+                {
+                    var days = GenerateDateList(calendar.Result.Seasons[i].StartDate.ISO8601Date, calendar.Result.Seasons[i].EndDate.ISO8601Date);
+                    foreach(var day in days)
+                    {
+                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        {
+                            SeasonCalendarViewDayItem calendarItem = new(day, calendar.Result.Seasons[i].CsrSeasonFilePath.Replace(".json", string.Empty), ColorConverter.FromHex(Configuration.SeasonColors[i]));
+                            SeasonCalendarViewModel.Instance.SeasonDays.Add(calendarItem);
+                        });
+                    }
+                }
+            }
+            else
+            {
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                {
+                    SeasonCalendarViewModel.Instance.CalendarLoadingState = MetadataLoadingState.Completed;
+                });
+
+                return false;
+            }
+
+            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            {
+                SeasonCalendarViewModel.Instance.CalendarLoadingState = MetadataLoadingState.Completed;
+            });
+
+            return true;
+        }
+
+        static List<DateTime> GenerateDateList(DateTime? lowerDate, DateTime? upperDate)
+        {
+            List<DateTime> dateList = [];
+
+            // Iterate through the dates and add them to the list
+            for (DateTime date = (DateTime)lowerDate; date <= upperDate; date = date.AddDays(1))
+            {
+                dateList.Add(date);
+            }
+
+            return dateList;
         }
 
         internal static async void PopulateMedalMatchData(long medalNameId)
@@ -884,8 +940,7 @@ namespace OpenSpartan.Workshop.Core
 
                 if (matches != null)
                 {
-                    var dispatcherWindow = ((Application.Current as App)?.MainWindow) as MainWindow;
-                    await dispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                     {
                         MedalMatchesViewModel.Instance.MatchList.AddRange(matches);
                     });
@@ -1635,6 +1690,7 @@ namespace OpenSpartan.Workshop.Core
                         async () => await PopulateExchangeData(),
                         async () => await PopulateCsrImages(),
                         async () => await PopulateCareerData(),
+                        async () => await PopulateCSRSeasonCalendar(),
                         async () => await PopulateUserInventory(),
                         async () => await PopulateCustomizationData(),
                         async () => await PopulateDecorationData(),

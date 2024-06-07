@@ -68,5 +68,27 @@ namespace OpenSpartan.Workshop.Core
             "diamond_6",
             "onyx_1",
         ];
+
+        internal static readonly string[] SeasonColors =
+        [
+            "#08B2E3",
+            "#EE6352",
+            "#57A773",
+            "#AB2346",
+            "#D5A021",
+            "#550527",
+            "#688E26",
+            "#F44708",
+            "#A10702",
+            "#38405F",
+            "#FF0035",
+            "#820263",
+            "#D90368",
+            "#FFD400",
+            "#36C9C6",
+            "#D8A7CA",
+            "#7E3F8F",
+            "#402039",
+        ];
     }
 }
