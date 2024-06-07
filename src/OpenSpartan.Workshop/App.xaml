@@ -161,6 +161,10 @@
             <converters:RankIdentifierToPathConverter x:Key="RankIdentifierToPathConverter"/>
             <converters:StringAvailabilityToVisibilityConverter x:Key="StringAvailabilityToVisibilityConverter"/>
             <converters:CsrProgressStateConverter x:Key="CsrProgressStateConverter"/>
+            <converters:CsrToPathConverter x:Key="CsrToPathConverter"/>
+            <converters:CsrToTextRankConverter x:Key="CsrToTextRankConverter" />
+            <converters:CsrToProgressConverter x:Key="CsrToProgressConverter" />
+            <converters:CsrToTooltipValueConverter x:Key="CsrToTooltipValueConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

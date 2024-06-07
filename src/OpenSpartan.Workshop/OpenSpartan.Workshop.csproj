@@ -31,6 +31,7 @@
 		<None Remove="Views\MatchesView.xaml" />
 		<None Remove="Views\MedalMatchesView.xaml" />
 		<None Remove="Views\MedalsView.xaml" />
+		<None Remove="Views\RankedView.xaml" />
 		<None Remove="Views\SeasonCalendarView.xaml" />
 		<None Remove="Views\SettingsView.xaml" />
 	</ItemGroup>
@@ -120,6 +121,9 @@
 		<None Update="Queries\Bootstrap\PlayerMatchStats.sql">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+		<None Update="Queries\Bootstrap\PlaylistCSRSnapshots.sql">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
 		<None Update="Queries\Bootstrap\PlaylistMapModePairs.sql">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
@@ -155,6 +159,9 @@
 		</None>
 		<None Update="Queries\Insert\PlayerMatchStats.sql">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Queries\Insert\PlaylistCSR.sql">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 		<None Update="Queries\Insert\PlaylistMapModePairs.sql">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -192,6 +199,9 @@
 		<None Update="Queries\VerifyTableAvailability.sql">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+		<Page Update="Views\RankedView.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</Page>
 		<Page Update="Views\SeasonCalendarView.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</Page>

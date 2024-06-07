@@ -84,6 +84,7 @@ namespace OpenSpartan.Workshop.Data
                 BootstrapTableIfNotExists(connection, "OperationRewardTracks");
                 BootstrapTableIfNotExists(connection, "InventoryItems");
                 BootstrapTableIfNotExists(connection, "OwnedInventoryItems");
+                BootstrapTableIfNotExists(connection, "PlaylistCSRSnapshots");
 
                 SetupIndices(connection);
 
@@ -152,6 +153,37 @@ namespace OpenSpartan.Workshop.Data
             catch (Exception ex)
             {
                 LogEngine.Log($"Error inserting service record entry. {ex.Message}", LogSeverity.Error);
+                return false;
+            }
+        }
+
+        internal static bool InsertPlaylistCSRSnapshot(string playlistId, string playlistVersion, string playlistCsrJson)
+        {
+            try
+            {
+                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText = GetQuery("Insert", "PlaylistCSR"); ;
+                command.Parameters.AddWithValue("$ResponseBody", playlistCsrJson);
+                command.Parameters.AddWithValue("$PlaylistId", playlistId);
+                command.Parameters.AddWithValue("$PlaylistVersion", playlistVersion);
+                command.Parameters.AddWithValue("$SnapshotTimestamp", DateTimeOffset.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK", CultureInfo.InvariantCulture));
+
+                using var reader = command.ExecuteReader();
+                if (reader.RecordsAffected > 1)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogEngine.Log($"Error inserting playlist CSR entry. {ex.Message}", LogSeverity.Error);
                 return false;
             }
         }

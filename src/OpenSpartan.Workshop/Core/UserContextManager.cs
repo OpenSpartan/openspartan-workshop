@@ -16,7 +16,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -24,7 +23,6 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -47,6 +45,8 @@ namespace OpenSpartan.Workshop.Core
 
         internal static CancellationTokenSource MatchLoadingCancellationTracker = new();
         internal static CancellationTokenSource BattlePassLoadingCancellationTracker = new();
+        internal static CancellationTokenSource ServiceRecordCancellationTracker = new();
+        internal static CancellationTokenSource ExchangeCancellationTracker = new();
 
         internal static MainWindow DispatcherWindow = ((Application.Current as App)?.MainWindow) as MainWindow;
 
@@ -76,8 +76,8 @@ namespace OpenSpartan.Workshop.Core
                     return metadata.Result;
                 }
 
-                return null;
                 LogEngine.Log($"Medal metadata populated.");
+                return null;
             }
             catch (Exception ex)
             {
@@ -364,22 +364,39 @@ namespace OpenSpartan.Workshop.Core
 
         internal static async Task<bool> PopulateServiceRecordData()
         {
+            await ServiceRecordCancellationTracker.CancelAsync();
+            ServiceRecordCancellationTracker = new CancellationTokenSource();
+
             try
             {
                 // Get initial service record details
                 var serviceRecordResult = await SafeAPICall(async () =>
                 {
-                    return await HaloClient.StatsGetPlayerServiceRecord(HomeViewModel.Instance.Gamertag, LifecycleMode.Matchmade);
+                    return await HaloClient.StatsGetPlayerServiceRecord($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})", LifecycleMode.Matchmade);
                 });
 
                 if (serviceRecordResult != null && serviceRecordResult.Result != null && serviceRecordResult.Response.Code == 200)
                 {
+                    // First, we want to insert the service record entry in the database.
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                     {
                         HomeViewModel.Instance.ServiceRecord = serviceRecordResult.Result;
                     });
 
                     DataHandler.InsertServiceRecordEntry(serviceRecordResult.Response.Message);
+
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    {
+                        RankedViewModel.Instance.RankedLoadingState = MetadataLoadingState.Loading;
+                        RankedViewModel.Instance.Playlists = [];
+                    });
+
+                    // For ranked progression, we can run that on the thread pool to make sure it doesn't block
+                    // all other calls.
+                    _ = Task.Run(async () =>
+                    {
+                        await ProcessRankedPlaylists(serviceRecordResult.Result, ServiceRecordCancellationTracker.Token);
+                    }, ServiceRecordCancellationTracker.Token);
                 }
 
                 return true;
@@ -388,6 +405,72 @@ namespace OpenSpartan.Workshop.Core
             {
                 return false;
             }
+        }
+
+        private static async Task ProcessRankedPlaylists(PlayerServiceRecord serviceRecord, CancellationToken token)
+        {
+            // Next, we want to also capture the ranked progression. To do that, we will iterate through each
+            // playlist the player has ever played in, according to the service record.
+            foreach (var playlist in serviceRecord.Subqueries.PlaylistAssetIds)
+            {
+                token.ThrowIfCancellationRequested();
+
+                // We look inside each playlist configuration to see if the playlist has CSR associated
+                // with it, since we only care about CSR-enabled playlists to get ranked progression.
+                var playlistConfigurationResult = await SafeAPICall(async () =>
+                {
+                    return await HaloClient.GameCmsGetMultiplayerPlaylistConfiguration($"{playlist.ToString()}.json");
+                });
+
+                if (playlistConfigurationResult != null && playlistConfigurationResult.Result != null)
+                {
+                    // Let's check if the playlist has CSR
+                    if (playlistConfigurationResult.Result.HasCsr == true)
+                    {
+                        var playlistCsr = await SafeAPICall(async () =>
+                        {
+                            return await HaloClient.SkillGetPlaylistCsr(playlist.ToString(), new List<string> { $"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})" });
+                        });
+
+                        // If we successfully got a playlist CSR, let's record that data locally in the database
+                        // and also get additional playlist data. We also check that the Value array has more than
+                        // zero elements, because if there is nothing that means that there is no CSR snapshot
+                        // to capture and store.
+                        if (playlistCsr != null && playlistCsr.Result != null && playlistCsr.Response != null && playlistCsr.Result.Value.Count > 0)
+                        {
+                            DataHandler.InsertPlaylistCSRSnapshot(playlist.ToString(), playlistConfigurationResult.Result.UgcPlaylistVersion.ToString(), playlistCsr.Response.Message);
+
+                            var playlistMetadata = await SafeAPICall(async () =>
+                            {
+                                return await HaloClient.HIUGCDiscoveryGetPlaylist(playlist.ToString(), playlistConfigurationResult.Result.UgcPlaylistVersion.ToString(), HaloClient.ClearanceToken);
+                            });
+
+                            // Now, let's get the data into the local viewmodel if the metadata acquisition was successful.
+                            if (playlistMetadata != null && playlistMetadata.Result != null)
+                            {
+                                if (!token.IsCancellationRequested)
+                                {
+                                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                                    {
+                                        RankedViewModel.Instance.Playlists.Add(new PlaylistCSRSnapshot()
+                                        {
+                                            Name = playlistMetadata.Result.PublicName,
+                                            Id = playlist,
+                                            Version = playlistConfigurationResult.Result.UgcPlaylistVersion,
+                                            Snapshot = playlistCsr.Result.Value[0], // We only got data for one player.
+                                        });
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            {
+                RankedViewModel.Instance.RankedLoadingState = MetadataLoadingState.Completed;
+            });
         }
 
         internal static async Task<bool> PopulateDecorationData()
@@ -880,7 +963,7 @@ namespace OpenSpartan.Workshop.Core
                 for (int i = 0; i < calendar.Result.Seasons.Count; i++)
                 {
                     var days = GenerateDateList(calendar.Result.Seasons[i].StartDate.ISO8601Date, calendar.Result.Seasons[i].EndDate.ISO8601Date);
-                    foreach(var day in days)
+                    foreach (var day in days)
                     {
                         await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                         {
@@ -1546,94 +1629,120 @@ namespace OpenSpartan.Workshop.Core
 
         internal static async Task<bool> PopulateExchangeData()
         {
-            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            try
             {
-                ExchangeViewModel.Instance.ExchangeItems = new ObservableCollection<ItemMetadataContainer>();
-                ExchangeViewModel.Instance.ExchangeLoadingState = MetadataLoadingState.Loading;
-            });
+                await ExchangeCancellationTracker.CancelAsync();
+                ExchangeCancellationTracker = new CancellationTokenSource();
 
-            var exchangeOfferings = await SafeAPICall(async () =>
-            {
-                return await HaloClient.EconomyGetSoftCurrencyStore($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})");
-            });
-
-            if (exchangeOfferings != null && exchangeOfferings.Result != null)
-            {
-                foreach (var offering in exchangeOfferings.Result.Offerings)
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                 {
-                    // We're only interested in offerings that have items attached to them.
-                    // Other items are not relevant, and we can skip them (there are no currency
-                    // or seasonal offers attached to Exchange items.
-                    if (offering != null && offering.IncludedItems.Any())
-                    {
-                        // Current Exchange offering can contain more items in one (e.g., logos)
-                        // but ultimately maps to just one item.
-                        var item = offering.IncludedItems.FirstOrDefault();
+                    ExchangeViewModel.Instance.ExchangeItems = new ObservableCollection<ItemMetadataContainer>();
+                    ExchangeViewModel.Instance.ExchangeLoadingState = MetadataLoadingState.Loading;
+                });
 
-                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                var exchangeOfferings = await SafeAPICall(async () =>
+                {
+                    return await HaloClient.EconomyGetSoftCurrencyStore($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})");
+                });
+
+                if (exchangeOfferings != null && exchangeOfferings.Result != null)
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        await ProcessExchangeItems(exchangeOfferings.Result, ExchangeCancellationTracker.Token);
+                    }, ExchangeCancellationTracker.Token);
+
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                LogEngine.Log($"Failed to finish updating The Exchange content. Reason: {ex.Message}");
+
+                return false;
+            }
+        }
+
+        private static async Task<bool> ProcessExchangeItems(StoreItem exchangeStoreItem, CancellationToken token)
+        {
+            foreach (var offering in exchangeStoreItem.Offerings)
+            {
+                token.ThrowIfCancellationRequested();
+
+                // We're only interested in offerings that have items attached to them.
+                // Other items are not relevant, and we can skip them (there are no currency
+                // or seasonal offers attached to Exchange items.
+                if (offering != null && offering.IncludedItems.Any())
+                {
+                    // Current Exchange offering can contain more items in one (e.g., logos)
+                    // but ultimately maps to just one item.
+                    var item = offering.IncludedItems.FirstOrDefault();
+
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    {
+                        ExchangeViewModel.Instance.ExpirationDate = exchangeStoreItem.StorefrontExpirationDate;
+                    });
+
+                    if (item != null)
+                    {
+                        var itemMetadata = await SafeAPICall(async () =>
                         {
-                            ExchangeViewModel.Instance.ExpirationDate = exchangeOfferings.Result.StorefrontExpirationDate;
+                            return await HaloClient.GameCmsGetItem(item.ItemPath, HaloClient.ClearanceToken);
                         });
 
-                        if (item != null)
+                        if (itemMetadata != null)
                         {
-                            var itemMetadata = await SafeAPICall(async () =>
+                            string folderPath = !string.IsNullOrWhiteSpace(itemMetadata.Result.CommonData.DisplayPath.FolderPath) ? itemMetadata.Result.CommonData.DisplayPath.FolderPath : itemMetadata.Result.CommonData.DisplayPath.Media.FolderPath;
+                            string fileName = !string.IsNullOrWhiteSpace(itemMetadata.Result.CommonData.DisplayPath.FileName) ? itemMetadata.Result.CommonData.DisplayPath.FileName : itemMetadata.Result.CommonData.DisplayPath.Media.FileName;
+
+                            var metadataContainer = new ItemMetadataContainer
                             {
-                                return await HaloClient.GameCmsGetItem(item.ItemPath, HaloClient.ClearanceToken);
-                            });
+                                ItemType = item.ItemType,
+                                // There is usually just one price, since it's just one offering. There may be
+                                // several included items (e.g., shoulder pads) but the price should still be the
+                                // same regardless, at least from the current Exchange implementation.
+                                // If for some reason there is no price assigned, we will default to -1.
+                                ItemValue = (offering.Prices != null && offering.Prices.Any()) ? offering.Prices[0].Cost : -1,
+                                ImagePath = (!string.IsNullOrWhiteSpace(folderPath) && !string.IsNullOrWhiteSpace(fileName)) ? Path.Combine(folderPath, fileName).Replace("\\", "/") : itemMetadata.Result.CommonData.DisplayPath.Media.MediaUrl.Path,
+                                ItemDetails = new InGameItem()
+                                {
+                                    CommonData = itemMetadata.Result.CommonData,
+                                },
+                            };
 
-                            if (itemMetadata != null)
+                            if (Path.IsPathRooted(metadataContainer.ImagePath))
                             {
-                                string folderPath = !string.IsNullOrWhiteSpace(itemMetadata.Result.CommonData.DisplayPath.FolderPath) ? itemMetadata.Result.CommonData.DisplayPath.FolderPath : itemMetadata.Result.CommonData.DisplayPath.Media.FolderPath;
-                                string fileName = !string.IsNullOrWhiteSpace(itemMetadata.Result.CommonData.DisplayPath.FileName) ? itemMetadata.Result.CommonData.DisplayPath.FileName : itemMetadata.Result.CommonData.DisplayPath.Media.FileName;
+                                metadataContainer.ImagePath = metadataContainer.ImagePath.TrimStart(Path.DirectorySeparatorChar);
+                                metadataContainer.ImagePath = metadataContainer.ImagePath.TrimStart(Path.AltDirectorySeparatorChar);
+                            }
 
-                                var metadataContainer = new ItemMetadataContainer
-                                {
-                                    ItemType = item.ItemType,
-                                    // There is usually just one price, since it's just one offering. There may be
-                                    // several included items (e.g., shoulder pads) but the price should still be the
-                                    // same regardless, at least from the current Exchange implementation.
-                                    // If for some reason there is no price assigned, we will default to -1.
-                                    ItemValue = (offering.Prices != null && offering.Prices.Any()) ? offering.Prices[0].Cost : -1,
-                                    ImagePath = (!string.IsNullOrWhiteSpace(folderPath) && !string.IsNullOrWhiteSpace(fileName)) ? Path.Combine(folderPath, fileName).Replace("\\", "/") : itemMetadata.Result.CommonData.DisplayPath.Media.MediaUrl.Path,
-                                    ItemDetails = new InGameItem()
-                                    {
-                                        CommonData = itemMetadata.Result.CommonData,
-                                    },
-                                };
+                            string qualifiedItemImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", metadataContainer.ImagePath);
 
-                                if (Path.IsPathRooted(metadataContainer.ImagePath))
-                                {
-                                    metadataContainer.ImagePath = metadataContainer.ImagePath.TrimStart(Path.DirectorySeparatorChar);
-                                    metadataContainer.ImagePath = metadataContainer.ImagePath.TrimStart(Path.AltDirectorySeparatorChar);
-                                }
+                            EnsureDirectoryExists(qualifiedItemImagePath);
 
-                                string qualifiedItemImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", metadataContainer.ImagePath);
+                            await DownloadAndSetImage(metadataContainer.ImagePath, qualifiedItemImagePath);
 
-                                EnsureDirectoryExists(qualifiedItemImagePath);
-
-                                await DownloadAndSetImage(metadataContainer.ImagePath, qualifiedItemImagePath);
-
+                            if (!token.IsCancellationRequested)
+                            {
                                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                                 {
                                     ExchangeViewModel.Instance.ExchangeItems.Add(metadataContainer);
                                 });
-
-                                LogEngine.Log($"Got item for Exchange listing: {item.ItemPath}");
                             }
+
+                            LogEngine.Log($"Got item for Exchange listing: {item.ItemPath}");
                         }
                     }
                 }
-
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                {
-                    ExchangeViewModel.Instance.ExchangeLoadingState = MetadataLoadingState.Completed;
-                });
-
-                return true;
             }
 
-            return false;
+            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            {
+                ExchangeViewModel.Instance.ExchangeLoadingState = MetadataLoadingState.Completed;
+            });
+
+            return true;
         }
 
         internal static async Task<bool> InitializeAllDataOnLaunch()
@@ -1681,6 +1790,9 @@ namespace OpenSpartan.Workshop.Core
                     // We want to populate the medal metadata before we do anything else.
                     MedalMetadata = await PrepopulateMedalMetadata();
 
+                    // Let's get career data first to make sure that it's quickly populated.
+                    _ = await PopulateCareerData();
+
                     // Service Record data should be pulled early to make sure that we
                     // get the latest medals quickly before everything else is populated.
                     _ = await PopulateServiceRecordData();
@@ -1689,7 +1801,6 @@ namespace OpenSpartan.Workshop.Core
                         async () => await PopulateMedalData(),
                         async () => await PopulateExchangeData(),
                         async () => await PopulateCsrImages(),
-                        async () => await PopulateCareerData(),
                         async () => await PopulateCSRSeasonCalendar(),
                         async () => await PopulateUserInventory(),
                         async () => await PopulateCustomizationData(),

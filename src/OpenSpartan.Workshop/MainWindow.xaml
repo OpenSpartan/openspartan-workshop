@@ -73,6 +73,11 @@
                         <FontIcon Glyph="&#xE787;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem Content="Ranked Progression" x:Name="nviRanked" Tag="OpenSpartan.Workshop.Views.RankedView">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xECA7;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
             </NavigationView.MenuItems>
 
             <Frame x:Name="ContentFrame"/>

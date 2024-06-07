@@ -44,7 +44,7 @@
 
                 <ProgressRing Height="12" Width="12"></ProgressRing>
 
-                <TextBlock Grid.Column="1" Text="Loading available store offerings..." VerticalAlignment="Center"></TextBlock>
+                <TextBlock Grid.Column="1" Text="Loading season calendar data..." VerticalAlignment="Center"></TextBlock>
             </Grid>
 
             <controls:SeasonCalendarControl Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" DayItems="{Binding SeasonDays}"></controls:SeasonCalendarControl>

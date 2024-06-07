@@ -1,4 +1,5 @@
 ﻿using Microsoft.Data.Sqlite;
+using OpenSpartan.Workshop.Core;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -43,8 +44,9 @@ namespace OpenSpartan.Workshop.Data
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                LogEngine.Log($"Could not bootstrap table {tableName}. {ex.Message}", Models.LogSeverity.Error);
                 return false;
             }
         }
