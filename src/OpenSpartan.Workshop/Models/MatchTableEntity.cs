@@ -40,6 +40,30 @@ namespace OpenSpartan.Workshop.Models
 
         public float? ExpectedKills { get; set; }
 
+        public float? ExpectedBronzeDeaths { get; set; }
+
+        public float? ExpectedBronzeKills { get; set; }
+
+        public float? ExpectedSilverDeaths { get; set; }
+
+        public float? ExpectedSilverKills { get; set; }
+
+        public float? ExpectedGoldDeaths { get; set; }
+
+        public float? ExpectedGoldKills { get; set; }
+
+        public float? ExpectedPlatinumDeaths { get; set; }
+
+        public float? ExpectedPlatinumKills { get; set; }
+
+        public float? ExpectedDiamondDeaths { get; set; }
+
+        public float? ExpectedDiamondKills { get; set; }
+
+        public float? ExpectedOnyxDeaths { get; set; }
+
+        public float? ExpectedOnyxKills { get; set; }
+
         public int? PostMatchCsr { get; set; }
 
         public int? PreMatchCsr { get; set; }

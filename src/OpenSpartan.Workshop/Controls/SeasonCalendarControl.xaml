@@ -31,11 +31,19 @@
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate>
-                                <StackPanel>
+                                <StackPanel VerticalAlignment="Bottom">
                                     <Grid
                                         Background="{Binding CSRSeasonMarkerColor}"
                                         Padding="5"
-                                        Margin="5"
+                                        Margin="4,0,4,4"
+                                        VerticalAlignment="Bottom">
+                                        <TextBlock Text="{Binding CSRSeasonText}"></TextBlock>
+                                    </Grid>
+
+                                    <Grid
+                                        Background="{Binding CSRSeasonMarkerColor}"
+                                        Padding="5"
+                                        Margin="4,0,4,0"
                                         VerticalAlignment="Bottom">
                                         <TextBlock Text="{Binding CSRSeasonText}"></TextBlock>
                                     </Grid>
