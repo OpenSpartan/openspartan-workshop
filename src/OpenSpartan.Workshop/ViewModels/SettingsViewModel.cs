@@ -1,5 +1,6 @@
 ﻿using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Models;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.ViewModels
@@ -156,6 +157,20 @@ namespace OpenSpartan.Workshop.ViewModels
                 if (_settings != value)
                 {
                     _settings = value;
+                    SettingsManager.StoreSettings(Settings);
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public List<string> ExtraRitualEvents
+        {
+            get => Settings.ExtraRitualEvents;
+            set
+            {
+                if (Settings.ExtraRitualEvents != value)
+                {
+                    Settings.ExtraRitualEvents = value;
                     SettingsManager.StoreSettings(Settings);
                     NotifyPropertyChanged();
                 }

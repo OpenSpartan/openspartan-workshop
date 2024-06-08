@@ -60,6 +60,9 @@ namespace OpenSpartan.Workshop
                             SettingsViewModel.Instance.Settings.Build = settings.Build;
                             SettingsViewModel.Instance.Settings.Sandbox = settings.Sandbox;
                             SettingsViewModel.Instance.Settings.UseObanClearance = settings.UseObanClearance;
+                            SettingsViewModel.Instance.Settings.ExtraRitualEvents = settings.ExtraRitualEvents;
+
+                            SettingsManager.StoreSettings(SettingsViewModel.Instance.Settings);
                         }    
                     }
                     catch (Exception ex)
