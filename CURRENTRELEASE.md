@@ -2,6 +2,7 @@
 
 - [#4] Battle pass item metadata is now shown whenever the user taps on an item.
 - [#16] Tier counterfactuals are now displayed for all ranked matches.
+- [#18] Ranked data now displayed in its own tab.
 - [#21] Added an experimental loose search setting, that speeds up match updates. It's disabled by default but can significantly improve match update performance after matches are already populated in the database.
 - [#23] Fixes missing medals not rendered in match stats.
 - [#24] For matches where there are no expected kills or deaths, the performance arrow indicators are not shown.
