@@ -30,20 +30,6 @@ namespace OpenSpartan.Workshop.Controls
 
         private void CalendarViewControl_CalendarViewDayItemChanging(CalendarView sender, CalendarViewDayItemChangingEventArgs args)
         {
-            if (DayItems != null)
-            {
-                var item = DayItems.Where(x => DateOnly.FromDateTime(x.DateTime) == DateOnly.FromDateTime(args.Item.Date.Date)).FirstOrDefault();
-
-                if (item != null)
-                {
-                    args.Item.DataContext = item;
-                }
-                else
-                {
-                    args.Item.DataContext = null;
-                }
-            }
-
             if (args.Phase == 0)
             {
                 // Register callback for next phase.
@@ -58,6 +44,20 @@ namespace OpenSpartan.Workshop.Controls
                 }
                 // Register callback for next phase.
                 args.RegisterUpdateCallback(CalendarViewControl_CalendarViewDayItemChanging);
+            }
+
+            if (DayItems != null)
+            {
+                var item = DayItems.Where(x => DateOnly.FromDateTime(x.DateTime) == DateOnly.FromDateTime(args.Item.Date.Date)).FirstOrDefault();
+
+                if (item != null)
+                {
+                    args.Item.DataContext = item;
+                }
+                else
+                {
+                    args.Item.DataContext = null;
+                }
             }
         }
     }

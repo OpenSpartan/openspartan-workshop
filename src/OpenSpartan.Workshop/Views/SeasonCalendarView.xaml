@@ -28,9 +28,6 @@
 
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="Season Calendar" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
-                    <Button Height="36" VerticalAlignment="Center" Margin="4">
-                        <FontIcon FontSize="14" Glyph="&#xE72C;"/>
-                    </Button>
                 </StackPanel>
             </Grid>
 

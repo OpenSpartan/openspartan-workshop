@@ -3,7 +3,7 @@ using System;
 
 namespace OpenSpartan.Workshop.Models
 {
-    public record SeasonCalendarViewDayItem
+    public class SeasonCalendarViewDayItem
     {
         public SeasonCalendarViewDayItem(DateTime dateTime, string text, SolidColorBrush markerColor)
         {
@@ -17,5 +17,9 @@ namespace OpenSpartan.Workshop.Models
         public string CSRSeasonText { get; }
 
         public SolidColorBrush CSRSeasonMarkerColor { get; set; }
+
+        public string RegularSeasonText { get; set; }
+
+        public SolidColorBrush RegularSeasonMarkerColor { get; set; }
     }
 }

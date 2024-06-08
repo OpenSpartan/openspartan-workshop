@@ -38,11 +38,11 @@
                             <ControlTemplate>
                                 <StackPanel VerticalAlignment="Bottom">
                                     <Grid
-                                        Background="{Binding CSRSeasonMarkerColor}"
+                                        Background="{Binding RegularSeasonMarkerColor}"
                                         Padding="5"
                                         Margin="4,0,4,4"
                                         VerticalAlignment="Bottom">
-                                        <TextBlock Text="{Binding CSRSeasonText}"></TextBlock>
+                                        <TextBlock Text="{Binding RegularSeasonText}"></TextBlock>
                                     </Grid>
 
                                     <Grid

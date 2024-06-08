@@ -8,6 +8,7 @@ using Den.Dev.Orion.Models.Security;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Broker;
 using Microsoft.Identity.Client.Extensions.Msal;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using OpenSpartan.Workshop.Data;
 using OpenSpartan.Workshop.Models;
@@ -948,7 +949,7 @@ namespace OpenSpartan.Workshop.Core
             }
         }
 
-        internal static async Task<bool> PopulateCSRSeasonCalendar()
+        internal static async Task<bool> PopulateSeasonCalendar()
         {
             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
             {
@@ -956,18 +957,60 @@ namespace OpenSpartan.Workshop.Core
                 SeasonCalendarViewModel.Instance.SeasonDays = [];
             });
 
-            var calendar = await SafeAPICall(async () => await HaloClient.GameCmsGetCSRCalendar());
+            // First, we handle the CSR calendar.
+            var csrCalendar = await SafeAPICall(async () => await HaloClient.GameCmsGetCSRCalendar());
+            
+            // Next, we try to obtain the data for the regular calendar.
 
-            if (calendar != null && calendar.Result != null)
+            // Using this as a reference point for extra rituals and excluded events.
+            var settings = SettingsManager.LoadSettings();
+
+            // First, we get the raw season calendar to get the list of all available events that
+            // were registered in the Halo Infinite API.
+            var seasonCalendar = await GetSeasonCalendar();
+            if (seasonCalendar != null)
             {
-                for (int i = 0; i < calendar.Result.Seasons.Count; i++)
+                if (settings.ExtraRitualEvents != null)
                 {
-                    var days = GenerateDateList(calendar.Result.Seasons[i].StartDate.ISO8601Date, calendar.Result.Seasons[i].EndDate.ISO8601Date);
+                    foreach (var extraRitualEvent in settings.ExtraRitualEvents)
+                    {
+                        seasonCalendar.Events.Add(new SeasonCalendarEntry { RewardTrackPath = extraRitualEvent });
+                    }
+                }
+            }
+
+            // Once the season calendar is obtained, we want to capture the metadata for every
+            // single season entry. Events can be populated directly as part of the battle pass query
+            // down the line.
+            Dictionary<string, SeasonRewardTrack>? seasonRewardTracks = await GetSeasonRewardTrackMetadata(seasonCalendar);
+
+            // Then, we get the operations that are available for a given player. This is slightly
+            // different than the data in the season calendar, so we need both. If no player operations are
+            // returned, we can abort.
+            var operations = await GetOperations();
+
+            if (settings.ExcludedOperations != null)
+            {
+                foreach (var excludedOperation in settings.ExcludedOperations.ToList())
+                {
+                    var operationToRemove = operations.OperationRewardTracks.FirstOrDefault(x => x.RewardTrackPath == excludedOperation);
+                    if (operationToRemove != null)
+                    {
+                        operations.OperationRewardTracks.Remove(operationToRemove);
+                    }
+                }
+            }
+
+            if (csrCalendar != null && csrCalendar.Result != null)
+            {
+                for (int i = 0; i < csrCalendar.Result.Seasons.Count; i++)
+                {
+                    var days = GenerateDateList(csrCalendar.Result.Seasons[i].StartDate.ISO8601Date, csrCalendar.Result.Seasons[i].EndDate.ISO8601Date);
                     foreach (var day in days)
                     {
                         await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                         {
-                            SeasonCalendarViewDayItem calendarItem = new(day, calendar.Result.Seasons[i].CsrSeasonFilePath.Replace(".json", string.Empty), ColorConverter.FromHex(Configuration.SeasonColors[i]));
+                            SeasonCalendarViewDayItem calendarItem = new(day, csrCalendar.Result.Seasons[i].CsrSeasonFilePath.Replace(".json", string.Empty), ColorConverter.FromHex(Configuration.SeasonColors[i]));
                             SeasonCalendarViewModel.Instance.SeasonDays.Add(calendarItem);
                         });
                     }
@@ -983,12 +1026,117 @@ namespace OpenSpartan.Workshop.Core
                 return false;
             }
 
+            // Complete the parsing of individual seasons
+            for (int i = 0; i < seasonRewardTracks.Count; i++)
+            {
+                // Date ranges for season reward tracks are not structured, so we will need to extract them separately.
+                var rewardTrack = seasonRewardTracks.ElementAt(i);
+                await ProcessRegularSeasonRanges(rewardTrack.Value.DateRange.Value, rewardTrack.Value.Name.Value, i);
+            }
+
+            // Then, we process operations
+            foreach (var operation in operations.OperationRewardTracks)
+            {
+                var compoundOperation = new OperationCompoundModel { RewardTrack = operation, SeasonRewardTrack = seasonRewardTracks.GetValueOrDefault(operation.RewardTrackPath) };
+
+                var isRewardTrackAvailable = DataHandler.IsOperationRewardTrackAvailable(operation.RewardTrackPath);
+
+                if (isRewardTrackAvailable)
+                {
+                    var operationDetails = DataHandler.GetOperationResponseBody(operation.RewardTrackPath);
+                    if (operationDetails != null)
+                        compoundOperation.RewardTrackMetadata = operationDetails;
+
+                    LogEngine.Log($"{operation.RewardTrackPath} (Local) - calendar prep completed");
+                }
+                else
+                {
+                    var apiResult = await SafeAPICall(async () => await HaloClient.GameCmsGetEvent(operation.RewardTrackPath, HaloClient.ClearanceToken));
+                    if (apiResult?.Result != null)
+                        DataHandler.UpdateOperationRewardTracks(apiResult.Response.Message, operation.RewardTrackPath);
+
+                    compoundOperation.RewardTrackMetadata = apiResult.Result;
+
+                    LogEngine.Log($"{operation.RewardTrackPath} - calendar prep completed");
+                }
+
+                await ProcessRegularSeasonRanges(compoundOperation.RewardTrackMetadata.DateRange.Value, compoundOperation.RewardTrackMetadata.Name.Value, operations.OperationRewardTracks.IndexOf(operation));
+            }
+
+            // And now we check the event data.
+            var distinctEvents = seasonCalendar.Events.DistinctBy(x => x.RewardTrackPath).ToList();
+            foreach (var eventEntry in distinctEvents)
+            {
+                var compoundEvent = new OperationCompoundModel
+                {
+                    RewardTrack = new RewardTrack { RewardTrackPath = eventEntry.RewardTrackPath }
+                };
+
+                var isRewardTrackAvailable = DataHandler.IsOperationRewardTrackAvailable(eventEntry.RewardTrackPath);
+
+                if (isRewardTrackAvailable)
+                {
+                    compoundEvent.RewardTrackMetadata = DataHandler.GetOperationResponseBody(eventEntry.RewardTrackPath);
+
+                    var rewardTrack = await GetRewardTrackMetadata("event", compoundEvent.RewardTrackMetadata.TrackId);
+
+                    LogEngine.Log($"{eventEntry.RewardTrackPath} (Local) - calendar prep completed");
+                }
+                else
+                {
+                    var apiResult = await SafeAPICall(async () => await HaloClient.GameCmsGetEvent(eventEntry.RewardTrackPath, HaloClient.ClearanceToken));
+                    if (apiResult?.Result != null)
+                    {
+                        DataHandler.UpdateOperationRewardTracks(apiResult.Response.Message, eventEntry.RewardTrackPath);
+                    }
+                    compoundEvent.RewardTrackMetadata = apiResult.Result;
+
+                    LogEngine.Log($"{eventEntry.RewardTrackPath} - calendar prep completed");
+                }
+
+                await ProcessRegularSeasonRanges(compoundEvent.RewardTrackMetadata.DateRange.Value, compoundEvent.RewardTrackMetadata.Name.Value, distinctEvents.IndexOf(eventEntry));
+            }
+
             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
             {
                 SeasonCalendarViewModel.Instance.CalendarLoadingState = MetadataLoadingState.Completed;
             });
 
             return true;
+        }
+
+        private async static Task ProcessRegularSeasonRanges(string rangeText, string name, int index)
+        {
+            List<Tuple<DateTime, DateTime>> ranges = DateRangeParser.ExtractDateRanges(rangeText);
+            foreach (var range in ranges)
+            {
+                var days = GenerateDateList(range.Item1, range.Item2);
+                if (days != null)
+                {
+                    foreach (var day in days)
+                    {
+                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        {
+                            var targetDay = SeasonCalendarViewModel.Instance.SeasonDays
+                                .Where(x => x.DateTime.Date == day.Date)
+                                .FirstOrDefault();
+
+                            if (targetDay != null)
+                            {
+                                targetDay.RegularSeasonText = name;
+                                targetDay.RegularSeasonMarkerColor = ColorConverter.FromHex(Configuration.SeasonColors[index]);
+                            }
+                            else
+                            {
+                                SeasonCalendarViewDayItem calendarItem = new(day, string.Empty, new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.White));
+                                calendarItem.RegularSeasonText = name;
+                                calendarItem.RegularSeasonMarkerColor = ColorConverter.FromHex(Configuration.SeasonColors[index]);
+                                SeasonCalendarViewModel.Instance.SeasonDays.Add(calendarItem);
+                            }
+                        });
+                    }
+                }
+            }
         }
 
         static List<DateTime> GenerateDateList(DateTime? lowerDate, DateTime? upperDate)
@@ -1801,7 +1949,17 @@ namespace OpenSpartan.Workshop.Core
                         async () => await PopulateMedalData(),
                         async () => await PopulateExchangeData(),
                         async () => await PopulateCsrImages(),
-                        async () => await PopulateCSRSeasonCalendar(),
+                        async () =>
+                        {
+                            try
+                            {
+                                await PopulateSeasonCalendar();
+                            }
+                            catch (Exception ex)
+                            {
+                                LogEngine.Log($"Could not populate the calendar. {ex.Message}", LogSeverity.Error);
+                            }
+                        },
                         async () => await PopulateUserInventory(),
                         async () => await PopulateCustomizationData(),
                         async () => await PopulateDecorationData(),
