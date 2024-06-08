@@ -89,12 +89,11 @@ namespace OpenSpartan.Workshop.Core
 
         internal static async Task<AuthenticationResult> InitializePublicClientApplication()
         {
-
-
             var storageProperties = new StorageCreationPropertiesBuilder(Configuration.CacheFileName, Configuration.AppDataDirectory).Build();
 
             var pcaBootstrap = PublicClientApplicationBuilder
                 .Create(Configuration.ClientID)
+                .WithDefaultRedirectUri()
                 .WithAuthority(AadAuthorityAudience.PersonalMicrosoftAccount);
 
             if ((bool)SettingsViewModel.Instance.UseBroker)
@@ -130,10 +129,10 @@ namespace OpenSpartan.Workshop.Core
                                                 .WithAccount(accountToLogin)
                                                 .ExecuteAsync();
                 }
-                catch (MsalClientException)
+                catch (MsalClientException ex)
                 {
                     // Authentication was not successsful, we have no token.
-                    LogEngine.Log("Authentication was not successful.", LogSeverity.Error);
+                    LogEngine.Log($"Authentication was not successful. {ex.Message}", LogSeverity.Error);
                 }
             }
 
