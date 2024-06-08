@@ -11,8 +11,8 @@ namespace OpenSpartan.Workshop.Core
         internal const string HaloWaypointCsrImageEndpoint = "https://www.halowaypoint.com/images/halo-infinite/csr/";
 
         // Build-related metadata.
-        internal const string Version = "1.0.5";
-        internal const string BuildId = "THELVADAM-03252024";
+        internal const string Version = "1.0.6";
+        internal const string BuildId = "CRUCIBLE-06072024";
         internal const string PackageName = "OpenSpartan.Workshop";
 
         // Authentication and setting-related metadata.

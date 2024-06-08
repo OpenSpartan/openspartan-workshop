@@ -779,14 +779,12 @@ namespace OpenSpartan.Workshop.Core
 
             var tasks = new ConcurrentBag<Task<List<Guid>>>();
 
-            bool hitMatchThreshold = false;
             int fullyMatchedBatches = 0;
             int matchThreshold = 4;
 
             // If EnableLooseMatchSearch is enabled, we need to also check that the
             // threshold for successful matches is not hit.
-            while (true &&
-                ((SettingsViewModel.Instance.EnableLooseMatchSearch || hitMatchThreshold) && (fullyMatchedBatches < matchThreshold)))
+            while (true && (SettingsViewModel.Instance.EnableLooseMatchSearch ? fullyMatchedBatches < matchThreshold : true))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
