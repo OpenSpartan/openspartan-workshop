@@ -8,13 +8,15 @@ namespace OpenSpartan.Workshop.Models
     {
         public OperationCompoundModel()
         {
-            Rewards = new();
+            Rewards = [];
         }
 
-        public RewardTrack RewardTrack { get; set; }
+        public RewardTrack? RewardTrack { get; set; }
 
-        public RewardTrackMetadata RewardTrackMetadata { get; set; }
+        public RewardTrackMetadata? RewardTrackMetadata { get; set; }
 
-        public ObservableCollection<IGrouping<int, RewardMetaContainer>> Rewards { get; set; }
+        public ObservableCollection<IGrouping<int, ItemMetadataContainer>>? Rewards { get; set; }
+
+        public SeasonRewardTrack? SeasonRewardTrack { get; set; }
     }
 }

@@ -27,7 +27,7 @@ namespace OpenSpartan.Workshop.ViewModels
 
         private bool _isBlocking;
 
-        public void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
+        public void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             OnPropertyChanged(propertyName);
         }

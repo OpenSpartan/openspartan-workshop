@@ -23,6 +23,24 @@
     <None Update="App.xaml">
       <SubType>Designer</SubType>
     </None>
+    <Page Update="Views\RankedView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Controls\SeasonCalendarControl.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Themes\Generic.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\SeasonCalendarView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\ExchangeView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Views\EventDetailView.xaml">
+      <SubType>Designer</SubType>
+    </Page>
     <Page Update="Views\MedalMatchesView.xaml">
       <SubType>Designer</SubType>
     </Page>

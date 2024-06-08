@@ -63,6 +63,21 @@
                         <FontIcon Glyph="&#xF133;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem Content="Exchange" x:Name="nviExchange" Tag="OpenSpartan.Workshop.Views.ExchangeView">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE719;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Season Calendar" x:Name="nviSeasonCalendar" Tag="OpenSpartan.Workshop.Views.SeasonCalendarView">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE787;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Ranked Progression" x:Name="nviRanked" Tag="OpenSpartan.Workshop.Views.RankedView">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xECA7;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
             </NavigationView.MenuItems>
 
             <Frame x:Name="ContentFrame"/>

@@ -1,4 +1,6 @@
 ﻿using Microsoft.Data.Sqlite;
+using OpenSpartan.Workshop.Core;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -42,12 +44,22 @@ namespace OpenSpartan.Workshop.Data
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                LogEngine.Log($"Could not bootstrap table {tableName}. {ex.Message}", Models.LogSeverity.Error);
                 return false;
             }
         }
 
-        public static void AddRange<T>(this ObservableCollection<T> collection, IEnumerable<T> items) => items.ToList().ForEach(collection.Add);
+        public static void AddRange<T>(this ObservableCollection<T> collection, IEnumerable<T> items)
+        {
+            ArgumentNullException.ThrowIfNull(collection);
+            ArgumentNullException.ThrowIfNull(items);
+
+            foreach (var item in items)
+            {
+                collection.Add(item);
+            }
+        }
     }
 }

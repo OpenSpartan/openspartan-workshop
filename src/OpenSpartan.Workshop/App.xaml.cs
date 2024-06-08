@@ -1,6 +1,7 @@
 ﻿using Microsoft.UI.Xaml;
 using NLog;
 using OpenSpartan.Workshop.Core;
+using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.IO;
@@ -9,8 +10,6 @@ namespace OpenSpartan.Workshop
 {
     public partial class App : Application
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         public Window MainWindow { get => m_window; }
 
         /// <summary>
@@ -35,8 +34,7 @@ namespace OpenSpartan.Workshop
             LogManager.Setup().LoadConfigurationFromFile("NLog.config");
 
             LoadSettings();
-
-            var authResult = await UserContextManager.InitializeAllDataOnLaunch();
+            _ = await UserContextManager.InitializeAllDataOnLaunch();
         }
 
         private async static void LoadSettings()
@@ -44,35 +42,46 @@ namespace OpenSpartan.Workshop
             var settingsPath = Path.Combine(Configuration.AppDataDirectory, Configuration.SettingsFileName);
             if (File.Exists(settingsPath))
             {
+                // Make sure that we default logging to true prior to settings
+                // being loaded so that we can capture any errors that might be
+                // happening with settings initialization.
                 SettingsViewModel.Instance.Settings = SettingsManager.LoadSettings();
-                if (SettingsViewModel.Instance.Settings.SyncSettings)
+
+                if ((bool)SettingsViewModel.Instance.Settings.SyncSettings)
                 {
                     try
                     {
                         var settings = await UserContextManager.GetWorkshopSettings();
+
                         if (settings != null)
                         {
-                            // For now, we only have two settings that are returned by the API, so
-                            // no need to overwrite the entire object.
                             SettingsViewModel.Instance.Settings.Release = settings.Release;
                             SettingsViewModel.Instance.Settings.HeaderImagePath = settings.HeaderImagePath;
+                            SettingsViewModel.Instance.Settings.Build = settings.Build;
+                            SettingsViewModel.Instance.Settings.Sandbox = settings.Sandbox;
+                            SettingsViewModel.Instance.Settings.UseObanClearance = settings.UseObanClearance;
                         }    
                     }
                     catch (Exception ex)
                     {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not load settings remotely. {ex.Message}\nWill use previously-configured settings..");
+                        LogEngine.Log($"Could not load settings remotely. {ex.Message}\nWill use previously-configured settings..", LogSeverity.Error);
                     }
                 }
             }
             else
             {
-                SettingsViewModel.Instance.Settings = new Models.WorkshopSettings
+                SettingsViewModel.Instance.Settings = new WorkshopSettings
                 {
                     APIVersion = Configuration.DefaultAPIVersion,
                     HeaderImagePath = Configuration.DefaultHeaderImage,
                     Release = Configuration.DefaultRelease,
+                    Sandbox = Configuration.DefaultSandbox,
+                    Build = Configuration.DefaultBuild,
                     SyncSettings = true,
                     EnableLogging = false,
+                    UseBroker = true,
+                    UseObanClearance = false,
+                    EnableLooseMatchSearch = false,
                 };
             }
         }

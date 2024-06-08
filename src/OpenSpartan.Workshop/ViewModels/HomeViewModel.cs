@@ -1,6 +1,7 @@
 ﻿using Den.Dev.Orion.Models.HaloInfinite;
 using OpenSpartan.Workshop.Core;
 using System;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.ViewModels
@@ -292,10 +293,10 @@ namespace OpenSpartan.Workshop.ViewModels
 
         public double? ExperienceProgress
         {
-            get => Convert.ToDouble(ExperienceEarnedToDate) / Convert.ToDouble(ExperienceTotalRequired);
+            get => Convert.ToDouble(ExperienceEarnedToDate, CultureInfo.InvariantCulture) / Convert.ToDouble(ExperienceTotalRequired, CultureInfo.InvariantCulture);
         }
 
-        public void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
+        public void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             OnPropertyChanged(propertyName);
         }

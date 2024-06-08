@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Common.Collections;
+﻿using CommunityToolkit.WinUI.Collections;
 using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.ViewModels;

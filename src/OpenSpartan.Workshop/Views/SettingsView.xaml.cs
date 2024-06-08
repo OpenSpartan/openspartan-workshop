@@ -6,14 +6,11 @@ using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Windows.Forms;
 
 namespace OpenSpartan.Workshop.Views
 {
     public sealed partial class SettingsView : Page
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         public SettingsView()
         {
             InitializeComponent();
@@ -21,9 +18,21 @@ namespace OpenSpartan.Workshop.Views
 
         private async void btnLogOut_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
         {
-            var result = MessageBox.Show("Are you sure you want to log out?", "OpenSpartan Workshop", MessageBoxButtons.YesNo);
+            ContentDialog deleteFileDialog = new ContentDialog
+            {
+                Title = "Log out",
+                Content = "Are you sure you want to log out?",
+                PrimaryButtonText = "Yes",
+                CloseButtonText = "No",
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = this.Content.XamlRoot
+            };
 
-            if (result == DialogResult.Yes)
+            ContentDialogResult result = await deleteFileDialog.ShowAsync();
+
+            // Delete the file if the user clicked the primary button.
+            /// Otherwise, do nothing.
+            if (result == ContentDialogResult.Primary)
             {
                 try
                 {
@@ -50,7 +59,7 @@ namespace OpenSpartan.Workshop.Views
                 }
                 catch (Exception ex)
                 {
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not log out by deleting the credential cache file. {ex.Message}");
+                    LogEngine.Log($"Could not log out by deleting the credential cache file. {ex.Message}", Models.LogSeverity.Error);
                 }
             }
         }

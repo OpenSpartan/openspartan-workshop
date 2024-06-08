@@ -4,8 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="using:OpenSpartan.Workshop.Models"
-    xmlns:converters="using:OpenSpartan.Workshop.Converters"
-    xmlns:winuiconverters="using:CommunityToolkit.WinUI.UI.Converters"
+    xmlns:winuiconverters="using:CommunityToolkit.WinUI.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
     xmlns:localcontrols="using:OpenSpartan.Workshop.Controls"
@@ -14,21 +13,9 @@
     x:Name="MatchesGridControlEntity"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-    <UserControl.Resources>
-        <converters:MetadataLoadingStateToVisibilityConverter x:Key="MetadataLoadingStateToVisibilityConverter"/>
-        <converters:OutcomeToBackgroundConverter x:Key="OutcomeToBackgroundConverter"/>
-        <converters:OutcomeToForegroundConverter x:Key="OutcomeToForegroundConverter"/>
-        <converters:PerformanceToGlyphConverter x:Key="PerformanceToGlyphConverter"/>
-        <converters:PerformanceToColorConverter x:Key="PerformanceToColorConverter"/>
-        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
-        <converters:RankIdentifierToPathConverter x:Key="RankIdentifierToPathConverter"/>
-        <converters:StringAvailabilityToVisibilityConverter x:Key="StringAvailabilityToVisibilityConverter"/>
-        <converters:CsrProgressStateConverter x:Key="CsrProgressStateConverter"/>
+    <UserControl.Resources> 
         <winuiconverters:StringFormatConverter x:Key="StringFormatConverter"/>
-        <converters:MedalNameIdToPathConverter x:Key="MedalNameIdToPathConverter"/>
-        <converters:MedalDifficultyToBrushConverter x:Key="MedalDifficultyToBrushConverter"/>
-        <converters:CommaAfterThousandsConverter x:Key="CommaAfterThousandsConverter"/>
-    </UserControl.Resources>
+    </UserControl.Resources> 
 
     <Grid>
         <controls:DataGrid IsReadOnly="True"
@@ -44,7 +31,7 @@
                    HorizontalScrollBarVisibility="Disabled"
                    PointerReleased="dgdMatches_PointerReleased">
             <controls:DataGrid.Columns>
-                <controls:DataGridTextColumn Header="Start Time" Width="*" Binding="{Binding StartTime}"></controls:DataGridTextColumn>
+                <controls:DataGridTextColumn Header="End Time" Width="*" Binding="{Binding EndTime}"></controls:DataGridTextColumn>
                 <controls:DataGridTextColumn Header="Match ID" Width="*" Binding="{Binding MatchId}"></controls:DataGridTextColumn>
                 <controls:DataGridTemplateColumn Header="Outcome" Width="120">
                     <controls:DataGridTemplateColumn.CellTemplate>
@@ -66,7 +53,7 @@
                                     <ColumnDefinition Width="50"></ColumnDefinition>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="12,0,0,0" Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Kills}"></TextBlock>
-                                <FontIcon FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center" Margin="4" Glyph="{Binding KillPerformance, Converter={StaticResource PerformanceToGlyphConverter}}" Foreground="{Binding KillPerformance, Converter={StaticResource PerformanceToColorConverter}}"/>
+                                <FontIcon Visibility="{Binding ExpectedKills, Converter={StaticResource SingleValueAvailabilityToVisibilityConverter}}" FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center" Margin="4" Glyph="{Binding KillPerformance, Converter={StaticResource PerformanceToGlyphConverter}}" Foreground="{Binding KillPerformance, Converter={StaticResource PerformanceToColorConverter}}"/>
                             </Grid>
                         </DataTemplate>
                     </controls:DataGridTemplateColumn.CellTemplate>
@@ -81,7 +68,7 @@
                                     <ColumnDefinition Width="50"></ColumnDefinition>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="12,0,0,0" Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Deaths}"></TextBlock>
-                                <FontIcon FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center" Margin="4" Glyph="{Binding DeathPerformance, Converter={StaticResource PerformanceToGlyphConverter}}" Foreground="{Binding DeathPerformance, Converter={StaticResource PerformanceToColorConverter}}"/>
+                                <FontIcon Visibility="{Binding ExpectedDeaths, Converter={StaticResource SingleValueAvailabilityToVisibilityConverter}}" FontWeight="Bold" Grid.Column="1" VerticalAlignment="Center" Margin="4" Glyph="{Binding DeathPerformance, Converter={StaticResource PerformanceToGlyphConverter}}" Foreground="{Binding DeathPerformance, Converter={StaticResource PerformanceToColorConverter}}"/>
                             </Grid>
                         </DataTemplate>
                     </controls:DataGridTemplateColumn.CellTemplate>
@@ -125,7 +112,7 @@
             </controls:DataGrid.Columns>
             <controls:DataGrid.RowDetailsTemplate>
                 <DataTemplate>
-                    <StackPanel Background="#2B2B2B" Width="2000" Height="600" HorizontalAlignment="Left" Margin="24,12" Padding="5" Spacing="3" Orientation="Horizontal">
+                    <StackPanel Background="#2B2B2B" Width="2200" Height="612" HorizontalAlignment="Left" Margin="24,12" Padding="5" Spacing="3" Orientation="Horizontal">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="150"></ColumnDefinition>
@@ -232,12 +219,14 @@
                             </StackPanel>
                         </Grid>
 
-                        <Grid Margin="48,0,0,0">
+                        <Grid Margin="48,0,0,0" Width="950">
                             <Grid VerticalAlignment="Top">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"></RowDefinition>
+                                    <RowDefinition Height="Auto"></RowDefinition>
                                     <RowDefinition Height="*"></RowDefinition>
                                 </Grid.RowDefinitions>
+                                
                                 <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Grid.Row="0"  Visibility="{Binding IsRanked, Converter={StaticResource BoolToVisibilityConverter}}">
                                     <Image Height="64" Margin="12,0,0,0" Source="{Binding RankIdentifier, Converter={StaticResource RankIdentifierToPathConverter}}"></Image>
                                     <StackPanel Margin="12,12,12,0" VerticalAlignment="Center">
@@ -266,15 +255,183 @@
                                     <Image Height="64" Margin="0,0,0,0" Source="{Binding NextRankIdentifier, Converter={StaticResource RankIdentifierToPathConverter}}"></Image>
                                 </StackPanel>
 
-                                <Grid Row="1">
+                                <StackPanel Grid.Row="1" Visibility="{Binding IsRanked, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <TextBlock Text="Tier Counterfactuals" FontWeight="Bold" Grid.Row="0" Margin="0,23,0,8"/>
+
+                                    <VariableSizedWrapGrid Orientation="Horizontal" ItemWidth="120" Margin="0,0,24,0">
+                                        <Grid Background="#583C27" BorderThickness="2" CornerRadius="4">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="36"></RowDefinition>
+                                                <RowDefinition Height="*"></RowDefinition>
+                                            </Grid.RowDefinitions>
+
+                                            <Grid Grid.Row="0" Background="#583C27" Padding="8" CornerRadius="4,4,0,0">
+                                                <TextBlock Text="Bronze" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                            </Grid>
+                                            <Grid Grid.Row="1" Background="#404040" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="32"></RowDefinition>
+                                                    <RowDefinition Height="32"></RowDefinition>
+                                                </Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="32"></ColumnDefinition>
+                                                    <ColumnDefinition Width="*"></ColumnDefinition>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock FontWeight="Bold" Grid.Row="0" Grid.Column="0" Text="K:" Margin="12,8,4,0"></TextBlock>
+                                                <TextBlock FontWeight="Bold" Grid.Row="1" Grid.Column="0" Text="D:" Margin="12,0,4,0"></TextBlock>
+
+                                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ExpectedBronzeKills}" Margin="8,8,4,0"></TextBlock>
+                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ExpectedBronzeDeaths}" Margin="8,0,4,0"></TextBlock>
+                                            </Grid>
+                                        </Grid>
+
+                                        <Grid Background="#666666" BorderThickness="2" CornerRadius="4">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="36"></RowDefinition>
+                                                <RowDefinition Height="*"></RowDefinition>
+                                            </Grid.RowDefinitions>
+
+                                            <Grid Grid.Row="0" Background="#666666" Padding="8" CornerRadius="4,4,0,0">
+                                                <TextBlock Text="Silver" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                            </Grid>
+                                            <Grid Grid.Row="1" Background="#404040" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="32"></RowDefinition>
+                                                    <RowDefinition Height="32"></RowDefinition>
+                                                </Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="32"></ColumnDefinition>
+                                                    <ColumnDefinition Width="*"></ColumnDefinition>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock FontWeight="Bold" Grid.Row="0" Grid.Column="0" Text="K:" Margin="12,8,4,0"></TextBlock>
+                                                <TextBlock FontWeight="Bold" Grid.Row="1" Grid.Column="0" Text="D:" Margin="12,0,4,0"></TextBlock>
+
+                                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ExpectedSilverKills}" Margin="8,8,4,0"></TextBlock>
+                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ExpectedSilverDeaths}" Margin="8,0,4,0"></TextBlock>
+                                            </Grid>
+                                        </Grid>
+
+                                        <Grid Background="#856F38" BorderThickness="2" CornerRadius="4">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="36"></RowDefinition>
+                                                <RowDefinition Height="*"></RowDefinition>
+                                            </Grid.RowDefinitions>
+
+                                            <Grid Grid.Row="0" Background="#856F38" Padding="8" CornerRadius="4,4,0,0">
+                                                <TextBlock Text="Gold" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                            </Grid>
+                                            <Grid Grid.Row="1" Background="#404040" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="32"></RowDefinition>
+                                                    <RowDefinition Height="32"></RowDefinition>
+                                                </Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="32"></ColumnDefinition>
+                                                    <ColumnDefinition Width="*"></ColumnDefinition>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock FontWeight="Bold" Grid.Row="0" Grid.Column="0" Text="K:" Margin="12,8,4,0"></TextBlock>
+                                                <TextBlock FontWeight="Bold" Grid.Row="1" Grid.Column="0" Text="D:" Margin="12,0,4,0"></TextBlock>
+
+                                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ExpectedGoldKills}" Margin="8,8,4,0"></TextBlock>
+                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ExpectedGoldDeaths}" Margin="8,0,4,0"></TextBlock>
+                                            </Grid>
+                                        </Grid>
+
+                                        <Grid Background="#5E6189" BorderThickness="2" CornerRadius="4">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="36"></RowDefinition>
+                                                <RowDefinition Height="*"></RowDefinition>
+                                            </Grid.RowDefinitions>
+
+                                            <Grid Grid.Row="0" Background="#5E6189" Padding="8" CornerRadius="4,4,0,0">
+                                                <TextBlock Text="Platinum" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                            </Grid>
+                                            <Grid Grid.Row="1" Background="#404040" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="32"></RowDefinition>
+                                                    <RowDefinition Height="32"></RowDefinition>
+                                                </Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="32"></ColumnDefinition>
+                                                    <ColumnDefinition Width="*"></ColumnDefinition>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock FontWeight="Bold" Grid.Row="0" Grid.Column="0" Text="K:" Margin="12,8,4,0"></TextBlock>
+                                                <TextBlock FontWeight="Bold" Grid.Row="1" Grid.Column="0" Text="D:" Margin="12,0,4,0"></TextBlock>
+
+                                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ExpectedPlatinumKills}" Margin="8,8,4,0"></TextBlock>
+                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ExpectedPlatinumDeaths}" Margin="8,0,4,0"></TextBlock>
+                                            </Grid>
+                                        </Grid>
+
+                                        <Grid Background="#47589E" BorderThickness="2" CornerRadius="4">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="36"></RowDefinition>
+                                                <RowDefinition Height="*"></RowDefinition>
+                                            </Grid.RowDefinitions>
+
+                                            <Grid Grid.Row="0" Background="#47589E" Padding="8" CornerRadius="4,4,0,0">
+                                                <TextBlock Text="Diamond" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                            </Grid>
+                                            <Grid Grid.Row="1" Background="#404040" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="32"></RowDefinition>
+                                                    <RowDefinition Height="32"></RowDefinition>
+                                                </Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="32"></ColumnDefinition>
+                                                    <ColumnDefinition Width="*"></ColumnDefinition>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock FontWeight="Bold" Grid.Row="0" Grid.Column="0" Text="K:" Margin="12,8,4,0"></TextBlock>
+                                                <TextBlock FontWeight="Bold" Grid.Row="1" Grid.Column="0" Text="D:" Margin="12,0,4,0"></TextBlock>
+
+                                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ExpectedDiamondKills}" Margin="8,8,4,0"></TextBlock>
+                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ExpectedDiamondDeaths}" Margin="8,0,4,0"></TextBlock>
+                                            </Grid>
+                                        </Grid>
+
+                                        <Grid Background="#604083" BorderThickness="2" CornerRadius="4">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="36"></RowDefinition>
+                                                <RowDefinition Height="*"></RowDefinition>
+                                            </Grid.RowDefinitions>
+
+                                            <Grid Grid.Row="0" Background="#604083" Padding="8" CornerRadius="4,4,0,0">
+                                                <TextBlock Text="Onyx" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                            </Grid>
+                                            <Grid Grid.Row="1" Background="#404040" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="32"></RowDefinition>
+                                                    <RowDefinition Height="32"></RowDefinition>
+                                                </Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="32"></ColumnDefinition>
+                                                    <ColumnDefinition Width="*"></ColumnDefinition>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock FontWeight="Bold" Grid.Row="0" Grid.Column="0" Text="K:" Margin="12,8,4,0"></TextBlock>
+                                                <TextBlock FontWeight="Bold" Grid.Row="1" Grid.Column="0" Text="D:" Margin="12,0,4,0"></TextBlock>
+
+                                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ExpectedOnyxKills}" Margin="8,8,4,0"></TextBlock>
+                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ExpectedOnyxDeaths}" Margin="8,0,4,0"></TextBlock>
+                                            </Grid>
+                                        </Grid>
+                                    </VariableSizedWrapGrid>
+                                </StackPanel>
+
+                                <Grid Row="2">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"></RowDefinition>
                                         <RowDefinition Height="*"></RowDefinition>
                                     </Grid.RowDefinitions>
 
-                                    <TextBlock Text="Medals" FontWeight="Bold" Grid.Row="0" Margin="0,23,0,8"/>
+                                    <TextBlock Text="Medals" Visibility="{Binding PlayerTeamStats[0].Stats.CoreStats.Medals, Converter={StaticResource ListCountToVisibilityConverter}}" FontWeight="Bold" Grid.Row="0" Margin="0,23,0,8"/>
 
-                                    <GridView Grid.Row="1" ItemsSource="{Binding PlayerTeamStats[0].Stats.CoreStats.Medals}" Width="446">
+                                    <GridView HorizontalAlignment="Left" Grid.Row="1" ItemsSource="{Binding PlayerTeamStats[0].Stats.CoreStats.Medals}" Width="446">
                                         <GridView.ItemTemplate>
                                             <DataTemplate>
                                                 <Grid Background="#404040" BorderThickness="2" CornerRadius="4" Tapped="MedalGridItem_Tapped">

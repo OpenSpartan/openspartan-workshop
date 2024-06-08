@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="OpenSpartan.Workshop.Views.RankedView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:OpenSpartan.Workshop.Views"
+    xmlns:viewmodels="using:OpenSpartan.Workshop.ViewModels"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    DataContext="{x:Bind viewmodels:RankedViewModel.Instance}"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="100"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="24,24,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="42"></RowDefinition>
+                    <RowDefinition Height="*"></RowDefinition>
+                </Grid.RowDefinitions>
+
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Ranked Progression" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
+                    <Button Height="36" VerticalAlignment="Center" Margin="4" x:Name="btnRankedRefresh" Click="btnRankedRefresh_Click">
+                        <FontIcon FontSize="14" Glyph="&#xE72C;"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+
+            <!--Informational state-->
+            <Grid Visibility="{Binding RankedLoadingState, Converter={StaticResource MetadataLoadingStateToVisibilityConverter}}" Margin="20,0,24,24" Background="#404040" BorderThickness="2" CornerRadius="4" Height="36" Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="36"></ColumnDefinition>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+
+                <ProgressRing Height="12" Width="12"></ProgressRing>
+
+                <TextBlock Grid.Column="1" Text="Loading ranked data..." VerticalAlignment="Center"></TextBlock>
+            </Grid>
+
+            <GridView Margin="12,0,8,0" Grid.Row="2" ItemsSource="{Binding Playlists}">
+                <GridView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Background="#404040" BorderThickness="2" CornerRadius="4" Width="300">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="36"></RowDefinition>
+                                <RowDefinition Height="*"></RowDefinition>
+                                <RowDefinition Height="36"></RowDefinition>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"></ColumnDefinition>
+                                    <ColumnDefinition Width="86"></ColumnDefinition>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Text="{Binding Name}" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                <Grid Grid.Column="1" CornerRadius="4">
+                                    <Border Background="#404040">
+                                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Text="{Binding Snapshot.Result.Current, Converter={StaticResource CsrToTextRankConverter}}"></TextBlock>
+                                    </Border>
+                                </Grid>
+                            </Grid>
+
+                            <Grid Grid.Row="1" Padding="8" Background="{Binding DifficultyIndex, Converter={StaticResource MedalDifficultyToBrushConverter}}">
+                                <ProgressRing ToolTipService.ToolTip="{Binding Snapshot.Result.Current, Converter={StaticResource CsrToTooltipValueConverter}}" Background="#2F2F2F" Height="160" Width="160" IsIndeterminate="False" Value="{Binding Snapshot.Result.Current, Converter={StaticResource CsrToProgressConverter}}" Maximum="1" Minimum="0" HorizontalAlignment="Center" VerticalAlignment="Center"></ProgressRing>
+                                <Image ToolTipService.ToolTip="{Binding Snapshot.Result.Current, Converter={StaticResource CsrToTooltipValueConverter}}" Height="88" Width="192" Source="{Binding Snapshot.Result.Current, Converter={StaticResource CsrToPathConverter}}"/>
+                            </Grid>
+
+                            <Grid Grid.Row="2" Background="#5B6163">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <TextBlock Text="Season Max:" VerticalAlignment="Center" Margin="0,0,12,0"></TextBlock>
+                                    <Image ToolTipService.ToolTip="{Binding Snapshot.Result.SeasonMax, Converter={StaticResource CsrToTextRankConverter}}" Height="28" Source="{Binding Snapshot.Result.SeasonMax, Converter={StaticResource CsrToPathConverter}}" Margin="0,0,12,0"/>
+
+                                    <TextBlock Text="All-Time Max:" VerticalAlignment="Center" Margin="0,0,12,0"></TextBlock>
+                                    <Image ToolTipService.ToolTip="{Binding Snapshot.Result.AllTimeMax, Converter={StaticResource CsrToTextRankConverter}}" Height="28" Source="{Binding Snapshot.Result.AllTimeMax, Converter={StaticResource CsrToPathConverter}}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </DataTemplate>
+                </GridView.ItemTemplate>
+
+                <GridView.GroupStyle>
+                    <GroupStyle HidesIfEmpty="True">
+                        <GroupStyle.HeaderTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0">
+                                    <TextBlock Text="{Binding Key, Converter={StaticResource MedalTypeIndexToStringConverter}}" Style="{StaticResource TitleTextBlockStyle}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </GroupStyle.HeaderTemplate>
+                    </GroupStyle>
+                </GridView.GroupStyle>
+            </GridView>
+        </Grid>
+    </Grid>
+</Page>

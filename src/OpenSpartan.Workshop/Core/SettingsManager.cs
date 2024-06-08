@@ -1,17 +1,16 @@
 ﻿using NLog;
 using OpenSpartan.Workshop.Models;
-using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.IO;
 using System.Text.Json;
 
 namespace OpenSpartan.Workshop.Core
 {
-    internal class SettingsManager
+    internal sealed class SettingsManager
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        internal static WorkshopSettings LoadSettings()
+        internal static WorkshopSettings? LoadSettings()
         {
             try
             {
@@ -19,13 +18,18 @@ namespace OpenSpartan.Workshop.Core
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not load settings. {ex.Message}");
+                // Assume that here we cannot check for settings yet and we need to
+                // always log an error. We are also intentionally not using the log
+                // wrapper class here because we don't have the settings initialized yet.
+                Logger.Error($"Could not load settings. {ex.Message}");
                 return null;
             }
         }
 
         internal static bool StoreSettings(WorkshopSettings settings)
         {
+            ArgumentNullException.ThrowIfNull(settings);
+
             try
             {
                 if (settings != null)
@@ -41,7 +45,7 @@ namespace OpenSpartan.Workshop.Core
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not store settings. {ex.Message}");
+                LogEngine.Log($"Could not store settings. {ex.Message}", LogSeverity.Error);
                 return false;
             }
         }

@@ -1,7 +1,7 @@
 ﻿using Den.Dev.Orion.Converters;
 using Den.Dev.Orion.Models.HaloInfinite;
 using Microsoft.Data.Sqlite;
-using NLog;
+using Microsoft.UI.Xaml.Controls;
 using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.ViewModels;
@@ -10,18 +10,17 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.IO;
-using System.Reflection;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
 
 namespace OpenSpartan.Workshop.Data
 {
-    internal sealed class DataHandler
+    internal static class DataHandler
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         internal static string DatabasePath => Path.Combine(Core.Configuration.AppDataDirectory, "data", $"{HomeViewModel.Instance.Xuid}.db");
 
         private static readonly JsonSerializerOptions serializerOptions = new()
@@ -54,12 +53,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"WAL journaling mode not set.");
+                    LogEngine.Log($"WAL journaling mode not set.", LogSeverity.Error);
                 }
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Journaling mode modification exception: {ex.Message}");
+                LogEngine.Log($"Journaling mode modification exception: {ex.Message}", LogSeverity.Error);
             }
 
             return null;
@@ -85,6 +84,7 @@ namespace OpenSpartan.Workshop.Data
                 BootstrapTableIfNotExists(connection, "OperationRewardTracks");
                 BootstrapTableIfNotExists(connection, "InventoryItems");
                 BootstrapTableIfNotExists(connection, "OwnedInventoryItems");
+                BootstrapTableIfNotExists(connection, "PlaylistCSRSnapshots");
 
                 SetupIndices(connection);
 
@@ -92,7 +92,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Database bootstrapping failure: {ex.Message}");
+                LogEngine.Log($"Database bootstrapping failure: {ex.Message}", LogSeverity.Error);
                 return false;
             }
         }
@@ -120,11 +120,11 @@ namespace OpenSpartan.Workshop.Data
 
             if (outcome > 0)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Info("Indices provisioned.");
+                LogEngine.Log("Indices provisioned.");
             }
             else
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Warn("Indices could not be set up. If this is not the first run, then those are likely already configured.");
+                LogEngine.Log("Indices could not be set up. If this is not the first run, then those are likely already configured.", LogSeverity.Warning);
             }
         }
 
@@ -152,7 +152,38 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Error inserting service record entry. {ex.Message}");
+                LogEngine.Log($"Error inserting service record entry. {ex.Message}", LogSeverity.Error);
+                return false;
+            }
+        }
+
+        internal static bool InsertPlaylistCSRSnapshot(string playlistId, string playlistVersion, string playlistCsrJson)
+        {
+            try
+            {
+                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
+                connection.Open();
+
+                var command = connection.CreateCommand();
+                command.CommandText = GetQuery("Insert", "PlaylistCSR"); ;
+                command.Parameters.AddWithValue("$ResponseBody", playlistCsrJson);
+                command.Parameters.AddWithValue("$PlaylistId", playlistId);
+                command.Parameters.AddWithValue("$PlaylistVersion", playlistVersion);
+                command.Parameters.AddWithValue("$SnapshotTimestamp", DateTimeOffset.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK", CultureInfo.InvariantCulture));
+
+                using var reader = command.ExecuteReader();
+                if (reader.RecordsAffected > 1)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogEngine.Log($"Error inserting playlist CSR entry. {ex.Message}", LogSeverity.Error);
                 return false;
             }
         }
@@ -180,12 +211,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Warn($"No rows returned for distinct match IDs.");
+                    LogEngine.Log($"No rows returned for distinct match IDs.", LogSeverity.Warning);
                 }
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining unique match IDs. {ex.Message}");
+                LogEngine.Log($"An error occurred obtaining unique match IDs. {ex.Message}", LogSeverity.Error);
             }
 
             return null;
@@ -216,15 +247,48 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Warn($"No rows returned for operations.");
+                    LogEngine.Log($"No rows returned for operations.", LogSeverity.Warning);
                 }
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining operations from database. {ex.Message}");
+                LogEngine.Log($"An error occurred obtaining operations from database. {ex.Message}", LogSeverity.Error);
             }
 
             return null;
+        }
+
+        internal static int GetExistingMatchCount(IEnumerable<Guid> matchIds)
+        {
+            try
+            {
+                using SqliteConnection connection = new($"Data Source={DatabasePath}");
+                connection.Open();
+
+                // In this context, we want the command to be literal rather than parameterized.
+                using var command = connection.CreateCommand();
+                command.CommandText = GetQuery("Select", "ExistingMatchCount").Replace("$MatchGUIDList", string.Join(", ", matchIds.Select(g => $"'{g}'")), StringComparison.InvariantCultureIgnoreCase);
+
+                using SqliteDataReader reader = command.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        var resultOrdinal = reader.GetOrdinal("ExistingMatchCount");
+                        return reader.IsDBNull(resultOrdinal) ? -1 : reader.GetFieldValue<int>(resultOrdinal);
+                    }
+                }
+                else
+                {
+                    LogEngine.Log($"No rows returned for existing match metadata.", LogSeverity.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogEngine.Log($"An error occurred obtaining match records from database. {ex.Message}", LogSeverity.Error);
+            }
+
+            return -1;
         }
 
         internal static List<MatchTableEntity> GetMatches(string playerXuid, string boundaryTime, int boundaryLimit)
@@ -279,12 +343,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Warn($"No rows returned for player match IDs.");
+                    LogEngine.Log($"No rows returned for player match IDs.", LogSeverity.Warning);
                 }
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining matches. {ex.Message}");
+                LogEngine.Log($"An error occurred obtaining matches. {ex.Message}", LogSeverity.Error);
             }
 
             return null;
@@ -294,6 +358,7 @@ namespace OpenSpartan.Workshop.Data
         {
             var matchOrdinal = reader.GetOrdinal("MatchId");
             var startTimeOrdinal = reader.GetOrdinal("StartTime");
+            var endTimeOrdinal = reader.GetOrdinal("EndTime");
             var rankOrdinal = reader.GetOrdinal("Rank");
             var outcomeOrdinal = reader.GetOrdinal("Outcome");
             var gameVariantCategoryOrdinal = reader.GetOrdinal("GameVariantCategory");
@@ -308,6 +373,18 @@ namespace OpenSpartan.Workshop.Data
             var teamMmrOrdinal = reader.GetOrdinal("TeamMmr");
             var expectedDeathsOrdinal = reader.GetOrdinal("ExpectedDeaths");
             var expectedKillsOrdinal = reader.GetOrdinal("ExpectedKills");
+            var expectedBronzeDeathsOrdinal = reader.GetOrdinal("ExpectedBronzeDeaths");
+            var expectedBronzeKillsOrdinal = reader.GetOrdinal("ExpectedBronzeKills");
+            var expectedSilverDeathsOrdinal = reader.GetOrdinal("ExpectedSilverDeaths");
+            var expectedSilverKillsOrdinal = reader.GetOrdinal("ExpectedSilverKills");
+            var expectedGoldDeathsOrdinal = reader.GetOrdinal("ExpectedGoldDeaths");
+            var expectedGoldKillsOrdinal = reader.GetOrdinal("ExpectedGoldKills");
+            var expectedPlatinumDeathsOrdinal = reader.GetOrdinal("ExpectedPlatinumDeaths");
+            var expectedPlatinumKillsOrdinal = reader.GetOrdinal("ExpectedPlatinumKills");
+            var expectedDiamondDeathsOrdinal = reader.GetOrdinal("ExpectedDiamondDeaths");
+            var expectedDiamondKillsOrdinal = reader.GetOrdinal("ExpectedDiamondKills");
+            var expectedOnyxDeathsOrdinal = reader.GetOrdinal("ExpectedOnyxDeaths");
+            var expectedOnyxKillsOrdinal = reader.GetOrdinal("ExpectedOnyxKills");
             var postMatchOrdinal = reader.GetOrdinal("PostMatchCsr");
             var preMatchCsrOrdinal = reader.GetOrdinal("PreMatchCsr");
             var tierOrdinal = reader.GetOrdinal("Tier");
@@ -323,6 +400,7 @@ namespace OpenSpartan.Workshop.Data
             {
                 MatchId = reader.IsDBNull(matchOrdinal) ? string.Empty : reader.GetFieldValue<string>(matchOrdinal),
                 StartTime = reader.IsDBNull(startTimeOrdinal) ? DateTimeOffset.UnixEpoch : reader.GetFieldValue<DateTimeOffset>(startTimeOrdinal).ToLocalTime(),
+                EndTime = reader.IsDBNull(startTimeOrdinal) ? DateTimeOffset.UnixEpoch : reader.GetFieldValue<DateTimeOffset>(endTimeOrdinal).ToLocalTime(),
                 Rank = reader.IsDBNull(rankOrdinal) ? 0 : reader.GetFieldValue<int>(rankOrdinal),
                 Outcome = reader.IsDBNull(outcomeOrdinal) ? Outcome.DidNotFinish : reader.GetFieldValue<Outcome>(outcomeOrdinal),
                 Category = reader.IsDBNull(gameVariantCategoryOrdinal) ? GameVariantCategory.None : reader.GetFieldValue<GameVariantCategory>(gameVariantCategoryOrdinal),
@@ -337,6 +415,18 @@ namespace OpenSpartan.Workshop.Data
                 TeamMmr = reader.IsDBNull(teamMmrOrdinal) ? null : reader.GetFieldValue<float>(teamMmrOrdinal),
                 ExpectedDeaths = reader.IsDBNull(expectedDeathsOrdinal) ? null : reader.GetFieldValue<float>(expectedDeathsOrdinal),
                 ExpectedKills = reader.IsDBNull(expectedKillsOrdinal) ? null : reader.GetFieldValue<float>(expectedKillsOrdinal),
+                ExpectedBronzeDeaths = reader.IsDBNull(expectedBronzeDeathsOrdinal) ? null : reader.GetFieldValue<float>(expectedBronzeDeathsOrdinal),
+                ExpectedBronzeKills = reader.IsDBNull(expectedBronzeKillsOrdinal) ? null : reader.GetFieldValue<float>(expectedBronzeKillsOrdinal),
+                ExpectedSilverDeaths = reader.IsDBNull(expectedSilverDeathsOrdinal) ? null : reader.GetFieldValue<float>(expectedSilverDeathsOrdinal),
+                ExpectedSilverKills = reader.IsDBNull(expectedSilverKillsOrdinal) ? null : reader.GetFieldValue<float>(expectedSilverKillsOrdinal),
+                ExpectedGoldDeaths = reader.IsDBNull(expectedGoldDeathsOrdinal) ? null : reader.GetFieldValue<float>(expectedGoldDeathsOrdinal),
+                ExpectedGoldKills = reader.IsDBNull(expectedGoldKillsOrdinal) ? null : reader.GetFieldValue<float>(expectedGoldKillsOrdinal),
+                ExpectedPlatinumDeaths = reader.IsDBNull(expectedPlatinumDeathsOrdinal) ? null : reader.GetFieldValue<float>(expectedPlatinumDeathsOrdinal),
+                ExpectedPlatinumKills = reader.IsDBNull(expectedPlatinumKillsOrdinal) ? null : reader.GetFieldValue<float>(expectedPlatinumKillsOrdinal),
+                ExpectedDiamondDeaths = reader.IsDBNull(expectedDiamondDeathsOrdinal) ? null : reader.GetFieldValue<float>(expectedDiamondDeathsOrdinal),
+                ExpectedDiamondKills = reader.IsDBNull(expectedDiamondKillsOrdinal) ? null : reader.GetFieldValue<float>(expectedDiamondKillsOrdinal),
+                ExpectedOnyxDeaths = reader.IsDBNull(expectedOnyxDeathsOrdinal) ? null : reader.GetFieldValue<float>(expectedOnyxDeathsOrdinal),
+                ExpectedOnyxKills = reader.IsDBNull(expectedOnyxKillsOrdinal) ? null : reader.GetFieldValue<float>(expectedOnyxKillsOrdinal),
                 PostMatchCsr = reader.IsDBNull(postMatchOrdinal) ? null : reader.GetFieldValue<int>(postMatchOrdinal),
                 PreMatchCsr = reader.IsDBNull(preMatchCsrOrdinal) ? null : reader.GetFieldValue<int>(preMatchCsrOrdinal),
                 Tier = reader.IsDBNull(tierOrdinal) ? null : reader.GetFieldValue<string>(tierOrdinal),
@@ -372,7 +462,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining match and stats availability. {ex.Message}");
+                LogEngine.Log($"An error occurred obtaining match and stats availability. {ex.Message}", LogSeverity.Error);
             }
 
             return (false, false); // Default values if the data retrieval fails
@@ -399,7 +489,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred inserting player match and stats. {ex.Message}");
+                LogEngine.Log($"An error occurred inserting player match and stats. {ex.Message}", LogSeverity.Error);
             }
 
             return false;
@@ -425,7 +515,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred inserting match and stats. {ex.Message}");
+                LogEngine.Log($"An error occurred inserting match and stats. {ex.Message}", LogSeverity.Error);
             }
 
             return false;
@@ -502,7 +592,7 @@ namespace OpenSpartan.Workshop.Data
 
                         if (insertionResult > 0)
                         {
-                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored map: {result.MatchInfo.MapVariant.AssetId}/{result.MatchInfo.MapVariant.VersionId}");
+                            LogEngine.Log($"Stored map: {result.MatchInfo.MapVariant.AssetId}/{result.MatchInfo.MapVariant.VersionId}");
                         }
                     }
                 }
@@ -522,7 +612,7 @@ namespace OpenSpartan.Workshop.Data
 
                             if (insertionResult > 0)
                             {
-                                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored playlist: {result.MatchInfo.Playlist.AssetId}/{result.MatchInfo.Playlist.VersionId}");
+                                LogEngine.Log($"Stored playlist: {result.MatchInfo.Playlist.AssetId}/{result.MatchInfo.Playlist.VersionId}");
                             }
                         }
                     }
@@ -543,7 +633,7 @@ namespace OpenSpartan.Workshop.Data
 
                             if (insertionResult > 0)
                             {
-                                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored playlist + map mode pair: {result.MatchInfo.PlaylistMapModePair.AssetId}/{result.MatchInfo.PlaylistMapModePair.VersionId}");
+                                LogEngine.Log($"Stored playlist + map mode pair: {result.MatchInfo.PlaylistMapModePair.AssetId}/{result.MatchInfo.PlaylistMapModePair.VersionId}");
                             }
                         }
                     }
@@ -565,7 +655,7 @@ namespace OpenSpartan.Workshop.Data
 
                             if (insertionResult > 0)
                             {
-                                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored game variant: {result.MatchInfo.UgcGameVariant.AssetId}/{result.MatchInfo.UgcGameVariant.VersionId}");
+                                LogEngine.Log($"Stored game variant: {result.MatchInfo.UgcGameVariant.AssetId}/{result.MatchInfo.UgcGameVariant.VersionId}");
                             }
                         }
 
@@ -594,7 +684,7 @@ namespace OpenSpartan.Workshop.Data
 
                         if (insertionResult > 0)
                         {
-                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored engine game variant: {engineGameVariant.Result.AssetId}/{engineGameVariant.Result.VersionId}");
+                            LogEngine.Log($"Stored engine game variant: {engineGameVariant.Result.AssetId}/{engineGameVariant.Result.VersionId}");
                         }
                     }
                 }
@@ -603,7 +693,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Error updating match stats. {ex.Message}");
+                LogEngine.Log($"Error updating match stats. {ex.Message}", LogSeverity.Error);
                 return false;
             }
         }
@@ -611,7 +701,7 @@ namespace OpenSpartan.Workshop.Data
 
         private static string GetQuery(string category, string target)
         {
-            return System.IO.File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Queries", category, $"{target}.sql"), Encoding.UTF8);
+            return System.IO.File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Queries", category, $"{target}.sql"), Encoding.UTF8);
         }
 
         internal static List<Medal> GetMedals()
@@ -637,12 +727,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Warn($"No rows returned for medals.");
+                    LogEngine.Log($"No rows returned for medals.", LogSeverity.Warning);
                 }
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining medals from the database. {ex.Message}");
+                LogEngine.Log($"An error occurred obtaining medals from the database. {ex.Message}", LogSeverity.Error);
             }
 
             return null;
@@ -664,7 +754,7 @@ namespace OpenSpartan.Workshop.Data
 
             if (insertionResult > 0)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored reward track {path}.");
+                LogEngine.Log($"Stored reward track {path}.");
                 return true;
             }
             else
@@ -689,7 +779,7 @@ namespace OpenSpartan.Workshop.Data
 
             if (insertionResult > 0)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored inventory item {path}.");
+                LogEngine.Log($"Stored inventory item {path}.");
                 return true;
             }
             else
@@ -777,12 +867,12 @@ namespace OpenSpartan.Workshop.Data
                 }
                 else
                 {
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"No rows returned for inventory items query.");
+                    LogEngine.Log($"No rows returned for inventory items query.");
                 }
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"An error occurred obtaining inventory items. {ex.Message}");
+                LogEngine.Log($"An error occurred obtaining inventory items. {ex.Message}", LogSeverity.Error);
             }
 
             return null;
@@ -811,11 +901,11 @@ namespace OpenSpartan.Workshop.Data
 
                     if (insertionResult > 0)
                     {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored owned inventory item {item.ItemId}.");
+                        LogEngine.Log($"Stored owned inventory item {item.ItemId}.");
                     }
                     else
                     {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not store owned inventory item {item.ItemId}.");
+                        LogEngine.Log($"Could not store owned inventory item {item.ItemId}.", LogSeverity.Error);
                     }
                 }
 
@@ -823,7 +913,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Error inserting owned inventory items. {ex.Message}");
+                LogEngine.Log($"Error inserting owned inventory items. {ex.Message}", LogSeverity.Error);
                 return false;
             }
         }

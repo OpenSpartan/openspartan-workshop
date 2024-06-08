@@ -12,6 +12,23 @@ namespace OpenSpartan.Workshop.ViewModels
 
         public static string Xuid => HomeViewModel.Instance.Xuid;
 
+        public bool EnableLooseMatchSearch
+        {
+            get
+            {
+                return Settings.EnableLooseMatchSearch;
+            }
+            set
+            {
+                if (Settings.EnableLooseMatchSearch != value)
+                {
+                    Settings.EnableLooseMatchSearch = value;
+                    SettingsManager.StoreSettings(Settings);
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
         public bool SyncSettings
         {
             get
@@ -63,6 +80,74 @@ namespace OpenSpartan.Workshop.ViewModels
             }
         }
 
+        public bool UseBroker
+        {
+            get
+            { 
+                return Settings.UseBroker;
+            }
+            set
+            {
+                if (Settings.UseBroker != value)
+                {
+                    Settings.UseBroker = value;
+                    SettingsManager.StoreSettings(Settings);
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public string Sandbox
+        {
+            get
+            {
+                return Settings.Sandbox;
+            }
+            set
+            {
+                if (Settings.Sandbox != value)
+                {
+                    Settings.Sandbox = value;
+                    SettingsManager.StoreSettings(Settings);
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public string Build
+        {
+            get
+            {
+                return Settings.Build;
+            }
+            set
+            {
+                if (Settings.Build != value)
+                {
+                    Settings.Build = value;
+                    SettingsManager.StoreSettings(Settings);
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
+        public bool UseObanClearance
+        {
+            get
+            {
+                return Settings.UseObanClearance;
+            }
+            set
+            {
+                if (Settings.UseObanClearance != value)
+                {
+                    Settings.UseObanClearance = value;
+                    SettingsManager.StoreSettings(Settings);
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
         public WorkshopSettings Settings
         {
             get => _settings;
@@ -71,6 +156,7 @@ namespace OpenSpartan.Workshop.ViewModels
                 if (_settings != value)
                 {
                     _settings = value;
+                    SettingsManager.StoreSettings(Settings);
                     NotifyPropertyChanged();
                 }
             }

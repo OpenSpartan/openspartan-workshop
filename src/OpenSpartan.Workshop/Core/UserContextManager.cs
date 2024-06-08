@@ -6,34 +6,34 @@ using Den.Dev.Orion.Models;
 using Den.Dev.Orion.Models.HaloInfinite;
 using Den.Dev.Orion.Models.Security;
 using Microsoft.Identity.Client;
+using Microsoft.Identity.Client.Broker;
 using Microsoft.Identity.Client.Extensions.Msal;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
-using NLog;
 using OpenSpartan.Workshop.Data;
 using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Transactions;
 
 namespace OpenSpartan.Workshop.Core
 {
     internal static class UserContextManager
     {
-        private static HaloApiResultContainer<MedalMetadata, RawResponseContainer> MedalMetadata;
+        private static MedalMetadata MedalMetadata;
 
         private const int MatchesPerPage = 25;
-
-        private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 
         private static readonly HttpClient WorkshopHttpClient = new()
         {
@@ -46,6 +46,8 @@ namespace OpenSpartan.Workshop.Core
 
         internal static CancellationTokenSource MatchLoadingCancellationTracker = new();
         internal static CancellationTokenSource BattlePassLoadingCancellationTracker = new();
+        internal static CancellationTokenSource ServiceRecordCancellationTracker = new();
+        internal static CancellationTokenSource ExchangeCancellationTracker = new();
 
         internal static MainWindow DispatcherWindow = ((Application.Current as App)?.MainWindow) as MainWindow;
 
@@ -62,38 +64,50 @@ namespace OpenSpartan.Workshop.Core
         {
             return WinRT.Interop.WindowNative.GetWindowHandle(DispatcherWindow);
         }
-        
-        internal static async Task<bool> PrepopulateMedalMetadata()
+
+        internal static async Task<MedalMetadata?> PrepopulateMedalMetadata()
         {
             try
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Attempting to populate medata metadata...");
-                MedalMetadata = await SafeAPICall(async () => await HaloClient.GameCmsGetMedalMetadata());
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Medal metadata populated.");
-                return true;
+                LogEngine.Log($"Attempting to populate medata metadata...");
+
+                var metadata = await SafeAPICall(async () => await HaloClient.GameCmsGetMedalMetadata());
+                if (metadata != null && metadata.Result != null)
+                {
+                    return metadata.Result;
+                }
+
+                LogEngine.Log($"Medal metadata populated.");
+                return null;
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not populate medal metadata. {ex.Message}");
-                return false;
+                LogEngine.Log($"Could not populate medal metadata. {ex.Message}", LogSeverity.Error);
+                return null;
             }
         }
 
         internal static async Task<AuthenticationResult> InitializePublicClientApplication()
         {
-            BrokerOptions options = new(BrokerOptions.OperatingSystems.Windows)
-            {
-                Title = "OpenSpartan Workshop"
-            };
+
 
             var storageProperties = new StorageCreationPropertiesBuilder(Configuration.CacheFileName, Configuration.AppDataDirectory).Build();
 
-            var pca = PublicClientApplicationBuilder
+            var pcaBootstrap = PublicClientApplicationBuilder
                 .Create(Configuration.ClientID)
-                .WithAuthority(AadAuthorityAudience.PersonalMicrosoftAccount)
-                .WithParentActivityOrWindow(GetMainWindowHandle)
-                .WithBroker(options)
-                .Build();
+                .WithAuthority(AadAuthorityAudience.PersonalMicrosoftAccount);
+
+            if ((bool)SettingsViewModel.Instance.UseBroker)
+            {
+                BrokerOptions options = new(BrokerOptions.OperatingSystems.Windows)
+                {
+                    Title = "OpenSpartan Workshop"
+                };
+
+                pcaBootstrap.WithParentActivityOrWindow(GetMainWindowHandle).WithBroker(options);
+            }
+
+            var pca = pcaBootstrap.Build();
 
             // This hooks up the cross-platform cache into MSAL
             var cacheHelper = await MsalCacheHelper.CreateAsync(storageProperties);
@@ -119,7 +133,7 @@ namespace OpenSpartan.Workshop.Core
                 catch (MsalClientException)
                 {
                     // Authentication was not successsful, we have no token.
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Error("Authentication was not successful.");
+                    LogEngine.Log("Authentication was not successful.", LogSeverity.Error);
                 }
             }
 
@@ -144,9 +158,11 @@ namespace OpenSpartan.Workshop.Core
 
         public static async Task<HaloApiResultContainer<T, RawResponseContainer>> SafeAPICall<T>(Func<Task<HaloApiResultContainer<T, RawResponseContainer>>> orionAPICall)
         {
+            HaloApiResultContainer<T, RawResponseContainer> result = null;
+
             try
             {
-                var result = await orionAPICall();
+                result = await orionAPICall();
 
                 if (result.Response.Code == 401)
                 {
@@ -154,7 +170,7 @@ namespace OpenSpartan.Workshop.Core
 
                     if (!tokenResult)
                     {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Error("Could not reacquire tokens.");
+                        LogEngine.Log("Could not reacquire tokens.", LogSeverity.Error);
 
                         return default;
                     }
@@ -166,8 +182,8 @@ namespace OpenSpartan.Workshop.Core
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Failed to make Halo Infinite API call. {ex.Message}");
-                return null;
+                LogEngine.Log($"Failed to make Halo Infinite API call. {ex.Message}", LogSeverity.Error);
+                return result;
             }
         }
 
@@ -208,19 +224,27 @@ namespace OpenSpartan.Workshop.Core
 
                 HaloClient = new(haloToken.Token, extendedTicket.DisplayClaims.Xui[0].XUID, userAgent: $"{Configuration.PackageName}/{Configuration.Version}-{Configuration.BuildId}");
 
-                string localClearance = string.Empty;
                 Task.Run(async () =>
                 {
-                    var clearance = (await SafeAPICall(async () => { return await HaloClient.SettingsActiveClearance(SettingsViewModel.Instance.Settings.Release); })).Result;
-                    if (clearance != null)
+                    PlayerClearance? clearance = null;
+
+                    if ((bool)SettingsViewModel.Instance.Settings.UseObanClearance)
                     {
-                        localClearance = clearance.FlightConfigurationId;
-                        HaloClient.ClearanceToken = localClearance;
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Your clearance is {localClearance} and it's set in the client.");
+                        clearance = (await SafeAPICall(async () => { return await HaloClient.SettingsActiveFlight(SettingsViewModel.Instance.Settings.Sandbox, SettingsViewModel.Instance.Settings.Build, SettingsViewModel.Instance.Settings.Release); })).Result;
                     }
                     else
                     {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Error("Could not obtain the clearance.");
+                        clearance = (await SafeAPICall(async () => { return await HaloClient.SettingsActiveClearance(SettingsViewModel.Instance.Settings.Release); })).Result;
+                    }
+
+                    if (clearance != null && !string.IsNullOrWhiteSpace(clearance.FlightConfigurationId))
+                    {
+                        HaloClient.ClearanceToken = clearance.FlightConfigurationId;
+                        LogEngine.Log($"Your clearance is {clearance.FlightConfigurationId} and it's set in the client.");
+                    }
+                    else
+                    {
+                        LogEngine.Log("Could not obtain the clearance.", LogSeverity.Error);
                     }
                 }).GetAwaiter().GetResult();
 
@@ -236,34 +260,32 @@ namespace OpenSpartan.Workshop.Core
         {
             try
             {
-                var tasks = new List<Task>
-                {
-                    SafeAPICall(async () => await HaloClient.EconomyGetPlayerCareerRank(new List<string> { $"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})" }, "careerRank1")),
-                    SafeAPICall(async () => await HaloClient.GameCmsGetCareerRanks("careerRank1"))
-                };
+                var xuid = XboxUserContext.DisplayClaims.Xui[0].XUID;
+                var economyTask = SafeAPICall(() => HaloClient.EconomyGetPlayerCareerRank(new List<string> { $"xuid({xuid})" }, "careerRank1"));
+                var ranksTask = SafeAPICall(() => HaloClient.GameCmsGetCareerRanks("careerRank1"));
 
-                await Task.WhenAll(tasks);
+                await Task.WhenAll(economyTask, ranksTask);
 
-                var careerTrackResult = (HaloApiResultContainer<RewardTrackResultContainer, RawResponseContainer>)tasks[0].GetResultOrDefault();
-                var careerTrackContainerResult = (HaloApiResultContainer<CareerTrackContainer, RawResponseContainer>)tasks[1].GetResultOrDefault();
+                var careerTrackResult = economyTask.GetResultOrDefault() as HaloApiResultContainer<RewardTrackResultContainer, RawResponseContainer>;
+                var careerTrackContainerResult = ranksTask.GetResultOrDefault() as HaloApiResultContainer<CareerTrackContainer, RawResponseContainer>;
 
-                if (careerTrackResult.Result != null && careerTrackResult.Response.Code == 200)
+                if (careerTrackResult?.Result != null && careerTrackResult.Response.Code == 200)
                 {
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => HomeViewModel.Instance.CareerSnapshot = careerTrackResult.Result);
                 }
 
-                if (careerTrackContainerResult.Result != null && (careerTrackContainerResult.Response.Code == 200 || careerTrackContainerResult.Response.Code == 304))
+                if (careerTrackContainerResult?.Result != null && (careerTrackContainerResult.Response.Code == 200 || careerTrackContainerResult.Response.Code == 304))
                 {
-                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => HomeViewModel.Instance.MaxRank = careerTrackContainerResult.Result.Ranks.Count);
-
-                    if (HomeViewModel.Instance.CareerSnapshot != null)
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(async () =>
                     {
-                        var currentCareerStage = careerTrackContainerResult.Result.Ranks
-                            .FirstOrDefault(c => c.Rank == HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank + 1);
+                        HomeViewModel.Instance.MaxRank = careerTrackContainerResult.Result.Ranks.Count;
 
-                        if (currentCareerStage != null)
+                        if (HomeViewModel.Instance.CareerSnapshot != null)
                         {
-                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                            var currentRank = HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank + 1;
+                            var currentCareerStage = careerTrackContainerResult.Result.Ranks.FirstOrDefault(c => c.Rank == currentRank);
+
+                            if (currentCareerStage != null)
                             {
                                 HomeViewModel.Instance.Title = $"{currentCareerStage.TierType} {currentCareerStage.RankTitle.Value} {currentCareerStage.RankTier.Value}";
                                 HomeViewModel.Instance.CurrentRankExperience = careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
@@ -271,42 +293,42 @@ namespace OpenSpartan.Workshop.Core
 
                                 HomeViewModel.Instance.ExperienceTotalRequired = careerTrackContainerResult.Result.Ranks.Sum(item => item.XpRequiredForRank);
 
-                                var relevantRanks = careerTrackContainerResult.Result.Ranks
-                                    .Where(c => c.Rank <= HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank);
+                                var relevantRanks = careerTrackContainerResult.Result.Ranks.TakeWhile(c => c.Rank < currentRank);
                                 HomeViewModel.Instance.ExperienceEarnedToDate = relevantRanks.Sum(rank => rank.XpRequiredForRank) + careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
-                            });
 
-                            // Currently a bug in the Halo Infinite CMS where the Onyx Cadet 3 large icon is set incorrectly.
-                            // Hopefully at some point this will be fixed.
-                            if (currentCareerStage.RankLargeIcon == "career_rank/CelebrationMoment/219_Cadet_Onyx_III.png")
-                            {
-                                currentCareerStage.RankLargeIcon = "career_rank/CelebrationMoment/19_Cadet_Onyx_III.png";
+                                // Currently a bug in the Halo Infinite CMS where the Onyx Cadet 3 large icon is set incorrectly.
+                                // Hopefully at some point this will be fixed.
+                                if (currentCareerStage.RankLargeIcon == "career_rank/CelebrationMoment/219_Cadet_Onyx_III.png")
+                                {
+                                    currentCareerStage.RankLargeIcon = "career_rank/CelebrationMoment/19_Cadet_Onyx_III.png";
+                                }
+
+                                string qualifiedRankImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankLargeIcon);
+                                string qualifiedAdornmentImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankAdornmentIcon);
+
+                                EnsureDirectoryExists(qualifiedRankImagePath);
+                                EnsureDirectoryExists(qualifiedAdornmentImagePath);
+
+                                await DownloadAndSetImage(currentCareerStage.RankLargeIcon, qualifiedRankImagePath, () => HomeViewModel.Instance.RankImage = qualifiedRankImagePath);
+                                await DownloadAndSetImage(currentCareerStage.RankAdornmentIcon, qualifiedAdornmentImagePath, () => HomeViewModel.Instance.AdornmentImage = qualifiedAdornmentImagePath);
                             }
-
-                            string qualifiedRankImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankLargeIcon);
-                            string qualifiedAdornmentImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankAdornmentIcon);
-
-                            EnsureDirectoryExists(qualifiedRankImagePath);
-                            EnsureDirectoryExists(qualifiedAdornmentImagePath);
-
-                            await DownloadAndSetImage(currentCareerStage.RankLargeIcon, qualifiedRankImagePath, () => HomeViewModel.Instance.RankImage = qualifiedRankImagePath);
-                            await DownloadAndSetImage(currentCareerStage.RankAdornmentIcon, qualifiedAdornmentImagePath, () => HomeViewModel.Instance.AdornmentImage = qualifiedAdornmentImagePath);
                         }
-                    }
-                    else
-                    {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Error("Could not get the career snapshot - it's null in the view model.");
-                        return false;
-                    }
+                        else
+                        {
+                            LogEngine.Log("Could not get the career snapshot - it's null in the view model.", LogSeverity.Error);
+                        }
+                    });
                 }
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                LogEngine.Log($"An error occurred: {ex.Message}", LogSeverity.Error);
                 return false;
             }
         }
+
 
         internal static void EnsureDirectoryExists(string path)
         {
@@ -314,38 +336,68 @@ namespace OpenSpartan.Workshop.Core
             file.Directory.Create();
         }
 
-        private static async Task DownloadAndSetImage(string imageName, string imagePath, Action setImageAction)
+        private static async Task DownloadAndSetImage(string imageName, string imagePath, Action setImageAction = null, bool isOnWaypoint = false)
         {
             if (!System.IO.File.Exists(imagePath))
             {
-                var image = await SafeAPICall(async () => await HaloClient.GameCmsGetImage(imageName));
-                if (image.Result != null && image.Response.Code == 200)
+                HaloApiResultContainer<byte[], RawResponseContainer> image = null;
+
+                if (isOnWaypoint)
+                {
+                    image = await SafeAPICall(async () => await HaloClient.GameCmsGetGenericWaypointFile(imageName));
+                }
+                else
+                {
+                    image = await SafeAPICall(async () => await HaloClient.GameCmsGetImage(imageName));
+                }
+
+                if (image != null && image.Result != null && image.Response.Code == 200)
                 {
                     await System.IO.File.WriteAllBytesAsync(imagePath, image.Result);
                 }
             }
 
-            await DispatcherWindow.DispatcherQueue.EnqueueAsync(setImageAction);
+            if (setImageAction != null)
+            {
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(setImageAction);
+            }
         }
 
         internal static async Task<bool> PopulateServiceRecordData()
         {
+            await ServiceRecordCancellationTracker.CancelAsync();
+            ServiceRecordCancellationTracker = new CancellationTokenSource();
+
             try
             {
                 // Get initial service record details
                 var serviceRecordResult = await SafeAPICall(async () =>
                 {
-                    return await HaloClient.StatsGetPlayerServiceRecord(HomeViewModel.Instance.Gamertag, LifecycleMode.Matchmade);
+                    return await HaloClient.StatsGetPlayerServiceRecord($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})", LifecycleMode.Matchmade);
                 });
 
-                if (serviceRecordResult.Result != null && serviceRecordResult.Response.Code == 200)
+                if (serviceRecordResult != null && serviceRecordResult.Result != null && serviceRecordResult.Response.Code == 200)
                 {
+                    // First, we want to insert the service record entry in the database.
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                     {
                         HomeViewModel.Instance.ServiceRecord = serviceRecordResult.Result;
                     });
 
                     DataHandler.InsertServiceRecordEntry(serviceRecordResult.Response.Message);
+
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    {
+                        RankedViewModel.Instance.RankedLoadingState = MetadataLoadingState.Loading;
+                        RankedViewModel.Instance.Playlists = [];
+                    });
+
+                    // For ranked progression, we can run that on the thread pool to make sure it doesn't block
+                    // all other calls.
+                    _ = Task.Run(async () =>
+                    {
+                        await ProcessRankedPlaylists(serviceRecordResult.Result, ServiceRecordCancellationTracker.Token);
+                    }, ServiceRecordCancellationTracker.Token);
                 }
 
                 return true;
@@ -354,6 +406,72 @@ namespace OpenSpartan.Workshop.Core
             {
                 return false;
             }
+        }
+
+        private static async Task ProcessRankedPlaylists(PlayerServiceRecord serviceRecord, CancellationToken token)
+        {
+            // Next, we want to also capture the ranked progression. To do that, we will iterate through each
+            // playlist the player has ever played in, according to the service record.
+            foreach (var playlist in serviceRecord.Subqueries.PlaylistAssetIds)
+            {
+                token.ThrowIfCancellationRequested();
+
+                // We look inside each playlist configuration to see if the playlist has CSR associated
+                // with it, since we only care about CSR-enabled playlists to get ranked progression.
+                var playlistConfigurationResult = await SafeAPICall(async () =>
+                {
+                    return await HaloClient.GameCmsGetMultiplayerPlaylistConfiguration($"{playlist.ToString()}.json");
+                });
+
+                if (playlistConfigurationResult != null && playlistConfigurationResult.Result != null)
+                {
+                    // Let's check if the playlist has CSR
+                    if (playlistConfigurationResult.Result.HasCsr == true)
+                    {
+                        var playlistCsr = await SafeAPICall(async () =>
+                        {
+                            return await HaloClient.SkillGetPlaylistCsr(playlist.ToString(), new List<string> { $"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})" });
+                        });
+
+                        // If we successfully got a playlist CSR, let's record that data locally in the database
+                        // and also get additional playlist data. We also check that the Value array has more than
+                        // zero elements, because if there is nothing that means that there is no CSR snapshot
+                        // to capture and store.
+                        if (playlistCsr != null && playlistCsr.Result != null && playlistCsr.Response != null && playlistCsr.Result.Value.Count > 0)
+                        {
+                            DataHandler.InsertPlaylistCSRSnapshot(playlist.ToString(), playlistConfigurationResult.Result.UgcPlaylistVersion.ToString(), playlistCsr.Response.Message);
+
+                            var playlistMetadata = await SafeAPICall(async () =>
+                            {
+                                return await HaloClient.HIUGCDiscoveryGetPlaylist(playlist.ToString(), playlistConfigurationResult.Result.UgcPlaylistVersion.ToString(), HaloClient.ClearanceToken);
+                            });
+
+                            // Now, let's get the data into the local viewmodel if the metadata acquisition was successful.
+                            if (playlistMetadata != null && playlistMetadata.Result != null)
+                            {
+                                if (!token.IsCancellationRequested)
+                                {
+                                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                                    {
+                                        RankedViewModel.Instance.Playlists.Add(new PlaylistCSRSnapshot()
+                                        {
+                                            Name = playlistMetadata.Result.PublicName,
+                                            Id = playlist,
+                                            Version = playlistConfigurationResult.Result.UgcPlaylistVersion,
+                                            Snapshot = playlistCsr.Result.Value[0], // We only got data for one player.
+                                        });
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            {
+                RankedViewModel.Instance.RankedLoadingState = MetadataLoadingState.Completed;
+            });
         }
 
         internal static async Task<bool> PopulateDecorationData()
@@ -375,7 +493,7 @@ namespace OpenSpartan.Workshop.Core
                     if (backgroundImageResult.Result != null && backgroundImageResult.Response.Code == 200)
                     {
                         // Let's make sure that we create the directory if it does not exist.
-                        FileInfo file = new FileInfo(qualifiedBackgroundImagePath);
+                        FileInfo file = new(qualifiedBackgroundImagePath);
                         file.Directory.Create();
 
                         await System.IO.File.WriteAllBytesAsync(qualifiedBackgroundImagePath, backgroundImageResult.Result);
@@ -421,7 +539,7 @@ namespace OpenSpartan.Workshop.Core
 
                 if (emblem.Result != null)
                 {
-                    nameplate = emblemMapping.Result.GetValueOrDefault(emblem.Result.CommonData.Id)?.GetValueOrDefault(customizationResult.Result.Appearance.Emblem.ConfigurationId.ToString())
+                    nameplate = emblemMapping.Result.GetValueOrDefault(emblem.Result.CommonData.Id)?.GetValueOrDefault(customizationResult.Result.Appearance.Emblem.ConfigurationId.ToString(CultureInfo.InvariantCulture))
                                    ?? new EmblemMapping() { EmblemCmsPath = emblem.Result.CommonData.DisplayPath.Media.MediaUrl.Path, NameplateCmsPath = string.Empty, TextColor = "#FFF" };
                 }
 
@@ -440,7 +558,8 @@ namespace OpenSpartan.Workshop.Core
                     file = new(qualifiedEmblemImagePath); file.Directory.Create();
                     file = new(qualifiedBackdropImagePath); file.Directory.Create();
 
-                    await DownloadAndSetImage(nameplate.NameplateCmsPath, qualifiedNameplateImagePath, () => HomeViewModel.Instance.Nameplate = qualifiedNameplateImagePath);
+                    // The nameplate image is downloaded from the Waypoint APIs.
+                    await DownloadAndSetImage(nameplate.NameplateCmsPath, qualifiedNameplateImagePath, () => HomeViewModel.Instance.Nameplate = qualifiedNameplateImagePath, true);
                     await DownloadAndSetImage(emblem.Result.CommonData.DisplayPath.Media.MediaUrl.Path, qualifiedEmblemImagePath, () => HomeViewModel.Instance.Emblem = qualifiedEmblemImagePath);
                     await DownloadAndSetImage(backdrop.Result.ImagePath.Media.MediaUrl.Path, qualifiedBackdropImagePath, () => HomeViewModel.Instance.Backdrop = qualifiedBackdropImagePath);
 
@@ -453,7 +572,7 @@ namespace OpenSpartan.Workshop.Core
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not populate customization data. {ex.Message}");
+                LogEngine.Log($"Could not populate customization data. {ex.Message}", LogSeverity.Error);
                 return false;
             }
         }
@@ -492,25 +611,25 @@ namespace OpenSpartan.Workshop.Core
 
                             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                             {
-                                MatchesViewModel.Instance.MatchList = new IncrementalLoadingCollection<MatchesSource, MatchTableEntity>();
+                                MatchesViewModel.Instance.MatchList = [];
                             });
 
                             return result;
                         }
                         else
                         {
-                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info("No matches to update.");
+                            LogEngine.Log("No matches to update.");
                         }
                     }
                     else
                     {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info("No matches found locally, so need to re-hydrate the database.");
+                        LogEngine.Log("No matches found locally, so need to re-hydrate the database.");
 
                         var result = await UpdateMatchRecords(distinctMatchIds, MatchLoadingCancellationTracker.Token);
 
                         await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                         {
-                            MatchesViewModel.Instance.MatchList = new IncrementalLoadingCollection<MatchesSource, MatchTableEntity>();
+                            MatchesViewModel.Instance.MatchList = [];
                         });
 
                         return result;
@@ -526,7 +645,7 @@ namespace OpenSpartan.Workshop.Core
                     MatchesViewModel.Instance.MatchLoadingParameter = "0";
                 });
 
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Error processing matches. {ex.Message}");
+                LogEngine.Log($"Error processing matches. {ex.Message}", LogSeverity.Error);
                 return false;
             }
         }
@@ -550,55 +669,64 @@ namespace OpenSpartan.Workshop.Core
 
                 await Parallel.ForEachAsync(matchIds, parallelOptions, async (matchId, token) =>
                 {
-                    token.ThrowIfCancellationRequested();
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    double completionProgress = matchCounter++ / (double)matchesTotal * 100.0;
-
-                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    try
                     {
-                        MatchesViewModel.Instance.MatchLoadingParameter = $"{matchId} ({matchCounter} out of {matchesTotal} - {completionProgress:#.00}%)";
-                    });
+                        token.ThrowIfCancellationRequested();
+                        cancellationToken.ThrowIfCancellationRequested();
 
-                    var matchStatsAvailability = DataHandler.GetMatchStatsAvailability(matchId.ToString());
+                        double completionProgress = matchCounter++ / (double)matchesTotal * 100.0;
 
-                    if (!matchStatsAvailability.MatchAvailable)
-                    {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Getting match stats for {matchId}...");
+                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        {
+                            MatchesViewModel.Instance.MatchLoadingParameter = $"{matchId} ({matchCounter} out of {matchesTotal} - {completionProgress:#.00}%)";
+                        });
 
-                        var matchStats = await GetMatchStats(matchId.ToString(), completionProgress);
-                        if (matchStats == null)
-                            return;
+                        var matchStatsAvailability = DataHandler.GetMatchStatsAvailability(matchId.ToString());
 
-                        var processedMatchAssetParameters = await DataHandler.UpdateMatchAssetRecords(matchStats.Result);
+                        if (!matchStatsAvailability.MatchAvailable)
+                        {
+                            LogEngine.Log($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Getting match stats for {matchId}...");
 
-                        bool matchStatsInsertionResult = DataHandler.InsertMatchStats(matchStats.Response.Message);
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info(matchStatsInsertionResult
-                            ? $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored match data for {matchId} in the database."
-                            : $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not store match {matchId} stats in the database.");
+                            var matchStats = await GetMatchStats(matchId.ToString(), completionProgress);
+                            if (matchStats == null)
+                                return;
+
+                            var processedMatchAssetParameters = await DataHandler.UpdateMatchAssetRecords(matchStats.Result);
+
+                            bool matchStatsInsertionResult = DataHandler.InsertMatchStats(matchStats.Response.Message);
+                            LogEngine.Log(matchStatsInsertionResult
+                                ? $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored match data for {matchId} in the database."
+                                : $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not store match {matchId} stats in the database.");
+                        }
+                        else
+                        {
+                            LogEngine.Log($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} already available. Not requesting new data.");
+                        }
+
+                        if (!matchStatsAvailability.StatsAvailable)
+                        {
+                            LogEngine.Log($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Attempting to get player results for players for match {matchId}.");
+
+                            var playerStatsSnapshot = await GetPlayerStats(matchId.ToString());
+                            if (playerStatsSnapshot == null)
+                                return;
+
+                            var playerStatsInsertionResult = DataHandler.InsertPlayerMatchStats(matchId.ToString(), playerStatsSnapshot.Response.Message);
+
+                            LogEngine.Log(playerStatsInsertionResult
+                                ? $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored player stats for {matchId}."
+                                : $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not store player stats for {matchId}.");
+                        }
+                        else
+                        {
+                            LogEngine.Log($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} player stats already available. Not requesting new data.");
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} already available. Not requesting new data.");
-                    }
-
-                    if (!matchStatsAvailability.StatsAvailable)
-                    {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Attempting to get player results for players for match {matchId}.");
-
-                        var playerStatsSnapshot = await GetPlayerStats(matchId.ToString());
-                        if (playerStatsSnapshot == null)
-                            return;
-
-                        var playerStatsInsertionResult = DataHandler.InsertPlayerMatchStats(matchId.ToString(), playerStatsSnapshot.Response.Message);
-
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info(playerStatsInsertionResult
-                            ? $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Stored player stats for {matchId}."
-                            : $"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Could not store player stats for {matchId}.");
-                    }
-                    else
-                    {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"[{completionProgress:#.00}%] [{matchCounter}/{matchesTotal}] Match {matchId} player stats already available. Not requesting new data.");
+                        // Because processing is parallelized, we don't quite want to error our right away and
+                        // stop processing other matches, so instead we will log an exception locally for investigation.
+                        LogEngine.Log($"Error storing {matchId} at {matchCounter}. {ex.Message}", LogSeverity.Error);
                     }
                 });
 
@@ -606,7 +734,7 @@ namespace OpenSpartan.Workshop.Core
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Error storing matches. {ex.Message}");
+                LogEngine.Log($"Error storing matches. {ex.Message}", LogSeverity.Error);
                 return false;
             }
         }
@@ -616,7 +744,7 @@ namespace OpenSpartan.Workshop.Core
             var matchStats = await SafeAPICall(async () => await HaloClient.StatsGetMatchStats(matchId));
             if (matchStats == null || matchStats.Result == null)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"[{completionProgress:#.00}%] [Error] Getting match stats failed for {matchId}.");
+                LogEngine.Log($"[{completionProgress:#.00}%] [Error] Getting match stats failed for {matchId}.", LogSeverity.Error);
                 return null;
             }
 
@@ -628,7 +756,7 @@ namespace OpenSpartan.Workshop.Core
             var matchStats = await HaloClient.StatsGetMatchStats(matchId);
             if (matchStats == null || matchStats.Result == null || matchStats.Result.Players == null)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"[Error] Could not obtain player stats for match {matchId} because the match metadata was unavailable.");
+                LogEngine.Log($"[Error] Could not obtain player stats for match {matchId} because the match metadata was unavailable.", LogSeverity.Error);
                 return null;
             }
 
@@ -638,7 +766,7 @@ namespace OpenSpartan.Workshop.Core
             var playerStatsSnapshot = await SafeAPICall(async () => await HaloClient.SkillGetMatchPlayerResult(matchId, targetPlayers!));
             if (playerStatsSnapshot == null || playerStatsSnapshot.Result == null || playerStatsSnapshot.Result.Value == null)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not obtain player stats for match {matchId}. Requested {targetPlayers.Count} XUIDs.");
+                LogEngine.Log($"Could not obtain player stats for match {matchId}. Requested {targetPlayers.Count} XUIDs.", LogSeverity.Error);
                 return null;
             }
 
@@ -647,12 +775,19 @@ namespace OpenSpartan.Workshop.Core
 
         private static async Task<List<Guid>> GetPlayerMatchIds(string xuid, CancellationToken cancellationToken)
         {
-            List<Guid> matchIds = new List<Guid>();
+            List<Guid> matchIds = [];
             int queryStart = 0;
 
             var tasks = new ConcurrentBag<Task<List<Guid>>>();
 
-            while (true)
+            bool hitMatchThreshold = false;
+            int fullyMatchedBatches = 0;
+            int matchThreshold = 4;
+
+            // If EnableLooseMatchSearch is enabled, we need to also check that the
+            // threshold for successful matches is not hit.
+            while (true &&
+                ((SettingsViewModel.Instance.EnableLooseMatchSearch || hitMatchThreshold) && (fullyMatchedBatches < matchThreshold)))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -660,7 +795,7 @@ namespace OpenSpartan.Workshop.Core
 
                 queryStart += MatchesPerPage;
 
-                if (tasks.Count == 8)
+                if (tasks.Count == 4)
                 {
                     var completedTasks = await Task.WhenAll(tasks);
                     tasks.Clear();
@@ -669,11 +804,20 @@ namespace OpenSpartan.Workshop.Core
                     foreach (var batch in completedTasks)
                     {
                         matchIds.AddRange(batch);
+
+                        if (SettingsViewModel.Instance.EnableLooseMatchSearch)
+                        {
+                            var matchingMatchesInDb = DataHandler.GetExistingMatchCount(batch);
+                            if (matchingMatchesInDb == batch.Count)
+                            {
+                                fullyMatchedBatches++;
+                            }
+                        }
                     }
 
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                     {
-                        MatchesViewModel.Instance.MatchLoadingParameter = matchIds.Count.ToString();
+                        MatchesViewModel.Instance.MatchLoadingParameter = matchIds.Count.ToString(CultureInfo.InvariantCulture);
                     });
 
                     if (completedTasks.LastOrDefault()?.Count == 0)
@@ -684,19 +828,79 @@ namespace OpenSpartan.Workshop.Core
                 }
             }
 
-            if (SettingsViewModel.Instance.EnableLogging)
+            if ((bool)SettingsViewModel.Instance.EnableLogging)
             {
-                Logger.Info($"Ended indexing at {matchIds.Count} total matchmade games.");
+                LogEngine.Log($"Ended indexing at {matchIds.Count} total matchmade games.");
             }
             return matchIds;
         }
 
+        /// <summary>
+        /// Gets the matches asynchronously from the Halo Infinite API.
+        /// </summary>
+        /// <param name="xuid"></param>
+        /// <param name="start"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
         private static async Task<List<Guid>> GetMatchBatchAsync(string xuid, int start, int count)
         {
-            var matches = await SafeAPICall(() =>
-                HaloClient.StatsGetMatchHistory($"xuid({xuid})", start, count, Den.Dev.Orion.Models.HaloInfinite.MatchType.All));
+            List<Guid> successfulMatches = [];
+            List<(string xuid, int start, int count)> retryQueue = [];
 
-            return matches?.Result?.Results?.Select(item => item.MatchId).ToList() ?? new List<Guid>();
+            var matches = await SafeAPICall(async () => await HaloClient.StatsGetMatchHistory($"xuid({xuid})", start, count, Den.Dev.Orion.Models.HaloInfinite.MatchType.All));
+
+            if (matches.Response.Code == 200)
+            {
+                successfulMatches.AddRange(matches?.Result?.Results?.Select(item => item.MatchId) ?? Enumerable.Empty<Guid>());
+            }
+            else
+            {
+                if ((bool)SettingsViewModel.Instance.EnableLogging)
+                {
+                    LogEngine.Log($"Error getting match stats through the search endpoint. Adding to retry queue. XUID: {xuid}, START: {start}, COUNT: {count}. Response code: {matches.Response.Code}. Response message: {matches.Response.Message}", LogSeverity.Error);
+                }
+                retryQueue.Add((xuid, start, count));
+            }
+
+            // Process retry queue after processing successful requests
+            foreach (var retryRequest in retryQueue)
+            {
+                await ProcessRetry(retryRequest, successfulMatches);
+            }
+
+            return successfulMatches;
+        }
+
+        private static async Task ProcessRetry((string xuid, int start, int count) retryRequest, List<Guid> successfulMatches)
+        {
+            var retryAttempts = 0;
+            HaloApiResultContainer<MatchHistoryResponse, RawResponseContainer> retryMatches;
+
+            do
+            {
+                retryMatches = await SafeAPICall(async () => await HaloClient.StatsGetMatchHistory($"xuid({retryRequest.xuid})", retryRequest.start, retryRequest.count, Den.Dev.Orion.Models.HaloInfinite.MatchType.All));
+
+                if (retryMatches.Response.Code == 200)
+                {
+                    successfulMatches.AddRange(retryMatches?.Result?.Results?.Select(item => item.MatchId) ?? Enumerable.Empty<Guid>());
+                    break; // Break the loop if successful
+                }
+                else
+                {
+                    // Log the failure again or handle it appropriately
+                    if ((bool)SettingsViewModel.Instance.EnableLogging)
+                    {
+                        LogEngine.Log($"Error getting match stats through the search endpoint. Retry index: {retryAttempts}. XUID: {retryRequest.xuid}, START: {retryRequest.start}, COUNT: {retryRequest.count}. Response code: {retryMatches.Response.Code}. Response message: {retryMatches.Response.Message}", LogSeverity.Error);
+                    }
+                    retryAttempts++;
+                }
+            } while (retryAttempts < 3); // Retry up to 3 times
+
+            if (retryAttempts == 3)
+            {
+                // Log or handle the failure after 3 attempts
+                LogEngine.Log($"Failed to retrieve matches after 3 attempts. XUID: {retryRequest.xuid}, START: {retryRequest.start}, COUNT: {retryRequest.count}", LogSeverity.Error);
+            }
         }
 
         internal static async Task<bool> ReAcquireTokens()
@@ -727,23 +931,225 @@ namespace OpenSpartan.Workshop.Core
                 }
                 else
                 {
-                    date = MatchesViewModel.Instance.MatchList.Min(a => a.StartTime).ToString("o", CultureInfo.InvariantCulture);
+                    date = MatchesViewModel.Instance.MatchList.Min(a => a.EndTime).ToString("o", CultureInfo.InvariantCulture);
                     matches = DataHandler.GetMatches($"xuid({HomeViewModel.Instance.Xuid})", date, 10);
                 }
 
                 if (matches != null)
                 {
-                    var dispatcherWindow = ((Application.Current as App)?.MainWindow) as MainWindow;
-                    await dispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                     {
                         MatchesViewModel.Instance.MatchList.AddRange(matches);
                     });
                 }
                 else
                 {
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Error("Could not get the list of matches for the specified parameters.");
+                    LogEngine.Log("Could not get the list of matches for the specified parameters.", LogSeverity.Error);
                 }
             }
+        }
+
+        internal static async Task<bool> PopulateSeasonCalendar()
+        {
+            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            {
+                SeasonCalendarViewModel.Instance.CalendarLoadingState = MetadataLoadingState.Loading;
+                SeasonCalendarViewModel.Instance.SeasonDays = [];
+            });
+
+            // First, we handle the CSR calendar.
+            var csrCalendar = await SafeAPICall(async () => await HaloClient.GameCmsGetCSRCalendar());
+            
+            // Next, we try to obtain the data for the regular calendar.
+
+            // Using this as a reference point for extra rituals and excluded events.
+            var settings = SettingsManager.LoadSettings();
+
+            // First, we get the raw season calendar to get the list of all available events that
+            // were registered in the Halo Infinite API.
+            var seasonCalendar = await GetSeasonCalendar();
+            if (seasonCalendar != null)
+            {
+                if (settings.ExtraRitualEvents != null)
+                {
+                    foreach (var extraRitualEvent in settings.ExtraRitualEvents)
+                    {
+                        seasonCalendar.Events.Add(new SeasonCalendarEntry { RewardTrackPath = extraRitualEvent });
+                    }
+                }
+            }
+
+            // Once the season calendar is obtained, we want to capture the metadata for every
+            // single season entry. Events can be populated directly as part of the battle pass query
+            // down the line.
+            Dictionary<string, SeasonRewardTrack>? seasonRewardTracks = await GetSeasonRewardTrackMetadata(seasonCalendar);
+
+            // Then, we get the operations that are available for a given player. This is slightly
+            // different than the data in the season calendar, so we need both. If no player operations are
+            // returned, we can abort.
+            var operations = await GetOperations();
+
+            if (settings.ExcludedOperations != null)
+            {
+                foreach (var excludedOperation in settings.ExcludedOperations.ToList())
+                {
+                    var operationToRemove = operations.OperationRewardTracks.FirstOrDefault(x => x.RewardTrackPath == excludedOperation);
+                    if (operationToRemove != null)
+                    {
+                        operations.OperationRewardTracks.Remove(operationToRemove);
+                    }
+                }
+            }
+
+            if (csrCalendar != null && csrCalendar.Result != null)
+            {
+                for (int i = 0; i < csrCalendar.Result.Seasons.Count; i++)
+                {
+                    var days = GenerateDateList(csrCalendar.Result.Seasons[i].StartDate.ISO8601Date, csrCalendar.Result.Seasons[i].EndDate.ISO8601Date);
+                    foreach (var day in days)
+                    {
+                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        {
+                            SeasonCalendarViewDayItem calendarItem = new(day, csrCalendar.Result.Seasons[i].CsrSeasonFilePath.Replace(".json", string.Empty), ColorConverter.FromHex(Configuration.SeasonColors[i]));
+                            SeasonCalendarViewModel.Instance.SeasonDays.Add(calendarItem);
+                        });
+                    }
+                }
+            }
+            else
+            {
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                {
+                    SeasonCalendarViewModel.Instance.CalendarLoadingState = MetadataLoadingState.Completed;
+                });
+
+                return false;
+            }
+
+            // Complete the parsing of individual seasons
+            for (int i = 0; i < seasonRewardTracks.Count; i++)
+            {
+                // Date ranges for season reward tracks are not structured, so we will need to extract them separately.
+                var rewardTrack = seasonRewardTracks.ElementAt(i);
+                await ProcessRegularSeasonRanges(rewardTrack.Value.DateRange.Value, rewardTrack.Value.Name.Value, i);
+            }
+
+            // Then, we process operations
+            foreach (var operation in operations.OperationRewardTracks)
+            {
+                var compoundOperation = new OperationCompoundModel { RewardTrack = operation, SeasonRewardTrack = seasonRewardTracks.GetValueOrDefault(operation.RewardTrackPath) };
+
+                var isRewardTrackAvailable = DataHandler.IsOperationRewardTrackAvailable(operation.RewardTrackPath);
+
+                if (isRewardTrackAvailable)
+                {
+                    var operationDetails = DataHandler.GetOperationResponseBody(operation.RewardTrackPath);
+                    if (operationDetails != null)
+                        compoundOperation.RewardTrackMetadata = operationDetails;
+
+                    LogEngine.Log($"{operation.RewardTrackPath} (Local) - calendar prep completed");
+                }
+                else
+                {
+                    var apiResult = await SafeAPICall(async () => await HaloClient.GameCmsGetEvent(operation.RewardTrackPath, HaloClient.ClearanceToken));
+                    if (apiResult?.Result != null)
+                        DataHandler.UpdateOperationRewardTracks(apiResult.Response.Message, operation.RewardTrackPath);
+
+                    compoundOperation.RewardTrackMetadata = apiResult.Result;
+
+                    LogEngine.Log($"{operation.RewardTrackPath} - calendar prep completed");
+                }
+
+                await ProcessRegularSeasonRanges(compoundOperation.RewardTrackMetadata.DateRange.Value, compoundOperation.RewardTrackMetadata.Name.Value, operations.OperationRewardTracks.IndexOf(operation));
+            }
+
+            // And now we check the event data.
+            var distinctEvents = seasonCalendar.Events.DistinctBy(x => x.RewardTrackPath).ToList();
+            foreach (var eventEntry in distinctEvents)
+            {
+                var compoundEvent = new OperationCompoundModel
+                {
+                    RewardTrack = new RewardTrack { RewardTrackPath = eventEntry.RewardTrackPath }
+                };
+
+                var isRewardTrackAvailable = DataHandler.IsOperationRewardTrackAvailable(eventEntry.RewardTrackPath);
+
+                if (isRewardTrackAvailable)
+                {
+                    compoundEvent.RewardTrackMetadata = DataHandler.GetOperationResponseBody(eventEntry.RewardTrackPath);
+
+                    var rewardTrack = await GetRewardTrackMetadata("event", compoundEvent.RewardTrackMetadata.TrackId);
+
+                    LogEngine.Log($"{eventEntry.RewardTrackPath} (Local) - calendar prep completed");
+                }
+                else
+                {
+                    var apiResult = await SafeAPICall(async () => await HaloClient.GameCmsGetEvent(eventEntry.RewardTrackPath, HaloClient.ClearanceToken));
+                    if (apiResult?.Result != null)
+                    {
+                        DataHandler.UpdateOperationRewardTracks(apiResult.Response.Message, eventEntry.RewardTrackPath);
+                    }
+                    compoundEvent.RewardTrackMetadata = apiResult.Result;
+
+                    LogEngine.Log($"{eventEntry.RewardTrackPath} - calendar prep completed");
+                }
+
+                await ProcessRegularSeasonRanges(compoundEvent.RewardTrackMetadata.DateRange.Value, compoundEvent.RewardTrackMetadata.Name.Value, distinctEvents.IndexOf(eventEntry));
+            }
+
+            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            {
+                SeasonCalendarViewModel.Instance.CalendarLoadingState = MetadataLoadingState.Completed;
+            });
+
+            return true;
+        }
+
+        private async static Task ProcessRegularSeasonRanges(string rangeText, string name, int index)
+        {
+            List<Tuple<DateTime, DateTime>> ranges = DateRangeParser.ExtractDateRanges(rangeText);
+            foreach (var range in ranges)
+            {
+                var days = GenerateDateList(range.Item1, range.Item2);
+                if (days != null)
+                {
+                    foreach (var day in days)
+                    {
+                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        {
+                            var targetDay = SeasonCalendarViewModel.Instance.SeasonDays
+                                .Where(x => x.DateTime.Date == day.Date)
+                                .FirstOrDefault();
+
+                            if (targetDay != null)
+                            {
+                                targetDay.RegularSeasonText = name;
+                                targetDay.RegularSeasonMarkerColor = ColorConverter.FromHex(Configuration.SeasonColors[index]);
+                            }
+                            else
+                            {
+                                SeasonCalendarViewDayItem calendarItem = new(day, string.Empty, new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.White));
+                                calendarItem.RegularSeasonText = name;
+                                calendarItem.RegularSeasonMarkerColor = ColorConverter.FromHex(Configuration.SeasonColors[index]);
+                                SeasonCalendarViewModel.Instance.SeasonDays.Add(calendarItem);
+                            }
+                        });
+                    }
+                }
+            }
+        }
+
+        static List<DateTime> GenerateDateList(DateTime? lowerDate, DateTime? upperDate)
+        {
+            List<DateTime> dateList = [];
+
+            // Iterate through the dates and add them to the list
+            for (DateTime date = (DateTime)lowerDate; date <= upperDate; date = date.AddDays(1))
+            {
+                dateList.Add(date);
+            }
+
+            return dateList;
         }
 
         internal static async void PopulateMedalMatchData(long medalNameId)
@@ -759,40 +1165,38 @@ namespace OpenSpartan.Workshop.Core
                 }
                 else
                 {
-                    date = MedalMatchesViewModel.Instance.MatchList.Min(a => a.StartTime).ToString("o", CultureInfo.InvariantCulture);
+                    date = MedalMatchesViewModel.Instance.MatchList.Min(a => a.EndTime).ToString("o", CultureInfo.InvariantCulture);
                     matches = DataHandler.GetMatchesWithMedal($"xuid({HomeViewModel.Instance.Xuid})", medalNameId, date, 10);
                 }
 
                 if (matches != null)
                 {
-                    var dispatcherWindow = ((Application.Current as App)?.MainWindow) as MainWindow;
-                    await dispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                     {
                         MedalMatchesViewModel.Instance.MatchList.AddRange(matches);
                     });
                 }
                 else
                 {
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Error("Could not get the list of matches for the specified parameters.");
+                    LogEngine.Log("Could not get the list of matches for the specified parameters.", LogSeverity.Error);
                 }
             }
         }
 
-        internal static List<Medal>? EnrichMedalMetadata(List<Medal> medals)
+        internal static List<Medal>? EnrichMedalMetadata(List<Medal> medals, [CallerMemberName] string caller = null)
         {
             try
             {
-                if (SettingsViewModel.Instance.EnableLogging)
-                    Logger.Info("Getting medal metadata...");
+                LogEngine.Log($"Enriching medal metadata on behalf of {caller}...");
 
-                if (MedalMetadata?.Result?.Medals == null || MedalMetadata.Result.Medals.Count == 0)
+                if (MedalMetadata == null || MedalMetadata.Medals == null || MedalMetadata.Medals.Count == 0)
                     return null;
 
                 var richMedals = medals
-                    .Where(medal => MedalMetadata.Result.Medals.Any(metaMedal => metaMedal.NameId == medal.NameId))
+                    .Where(medal => MedalMetadata.Medals.Any(metaMedal => metaMedal.NameId == medal.NameId))
                     .Select(medal =>
                     {
-                        var metaMedal = MedalMetadata.Result.Medals.First(c => c.NameId == medal.NameId);
+                        var metaMedal = MedalMetadata.Medals.First(c => c.NameId == medal.NameId);
                         medal.Name = metaMedal.Name;
                         medal.Description = metaMedal.Description;
                         medal.DifficultyIndex = metaMedal.DifficultyIndex;
@@ -807,29 +1211,27 @@ namespace OpenSpartan.Workshop.Core
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging)
-                    Logger.Error($"Could not enrich medal metadata. Error: {ex.Message}");
+                LogEngine.Log($"Could not enrich medal metadata. Error: {ex.Message}", LogSeverity.Error);
 
                 return null;
             }
         }
 
-
-
         internal static async Task<bool> PopulateMedalData()
         {
             try
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Info("Getting medal metadata...");
+                LogEngine.Log("Getting medal metadata...");
 
-                if (MedalMetadata?.Result?.Medals == null || MedalMetadata.Result.Medals.Count == 0)
+                if (MedalMetadata == null || MedalMetadata.Medals == null || MedalMetadata.Medals.Count == 0)
                     return false;
 
+                // This gets the medals that are locally stored.
                 var medals = DataHandler.GetMedals();
                 if (medals == null)
                     return false;
 
-                var compoundMedals = medals.Join(MedalMetadata.Result.Medals, earned => earned.NameId, references => references.NameId, (earned, references) => new Medal()
+                var compoundMedals = medals.Join(MedalMetadata.Medals, earned => earned.NameId, references => references.NameId, (earned, references) => new Medal()
                 {
                     Count = earned.Count,
                     Description = references.Description,
@@ -852,7 +1254,7 @@ namespace OpenSpartan.Workshop.Core
 
                 string qualifiedMedalPath = Path.Combine(Configuration.AppDataDirectory, "imagecache", "medals");
 
-                var spriteRequestResult = await SafeAPICall(async () => await HaloClient.GameCmsGetGenericWaypointFile(MedalMetadata.Result.Sprites.ExtraLarge.Path));
+                var spriteRequestResult = await SafeAPICall(async () => await HaloClient.GameCmsGetGenericWaypointFile(MedalMetadata.Sprites.ExtraLarge.Path));
 
                 var spriteContent = spriteRequestResult?.Result;
                 if (spriteContent != null)
@@ -861,7 +1263,10 @@ namespace OpenSpartan.Workshop.Core
                     SkiaSharp.SKBitmap bmp = SkiaSharp.SKBitmap.Decode(ms);
                     using var pixmap = bmp.PeekPixels();
 
-                    foreach (var medal in compoundMedals)
+                    // We want to download all medals that are available
+                    // in the stack. That way, we don't have to fiddle with
+                    // individual missing medals later on.
+                    foreach (var medal in MedalMetadata.Medals)
                     {
                         string medalImagePath = Path.Combine(qualifiedMedalPath, $"{medal.NameId}.png");
                         EnsureDirectoryExists(medalImagePath);
@@ -875,19 +1280,27 @@ namespace OpenSpartan.Workshop.Core
                             var subset = pixmap.ExtractSubset(rectI);
                             using var data = subset.Encode(SkiaSharp.SKPngEncoderOptions.Default);
                             await System.IO.File.WriteAllBytesAsync(medalImagePath, data.ToArray());
-                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Wrote medal to file: {medalImagePath}");
+                            LogEngine.Log($"Wrote medal to file: {medalImagePath}");
                         }
                     }
 
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Info("Got medals.");
+                    LogEngine.Log("Got medals.");
                 }
             }
             catch (Exception ex)
             {
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not obtain medal metadata. Error: {ex.Message}");
+                LogEngine.Log($"Could not obtain medal metadata. Error: {ex.Message}", LogSeverity.Error);
                 return false;
             }
             return true;
+        }
+
+        public static async Task<RewardTrack?> GetRewardTrackMetadata(string eventType, string trackId)
+        {
+            return (await SafeAPICall(async () =>
+            {
+                return await HaloClient.EconomyGetRewardTrack($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})", eventType, $"{trackId}");
+            })).Result;
         }
 
         public static async Task<OperationRewardTrackSnapshot?> GetOperations()
@@ -895,6 +1308,14 @@ namespace OpenSpartan.Workshop.Core
             return (await SafeAPICall(async () =>
             {
                 return await HaloClient.EconomyPlayerOperations($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})", HaloClient.ClearanceToken);
+            })).Result;
+        }
+
+        public static async Task<SeasonCalendar?> GetSeasonCalendar()
+        {
+            return (await SafeAPICall(async () =>
+            {
+                return await HaloClient.GameCmsGetSeasonCalendar();
             })).Result;
         }
 
@@ -910,15 +1331,58 @@ namespace OpenSpartan.Workshop.Core
         {
             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.BattlePassLoadingState = MetadataLoadingState.Loading);
 
+            // Using this as a reference point for extra rituals and excluded events.
+            var settings = SettingsManager.LoadSettings();
+
+            // First, we get the raw season calendar to get the list of all available events that
+            // were registered in the Halo Infinite API.
+            var seasonCalendar = await GetSeasonCalendar();
+            if (seasonCalendar != null)
+            {
+                if (settings.ExtraRitualEvents != null)
+                {
+                    foreach (var extraRitualEvent in settings.ExtraRitualEvents)
+                    {
+                        seasonCalendar.Events.Add(new SeasonCalendarEntry { RewardTrackPath = extraRitualEvent });
+                    }
+                }
+            }
+
+            // Once the season calendar is obtained, we want to capture the metadata for every
+            // single season entry. Events can be populated directly as part of the battle pass query
+            // down the line.
+            Dictionary<string, SeasonRewardTrack>? seasonRewardTracks = await GetSeasonRewardTrackMetadata(seasonCalendar);
+
+            // Then, we get the operations that are available for a given player. This is slightly
+            // different than the data in the season calendar, so we need both. If no player operations are
+            // returned, we can abort.
             var operations = await GetOperations();
             if (operations == null) return false;
 
+            if (settings.ExcludedOperations != null)
+            {
+                foreach (var excludedOperation in settings.ExcludedOperations.ToList())
+                {
+                    var operationToRemove = operations.OperationRewardTracks.FirstOrDefault(x => x.RewardTrackPath == excludedOperation);
+                    if (operationToRemove != null)
+                    {
+                        operations.OperationRewardTracks.Remove(operationToRemove);
+                    }
+                }
+            }
+
+            // Let's get the data for each of the operations.
             foreach (var operation in operations.OperationRewardTracks)
             {
+                // Tell the user that the operations are currently being loaded by changing the
+                // loading parameter to the reward track path.
                 cancellationToken.ThrowIfCancellationRequested();
                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.BattlePassLoadingParameter = operation.RewardTrackPath);
 
-                var compoundEvent = new OperationCompoundModel { RewardTrack = operation };
+                // We can now also pull the metadata from the previously declared
+                // calendar container.
+                var compoundOperation = new OperationCompoundModel { RewardTrack = operation, SeasonRewardTrack = seasonRewardTracks.GetValueOrDefault(operation.RewardTrackPath) };
+
                 var isRewardTrackAvailable = DataHandler.IsOperationRewardTrackAvailable(operation.RewardTrackPath);
 
                 if (isRewardTrackAvailable)
@@ -926,10 +1390,10 @@ namespace OpenSpartan.Workshop.Core
                     var operationDetails = DataHandler.GetOperationResponseBody(operation.RewardTrackPath);
                     if (operationDetails != null)
                     {
-                        compoundEvent.RewardTrackMetadata = operationDetails;
+                        compoundOperation.RewardTrackMetadata = operationDetails;
                     }
-                    compoundEvent.Rewards = new(await GetFlattenedRewards(operationDetails.Ranks, operation.CurrentProgress.Rank));
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"{operation.RewardTrackPath} (Local) - Completed");
+                    compoundOperation.Rewards = new(await GetFlattenedRewards(operationDetails.Ranks, operation.CurrentProgress.Rank));
+                    LogEngine.Log($"{operation.RewardTrackPath} (Local) - Completed");
                 }
                 else
                 {
@@ -938,15 +1402,117 @@ namespace OpenSpartan.Workshop.Core
                     {
                         DataHandler.UpdateOperationRewardTracks(apiResult.Response.Message, operation.RewardTrackPath);
                     }
-                    compoundEvent.RewardTrackMetadata = apiResult.Result;
-                    compoundEvent.Rewards = new(await GetFlattenedRewards(apiResult.Result.Ranks, operation.CurrentProgress.Rank));
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"{operation.RewardTrackPath} - Completed");
+                    compoundOperation.RewardTrackMetadata = apiResult.Result;
+                    compoundOperation.Rewards = new(await GetFlattenedRewards(apiResult.Result.Ranks, operation.CurrentProgress.Rank));
+                    LogEngine.Log($"{operation.RewardTrackPath} - Completed");
                 }
 
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.BattlePasses.Add(compoundEvent));
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.BattlePasses.Add(compoundOperation));
+            }
+
+            // Remember that in earlier versions of events they were chunked up - you had to
+            // play the same event over many weeks (e.g., they would enable you to play 10 levels per week).
+            // For the purposes of this experience, we can just select the distinct events based on reward
+            // paths (they are are the same, regardless of which which it happ
+            foreach (var eventEntry in seasonCalendar.Events.DistinctBy(x => x.RewardTrackPath))
+            {
+                // Tell the user that the operations are currently being loaded by changing the
+                // loading parameter to the reward track path.
+                cancellationToken.ThrowIfCancellationRequested();
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.BattlePassLoadingParameter = eventEntry.RewardTrackPath);
+
+                OperationCompoundModel compoundEvent = new()
+                {
+                    RewardTrack = new RewardTrack() { RewardTrackPath = eventEntry.RewardTrackPath }
+                };
+
+                var isRewardTrackAvailable = DataHandler.IsOperationRewardTrackAvailable(eventEntry.RewardTrackPath);
+
+                if (isRewardTrackAvailable)
+                {
+                    var eventDetails = DataHandler.GetOperationResponseBody(eventEntry.RewardTrackPath);
+                    if (eventDetails != null)
+                    {
+                        compoundEvent.RewardTrackMetadata = eventDetails;
+                    }
+
+                    // For events, there is no "Current Progress" indicator the same way we have it for operations, so
+                    // we're using a dummy value of -1.
+
+                    // We want to get the current progress for the evnet.
+                    var rewardTrack = await GetRewardTrackMetadata("event", compoundEvent.RewardTrackMetadata.TrackId);
+
+                    compoundEvent.Rewards = new(await GetFlattenedRewards(eventDetails.Ranks, (rewardTrack != null ? rewardTrack.CurrentProgress.Rank : -1)));
+                    LogEngine.Log($"{eventEntry.RewardTrackPath} (Local) - Completed");
+                }
+                else
+                {
+                    var apiResult = await SafeAPICall(async () => await HaloClient.GameCmsGetEvent(eventEntry.RewardTrackPath, HaloClient.ClearanceToken));
+                    if (apiResult?.Result != null)
+                    {
+                        DataHandler.UpdateOperationRewardTracks(apiResult.Response.Message, eventEntry.RewardTrackPath);
+                    }
+                    compoundEvent.RewardTrackMetadata = apiResult.Result;
+                    compoundEvent.Rewards = new(await GetFlattenedRewards(apiResult.Result.Ranks, -1));
+                    LogEngine.Log($"{eventEntry.RewardTrackPath} - Completed");
+                }
+
+                // Let's make sure that we also download the image for the event, if available.
+                if (!string.IsNullOrWhiteSpace(compoundEvent.RewardTrackMetadata.SummaryImagePath))
+                {
+                    // Some images, like in the example of Noble Intentions event, do not end with an extension. This is not
+                    // at all a common occurrence, so I am just making sure that I check it ahead of time in this one special
+                    // instance.
+                    if (!compoundEvent.RewardTrackMetadata.SummaryImagePath.EndsWith(".png", StringComparison.InvariantCultureIgnoreCase)
+                        && !compoundEvent.RewardTrackMetadata.SummaryImagePath.EndsWith(".jpg", StringComparison.InvariantCultureIgnoreCase)
+                        && !compoundEvent.RewardTrackMetadata.SummaryImagePath.EndsWith(".jpeg", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        compoundEvent.RewardTrackMetadata.SummaryImagePath += ".png";
+                    }
+
+                    await UpdateLocalImage("imagecache", compoundEvent.RewardTrackMetadata.SummaryImagePath);
+                }
+
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.Events.Add(compoundEvent));
             }
 
             return true;
+        }
+
+        private static async Task<Dictionary<string, SeasonRewardTrack>?> GetSeasonRewardTrackMetadata(SeasonCalendar? seasonCalendar)
+        {
+            if (seasonCalendar == null || seasonCalendar.Seasons == null || seasonCalendar.Seasons.Count == 0)
+                return null;
+
+            var seasonRewardTracks = new Dictionary<string, SeasonRewardTrack>();
+
+            foreach (var season in seasonCalendar.Seasons)
+            {
+                if (string.IsNullOrWhiteSpace(season.SeasonMetadata) || string.IsNullOrWhiteSpace(season.OperationTrackPath))
+                    continue;
+
+                var result = await SafeAPICall(async () =>
+                    await HaloClient.GameCmsGetSeasonRewardTrack(season.SeasonMetadata, HaloClient.ClearanceToken)
+                );
+
+                if (result?.Result != null)
+                {
+                    seasonRewardTracks.Add(season.OperationTrackPath, result.Result);
+
+                    // If we have the metadata, let's also make sure that we download the relevant images.
+                    await UpdateLocalImage("imagecache", result.Result.SummaryBackgroundPath);
+                    await UpdateLocalImage("imagecache", result.Result.BattlePassSeasonUpsellBackgroundImage);
+                    await UpdateLocalImage("imagecache", result.Result.ChallengesBackgroundPath);
+                    await UpdateLocalImage("imagecache", result.Result.BattlePassLogoImage);
+                    await UpdateLocalImage("imagecache", result.Result.SeasonLogoImage);
+                    await UpdateLocalImage("imagecache", result.Result.RitualLogoImage);
+                    await UpdateLocalImage("imagecache", result.Result.StorefrontBackgroundImage);
+                    await UpdateLocalImage("imagecache", result.Result.CardBackgroundImage);
+                    await UpdateLocalImage("imagecache", result.Result.ProgressionBackgroundImage);
+                }
+            }
+
+            return seasonRewardTracks.Count > 0 ? seasonRewardTracks : null;
         }
 
         internal static async Task<bool> PopulateUserInventory()
@@ -964,9 +1530,9 @@ namespace OpenSpartan.Workshop.Core
             return false;
         }
 
-        internal static async Task<IEnumerable<IGrouping<int, RewardMetaContainer>>> GetFlattenedRewards(List<RankSnapshot> rankSnapshots, int currentPlayerRank)
+        internal static async Task<IEnumerable<IGrouping<int, ItemMetadataContainer>>> GetFlattenedRewards(List<RankSnapshot> rankSnapshots, int currentPlayerRank)
         {
-            List<RewardMetaContainer> rewards = [];
+            List<ItemMetadataContainer> rewards = [];
 
             foreach (var rewardBucket in rankSnapshots)
             {
@@ -981,29 +1547,48 @@ namespace OpenSpartan.Workshop.Core
                 rewards.AddRange(paidInventoryRewards);
                 rewards.AddRange(paidCurrencyRewards);
 
-                if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Rank {rewardBucket.Rank} - Completed");
+                LogEngine.Log($"Rank {rewardBucket.Rank} - Completed");
             }
 
             return rewards.GroupBy(x => x.Ranks.Item1);
         }
 
-        internal static async Task<List<RewardMetaContainer>> ExtractCurrencyRewards(int rank, int playerRank, IEnumerable<CurrencyAmount> currencyItems, bool isFree)
+        internal static async Task<List<ItemMetadataContainer>> ExtractCurrencyRewards(int rank, int playerRank, IEnumerable<CurrencyAmount> currencyItems, bool isFree)
         {
-            List<RewardMetaContainer> rewardContainers = new();
+            List<ItemMetadataContainer> rewardContainers = new();
 
             foreach (var currencyReward in currencyItems)
             {
-                RewardMetaContainer container = new()
+                ItemMetadataContainer container = new()
                 {
                     Ranks = new Tuple<int, int>(rank, playerRank),
                     IsFree = isFree,
-                    Amount = currencyReward.Amount,
+                    ItemValue = currencyReward.Amount,
                     CurrencyDetails = await GetInGameCurrency(currencyReward.CurrencyPath)
                 };
 
                 if (container.CurrencyDetails != null)
                 {
-                    string currencyImageLocation = GetCurrencyImageLocation(container.CurrencyDetails.Id.ToLower(CultureInfo.InvariantCulture));
+                    switch (container.CurrencyDetails.Id.ToLower(CultureInfo.InvariantCulture))
+                    {
+                        case "rerollcurrency":
+                            container.Type = ItemClass.ChallengeReroll;
+                            break;
+                        case "xpgrant":
+                            container.Type = ItemClass.XPGrant;
+                            break;
+                        case "xb":
+                            container.Type = ItemClass.XPBoost;
+                            break;
+                        case "cr":
+                            container.Type = ItemClass.Credits;
+                            break;
+                        case "softcurrency":
+                            container.Type = ItemClass.SpartanPoints;
+                            break;
+                    }
+
+                    string currencyImageLocation = GetCurrencyImageLocation(container.Type);
 
                     container.ImagePath = currencyImageLocation;
 
@@ -1025,13 +1610,15 @@ namespace OpenSpartan.Workshop.Core
             return rewardContainers;
         }
 
-        private static string GetCurrencyImageLocation(string currencyId)
+        private static string GetCurrencyImageLocation(ItemClass type)
         {
-            return currencyId switch
+            return type switch
             {
-                "rerollcurrency" => "progression/Currencies/1104-000-data-pad-e39bef84-2x2.png",
-                "xb" => "progression/Currencies/1103-000-xp-boost-5e92621a-2x2.png",
-                "cr" => "progression/Currencies/Credit_Coin-SM.png",
+                ItemClass.ChallengeReroll => "progression/Currencies/1104-000-data-pad-e39bef84-2x2.png", // Challenge swap
+                ItemClass.XPGrant => "progression/Currencies/1102-000-xp-grant-c77c6396-2x2.png", // XP grant
+                ItemClass.XPBoost => "progression/Currencies/1103-000-xp-boost-5e92621a-2x2.png", // XP boost
+                ItemClass.Credits => "progression/Currencies/Credit_Coin-SM.png", // Credit coins
+                ItemClass.SpartanPoints => "progression/StoreContent/ToggleTiles/SpartanPoints_Common_2x2.png", // Spartan points
                 _ => string.Empty,
             };
         }
@@ -1039,74 +1626,76 @@ namespace OpenSpartan.Workshop.Core
         private static async Task WriteImageToFileAsync(string path, byte[] imageData)
         {
             await System.IO.File.WriteAllBytesAsync(path, imageData);
-            if (SettingsViewModel.Instance.EnableLogging) Logger.Info("Stored local image: " + path);
+            LogEngine.Log("Stored local image: " + path);
         }
 
-        internal static async Task<List<RewardMetaContainer>> ExtractInventoryRewards(int rank, int playerRank, IEnumerable<InventoryAmount> inventoryItems, bool isFree)
+        internal static async Task<List<ItemMetadataContainer>> ExtractInventoryRewards(int rank, int playerRank, IEnumerable<InventoryAmount> inventoryItems, bool isFree)
         {
-            List<RewardMetaContainer> rewardContainers = [];
+            List<ItemMetadataContainer> rewardContainers = new(inventoryItems.Count());
+            SemaphoreSlim semaphore = new(Environment.ProcessorCount);
 
-            await Task.WhenAll(inventoryItems.Select(async inventoryReward =>
+            async Task ProcessInventoryItem(InventoryAmount inventoryReward)
             {
-                bool inventoryItemLocallyAvailable = DataHandler.IsInventoryItemAvailable(inventoryReward.InventoryItemPath);
+                await semaphore.WaitAsync().ConfigureAwait(false);
 
-                var container = new RewardMetaContainer
+                try
                 {
-                    Ranks = Tuple.Create(rank, playerRank),
-                    IsFree = isFree,
-                    Amount = inventoryReward.Amount,
-                };
+                    bool inventoryItemLocallyAvailable = DataHandler.IsInventoryItemAvailable(inventoryReward.InventoryItemPath);
 
-                if (inventoryItemLocallyAvailable)
-                {
-                    container.ItemDetails = DataHandler.GetInventoryItem(inventoryReward.InventoryItemPath);
-
-                    if (container.ItemDetails != null)
+                    var container = new ItemMetadataContainer
                     {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Trying to get local image for {container.ItemDetails.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
+                        Ranks = Tuple.Create(rank, playerRank),
+                        IsFree = isFree,
+                        ItemValue = inventoryReward.Amount,
+                        Type = ItemClass.StandardReward,
+                    };
 
-                        if (await UpdateLocalImage("imagecache", container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path))
+                    if (inventoryItemLocallyAvailable)
+                    {
+                        container.ItemDetails = DataHandler.GetInventoryItem(inventoryReward.InventoryItemPath);
+
+                        if (container.ItemDetails != null)
                         {
-                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored local image: {container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path}");
+                            LogEngine.Log($"Trying to get local image for {container.ItemDetails.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
+
+                            if (await UpdateLocalImage("imagecache", container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path).ConfigureAwait(false))
+                            {
+                                LogEngine.Log($"Stored local image: {container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path}");
+                            }
+                            else
+                            {
+                                LogEngine.Log(container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path, LogSeverity.Error);
+                            }
                         }
                         else
                         {
-                            if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Failed to store local image: {container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path}");
+                            LogEngine.Log("Inventory item is null.", LogSeverity.Error);
                         }
                     }
                     else
                     {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Error("Inventory item is null.");
-                    }
-                }
-                else
-                {
-                    var item = await SafeAPICall(async () =>
-                        await HaloClient.GameCmsGetItem(inventoryReward.InventoryItemPath, HaloClient.ClearanceToken)
-                    );
+                        var item = await SafeAPICall(async () => await HaloClient.GameCmsGetItem(inventoryReward.InventoryItemPath, HaloClient.ClearanceToken).ConfigureAwait(false)).ConfigureAwait(false);
 
-                    if (item != null && item.Result != null)
-                    {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Trying to get local image for {item.Result.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
-
-                        if (await UpdateLocalImage("imagecache", item.Result.CommonData.DisplayPath.Media.MediaUrl.Path))
+                        if (item != null && item.Result != null)
                         {
-                            if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Stored local image: {item.Result.CommonData.DisplayPath.Media.MediaUrl.Path}");
-                        }
-                        else
-                        {
-                            if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Failed to store local image: {item.Result.CommonData.DisplayPath.Media.MediaUrl.Path}");
-                        }
+                            LogEngine.Log($"Trying to get local image for {item.Result.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
 
-                        DataHandler.UpdateInventoryItems(item.Response.Message, inventoryReward.InventoryItemPath);
-                        container.ItemDetails = item.Result;
+                            if (await UpdateLocalImage("imagecache", item.Result.CommonData.DisplayPath.Media.MediaUrl.Path).ConfigureAwait(false))
+                            {
+                                LogEngine.Log($"Stored local image: {item.Result.CommonData.DisplayPath.Media.MediaUrl.Path}");
+                            }
+                            else
+                            {
+                                LogEngine.Log(item.Result.CommonData.DisplayPath.Media.MediaUrl.Path, LogSeverity.Error);
+                            }
+
+                            DataHandler.UpdateInventoryItems(item.Response.Message, inventoryReward.InventoryItemPath);
+                            container.ItemDetails = item.Result;
+                        }
                     }
-                }
 
-                container.ImagePath = container.ItemDetails?.CommonData.DisplayPath.Media.MediaUrl.Path;
+                    container.ImagePath = container.ItemDetails?.CommonData.DisplayPath.Media.MediaUrl.Path;
 
-                try
-                {
                     lock (rewardContainers)
                     {
                         rewardContainers.Add(container);
@@ -1114,17 +1703,23 @@ namespace OpenSpartan.Workshop.Core
                 }
                 catch (Exception ex)
                 {
-
-                    if (SettingsViewModel.Instance.EnableLogging) Logger.Error($"Could not set container item details for {inventoryReward.InventoryItemPath}. {ex.Message}");
+                    LogEngine.Log($"Could not set container item details for {inventoryReward.InventoryItemPath}. {ex.Message}", LogSeverity.Error);
                 }
-            }));
+                finally
+                {
+                    semaphore.Release();
+                }
+            }
+
+            await Task.WhenAll(inventoryItems.Select(ProcessInventoryItem)).ConfigureAwait(false);
 
             return rewardContainers;
         }
 
-
         internal static async Task<bool> UpdateLocalImage(string subDirectoryName, string imagePath)
         {
+            if (string.IsNullOrWhiteSpace(imagePath))
+                return false;
 
             string qualifiedImagePath = Path.Join(Configuration.AppDataDirectory, subDirectoryName, imagePath);
 
@@ -1166,16 +1761,134 @@ namespace OpenSpartan.Workshop.Core
                 {
                     try
                     {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Downloading image for {rank}...");
+                        LogEngine.Log($"Downloading image for {rank}...");
                         byte[] imageBytes = await WorkshopHttpClient.GetByteArrayAsync(new Uri($"{Configuration.HaloWaypointCsrImageEndpoint}/{rank}.png"));
                         await System.IO.File.WriteAllBytesAsync(qualifiedRankImagePath, imageBytes);
                     }
                     catch (Exception ex)
                     {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info($"Could not download and store rank image for {rank}. {ex.Message}");
+                        LogEngine.Log($"Could not download and store rank image for {rank}. {ex.Message}", LogSeverity.Error);
                     }
                 }
             }
+
+            return true;
+        }
+
+        internal static async Task<bool> PopulateExchangeData()
+        {
+            try
+            {
+                await ExchangeCancellationTracker.CancelAsync();
+                ExchangeCancellationTracker = new CancellationTokenSource();
+
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                {
+                    ExchangeViewModel.Instance.ExchangeItems = new ObservableCollection<ItemMetadataContainer>();
+                    ExchangeViewModel.Instance.ExchangeLoadingState = MetadataLoadingState.Loading;
+                });
+
+                var exchangeOfferings = await SafeAPICall(async () =>
+                {
+                    return await HaloClient.EconomyGetSoftCurrencyStore($"xuid({XboxUserContext.DisplayClaims.Xui[0].XUID})");
+                });
+
+                if (exchangeOfferings != null && exchangeOfferings.Result != null)
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        await ProcessExchangeItems(exchangeOfferings.Result, ExchangeCancellationTracker.Token);
+                    }, ExchangeCancellationTracker.Token);
+
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                LogEngine.Log($"Failed to finish updating The Exchange content. Reason: {ex.Message}");
+
+                return false;
+            }
+        }
+
+        private static async Task<bool> ProcessExchangeItems(StoreItem exchangeStoreItem, CancellationToken token)
+        {
+            foreach (var offering in exchangeStoreItem.Offerings)
+            {
+                token.ThrowIfCancellationRequested();
+
+                // We're only interested in offerings that have items attached to them.
+                // Other items are not relevant, and we can skip them (there are no currency
+                // or seasonal offers attached to Exchange items.
+                if (offering != null && offering.IncludedItems.Any())
+                {
+                    // Current Exchange offering can contain more items in one (e.g., logos)
+                    // but ultimately maps to just one item.
+                    var item = offering.IncludedItems.FirstOrDefault();
+
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    {
+                        ExchangeViewModel.Instance.ExpirationDate = exchangeStoreItem.StorefrontExpirationDate;
+                    });
+
+                    if (item != null)
+                    {
+                        var itemMetadata = await SafeAPICall(async () =>
+                        {
+                            return await HaloClient.GameCmsGetItem(item.ItemPath, HaloClient.ClearanceToken);
+                        });
+
+                        if (itemMetadata != null)
+                        {
+                            string folderPath = !string.IsNullOrWhiteSpace(itemMetadata.Result.CommonData.DisplayPath.FolderPath) ? itemMetadata.Result.CommonData.DisplayPath.FolderPath : itemMetadata.Result.CommonData.DisplayPath.Media.FolderPath;
+                            string fileName = !string.IsNullOrWhiteSpace(itemMetadata.Result.CommonData.DisplayPath.FileName) ? itemMetadata.Result.CommonData.DisplayPath.FileName : itemMetadata.Result.CommonData.DisplayPath.Media.FileName;
+
+                            var metadataContainer = new ItemMetadataContainer
+                            {
+                                ItemType = item.ItemType,
+                                // There is usually just one price, since it's just one offering. There may be
+                                // several included items (e.g., shoulder pads) but the price should still be the
+                                // same regardless, at least from the current Exchange implementation.
+                                // If for some reason there is no price assigned, we will default to -1.
+                                ItemValue = (offering.Prices != null && offering.Prices.Any()) ? offering.Prices[0].Cost : -1,
+                                ImagePath = (!string.IsNullOrWhiteSpace(folderPath) && !string.IsNullOrWhiteSpace(fileName)) ? Path.Combine(folderPath, fileName).Replace("\\", "/") : itemMetadata.Result.CommonData.DisplayPath.Media.MediaUrl.Path,
+                                ItemDetails = new InGameItem()
+                                {
+                                    CommonData = itemMetadata.Result.CommonData,
+                                },
+                            };
+
+                            if (Path.IsPathRooted(metadataContainer.ImagePath))
+                            {
+                                metadataContainer.ImagePath = metadataContainer.ImagePath.TrimStart(Path.DirectorySeparatorChar);
+                                metadataContainer.ImagePath = metadataContainer.ImagePath.TrimStart(Path.AltDirectorySeparatorChar);
+                            }
+
+                            string qualifiedItemImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", metadataContainer.ImagePath);
+
+                            EnsureDirectoryExists(qualifiedItemImagePath);
+
+                            await DownloadAndSetImage(metadataContainer.ImagePath, qualifiedItemImagePath);
+
+                            if (!token.IsCancellationRequested)
+                            {
+                                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                                {
+                                    ExchangeViewModel.Instance.ExchangeItems.Add(metadataContainer);
+                                });
+                            }
+
+                            LogEngine.Log($"Got item for Exchange listing: {item.ItemPath}");
+                        }
+                    }
+                }
+            }
+
+            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            {
+                ExchangeViewModel.Instance.ExchangeLoadingState = MetadataLoadingState.Completed;
+            });
 
             return true;
         }
@@ -1194,6 +1907,11 @@ namespace OpenSpartan.Workshop.Core
 
                 if (instantiationResult)
                 {
+                    if (string.IsNullOrWhiteSpace(HaloClient.ClearanceToken))
+                    {
+                        LogEngine.Log($"The clearance is empty, so many API calls that depend on it may fail.");
+                    }
+
                     HomeViewModel.Instance.Gamertag = XboxUserContext.DisplayClaims.Xui[0].Gamertag;
                     HomeViewModel.Instance.Xuid = XboxUserContext.DisplayClaims.Xui[0].XUID;
 
@@ -1202,11 +1920,11 @@ namespace OpenSpartan.Workshop.Core
 
                     if (journalingMode.Equals("wal", StringComparison.Ordinal))
                     {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Info("Successfully set WAL journaling mode.");
+                        LogEngine.Log("Successfully set WAL journaling mode.");
                     }
                     else
                     {
-                        if (SettingsViewModel.Instance.EnableLogging) Logger.Error("Could not set WAL journaling mode.");
+                        LogEngine.Log("Could not set WAL journaling mode.", LogSeverity.Warning);
                     }
 
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
@@ -1218,16 +1936,33 @@ namespace OpenSpartan.Workshop.Core
                     });
 
                     // We want to populate the medal metadata before we do anything else.
-                    _ = await PrepopulateMedalMetadata();
+                    MedalMetadata = await PrepopulateMedalMetadata();
 
-                    Parallel.Invoke(    
+                    // Let's get career data first to make sure that it's quickly populated.
+                    _ = await PopulateCareerData();
+
+                    // Service Record data should be pulled early to make sure that we
+                    // get the latest medals quickly before everything else is populated.
+                    _ = await PopulateServiceRecordData();
+
+                    Parallel.Invoke(
                         async () => await PopulateMedalData(),
+                        async () => await PopulateExchangeData(),
                         async () => await PopulateCsrImages(),
-                        async () => await PopulateServiceRecordData(),
-                        async () => await PopulateCareerData(),
+                        async () =>
+                        {
+                            try
+                            {
+                                await PopulateSeasonCalendar();
+                            }
+                            catch (Exception ex)
+                            {
+                                LogEngine.Log($"Could not populate the calendar. {ex.Message}", LogSeverity.Error);
+                            }
+                        },
                         async () => await PopulateUserInventory(),
                         async () => await PopulateCustomizationData(),
-                        async () => await PopulateDecorationData(),  
+                        async () => await PopulateDecorationData(),
                         async () =>
                         {
                             var matchRecordsOutcome = await PopulateMatchRecordsData();

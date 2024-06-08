@@ -1,13 +1,25 @@
-# OpenSpartan Workshop 1.0.3 (`ESCHARUM-03052024`)
+# OpenSpartan Workshop 1.0.4 (`URDIDACT-03112024`)
 
-- [#2] Fixed a bug where the battle pass navigation was not correctly done on smaller window sizes.
-- [#3] Medal name ID is now shown in medal details, so that a user can note it for SQL queries.
-- [#5] Medals are now shown for each of the matches.
-- User can navigate to matches where they earned medals from the match view.
-- [#10] Ranked information displayed in match view and match details.
-- [#12] **Battle Pass** is now listed as **Operations** in the navigation view.
-- Fixed a bug where the service record might not correctly load.
-- [#14] Title now correctly displays the tier and tier type.
-- Onyx Cadet Grade 3 now correctly renders the large icon in the service record. Caused by Halo Infinite API game CMS misconfiguration.
+- [#4] Battle pass item metadata is now shown whenever the user taps on an item.
+- [#16] Tier counterfactuals are now displayed for all ranked matches.
+- [#18] Ranked data now displayed in its own tab.
+- [#21] Added an experimental loose search setting, that speeds up match updates. It's disabled by default but can significantly improve match update performance after matches are already populated in the database.
+- [#23] Fixes missing medals not rendered in match stats.
+- [#24] For matches where there are no expected kills or deaths, the performance arrow indicators are not shown.
+- [#25] Fixed the issue where medals are not refreshed on application launch.
+- [#27] Unnecessary medal label not rendered in match overview when no medals are earned.
+- [#28] Add support for authenticating without using the authentication broker.
+- [#31] Data from [The Exchange](https://www.halowaypoint.com/news/welcome-to-the-exchange) is now rendered in a separate tab, allowing convenient tracking of what's currently on the market.
+- [#35] Event progress is now shown the same way you would see it for operations.
+- Improvements to logging for match acquisition, enabling faster diagnostics for failed calls.
+- Improvements to re-trying match acquisition for failed matches.
+- Logging out now shows a dialog that matches the design of everything else in the window.
+- Events are now listed alongside typical operations (battle pass progression).
+- Minigame modes (e.g., [Survive The Undead](https://www.halowaypoint.com/news/combat-workshop-survive-the-undead)) now correctly render in the match list and don't show an integer representation.
+- Improved logging - it's now easier to trace where exactly an issue surfaced.
+- All currency now displays titles in the battle pass view.
+- Fixed the bug where the nameplate was not being rendered even though the image is available.
+- Matches in the matches list are now ordered by their end time, making it easier to parse the last games.
+- Fixed an issue where Bronze ranks were not displayed in match metadata.
 
 Refer to [**getting started guide**](https://openspartan.com/docs/workshop/guides/get-started/) to start using OpenSpartan Workshop.

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="OpenSpartan.Workshop.Controls.SeasonCalendarControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid>
+        <CalendarView
+            x:Name="CalendarViewControl"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            CalendarItemBorderBrush="DimGray"
+            CalendarItemBorderThickness="1"
+            CalendarItemCornerRadius="0"
+            BlackoutStrikethroughBrush="Transparent"
+            BlackoutBackground="#5B6163"
+            BlackoutForeground="#2F2F2F"
+            DayItemFontSize="{StaticResource BodyTextBlockFontSize}"
+            DayItemMargin="4,0,0,0"
+            IsGroupLabelVisible="True"
+            FirstOfMonthLabelFontSize="{StaticResource BodyTextBlockFontSize}"
+            FirstOfMonthLabelFontWeight="Bold"
+            HorizontalFirstOfMonthLabelAlignment="Right"
+            FirstOfMonthLabelMargin="0,0,4,0"
+            DayItemFontWeight="SemiBold"
+            FirstDayOfWeek="Monday"
+            HorizontalDayItemAlignment="Left"
+            VerticalDayItemAlignment="Top">
+            <CalendarView.CalendarViewDayItemStyle>
+                <Style TargetType="CalendarViewDayItem">
+                    <Setter Property="FontSize" Value="12" />
+                    <Setter Property="FontWeight" Value="ExtraLight" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate>
+                                <StackPanel VerticalAlignment="Bottom">
+                                    <Grid
+                                        Background="{Binding RegularSeasonMarkerColor}"
+                                        Padding="5"
+                                        Margin="4,0,4,4"
+                                        VerticalAlignment="Bottom">
+                                        <TextBlock Text="{Binding RegularSeasonText}"></TextBlock>
+                                    </Grid>
+
+                                    <Grid
+                                        Background="{Binding CSRSeasonMarkerColor}"
+                                        Padding="5"
+                                        Margin="4,0,4,0"
+                                        VerticalAlignment="Bottom">
+                                        <TextBlock Text="{Binding CSRSeasonText}"></TextBlock>
+                                    </Grid>
+                                </StackPanel>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </CalendarView.CalendarViewDayItemStyle>
+        </CalendarView>
+    </Grid>
+</UserControl>

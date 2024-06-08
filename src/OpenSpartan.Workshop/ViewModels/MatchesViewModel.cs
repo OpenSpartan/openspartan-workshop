@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.WinUI;
+using CommunityToolkit.WinUI.Collections;
 using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Data;
 using OpenSpartan.Workshop.Models;
@@ -86,7 +87,7 @@ namespace OpenSpartan.Workshop.ViewModels
             NavigationRequested?.Invoke(this, parameter);
         }
 
-        public void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
+        public void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             OnPropertyChanged(propertyName);
         }

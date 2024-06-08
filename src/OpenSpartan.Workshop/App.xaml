@@ -152,6 +152,19 @@
             <converters:OutcomeToForegroundConverter x:Key="OutcomeToForegroundConverter"/>
             <converters:PerformanceToGlyphConverter x:Key="PerformanceToGlyphConverter"/>
             <converters:PerformanceToColorConverter x:Key="PerformanceToColorConverter"/>
+            <converters:RewardTypeToStringConverter x:Key="RewardTypeToStringConverter"/>
+            <converters:RewardTypeToVisibilityConverter x:Key="RewardTypeToVisibilityConverter" />
+            <converters:ISO8601ToLocalDateStringConverter x:Key="ISO8601ToLocalDateStringConverter" />
+            <converters:SingleValueAvailabilityToVisibilityConverter x:Key="SingleValueAvailabilityToVisibilityConverter"/>
+            <converters:ListCountToVisibilityConverter x:Key="ListCountToVisibilityConverter"/>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <converters:RankIdentifierToPathConverter x:Key="RankIdentifierToPathConverter"/>
+            <converters:StringAvailabilityToVisibilityConverter x:Key="StringAvailabilityToVisibilityConverter"/>
+            <converters:CsrProgressStateConverter x:Key="CsrProgressStateConverter"/>
+            <converters:CsrToPathConverter x:Key="CsrToPathConverter"/>
+            <converters:CsrToTextRankConverter x:Key="CsrToTextRankConverter" />
+            <converters:CsrToProgressConverter x:Key="CsrToProgressConverter" />
+            <converters:CsrToTooltipValueConverter x:Key="CsrToTooltipValueConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
