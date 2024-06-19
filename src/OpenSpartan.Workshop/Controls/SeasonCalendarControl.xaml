@@ -10,6 +10,8 @@
     <Grid>
         <CalendarView
             x:Name="CalendarViewControl"
+            IsTodayHighlighted="true"
+            TodayForeground="Transparent"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
             CalendarItemBorderBrush="DimGray"
@@ -36,23 +38,29 @@
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate>
-                                <StackPanel VerticalAlignment="Bottom">
-                                    <Grid
-                                        Background="{Binding RegularSeasonMarkerColor}"
-                                        Padding="5"
-                                        Margin="4,0,4,4"
-                                        VerticalAlignment="Bottom">
-                                        <TextBlock Text="{Binding RegularSeasonText}"></TextBlock>
-                                    </Grid>
+                                <Grid>
+                                    <StackPanel VerticalAlignment="Bottom">
+                                        <Grid
+                                            Padding="5"
+                                            Margin="4,0,4,4"
+                                            VerticalAlignment="Bottom">
+                                            <Grid.Background>
+                                                <SolidColorBrush Color="{Binding RegularSeasonMarkerColor.Color}" Opacity="1"></SolidColorBrush>
+                                            </Grid.Background>
+                                            <TextBlock Text="{Binding RegularSeasonText}" TextDecorations="None"></TextBlock>
+                                        </Grid>
 
-                                    <Grid
-                                        Background="{Binding CSRSeasonMarkerColor}"
-                                        Padding="5"
-                                        Margin="4,0,4,0"
-                                        VerticalAlignment="Bottom">
-                                        <TextBlock Text="{Binding CSRSeasonText}"></TextBlock>
-                                    </Grid>
-                                </StackPanel>
+                                        <Grid
+                                            Padding="5"
+                                            Margin="4,0,4,0"
+                                            VerticalAlignment="Bottom">
+                                            <Grid.Background>
+                                                <SolidColorBrush Color="{Binding CSRSeasonMarkerColor.Color}" Opacity=".3"></SolidColorBrush>
+                                            </Grid.Background>
+                                            <TextBlock Text="{Binding CSRSeasonText}" TextDecorations="None"></TextBlock>
+                                        </Grid>
+                                    </StackPanel>
+                                </Grid>
                             </ControlTemplate>
                         </Setter.Value>
                     </Setter>
