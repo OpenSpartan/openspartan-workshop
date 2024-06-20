@@ -61,6 +61,7 @@ namespace OpenSpartan.Workshop
                             SettingsViewModel.Instance.Settings.Sandbox = settings.Sandbox;
                             SettingsViewModel.Instance.Settings.UseObanClearance = settings.UseObanClearance;
                             SettingsViewModel.Instance.Settings.ExtraRitualEvents = settings.ExtraRitualEvents;
+                            SettingsViewModel.Instance.Settings.ExcludedOperations = settings.ExcludedOperations;
 
                             SettingsManager.StoreSettings(SettingsViewModel.Instance.Settings);
                         }    

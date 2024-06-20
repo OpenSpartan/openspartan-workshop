@@ -8,14 +8,22 @@ namespace OpenSpartan.Workshop.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            var medalPath = string.Empty;
+            var localPath = string.Empty;
 
             if (value != null)
             {
-                medalPath = Path.Join(Core.Configuration.AppDataDirectory, "imagecache", value.ToString());
+                string? targetPath = value as string;
+
+                if (Path.IsPathRooted(targetPath))
+                {
+                    targetPath = targetPath.TrimStart(Path.DirectorySeparatorChar);
+                    targetPath = targetPath.TrimStart(Path.AltDirectorySeparatorChar);
+                }
+
+                localPath = Path.Join(Core.Configuration.AppDataDirectory, "imagecache", targetPath);
             }
 
-            return medalPath;
+            return localPath;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

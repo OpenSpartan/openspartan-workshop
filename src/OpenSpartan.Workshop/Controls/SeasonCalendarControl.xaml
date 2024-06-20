@@ -38,7 +38,11 @@
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate>
-                                <Grid>
+                                <Grid x:Name="CalendarItemGrid">
+                                    <Image Opacity=".4" HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="UniformToFill" Source="{Binding BackgroundImagePath, Converter={StaticResource ServicePathToLocalPathConverter}}">
+
+                                    </Image>
+                                    
                                     <StackPanel VerticalAlignment="Bottom">
                                         <Grid
                                             Padding="5"
@@ -47,7 +51,10 @@
                                             <Grid.Background>
                                                 <SolidColorBrush Color="{Binding RegularSeasonMarkerColor.Color}" Opacity="1"></SolidColorBrush>
                                             </Grid.Background>
-                                            <TextBlock Text="{Binding RegularSeasonText}" TextDecorations="None"></TextBlock>
+                                            <StackPanel Orientation="Horizontal" Visibility="{Binding RegularSeasonText, Converter={StaticResource StringAvailabilityToVisibilityConverter}}">
+                                                <Image Source="{Binding RegularSeasonText, Converter={StaticResource StringAvailabilityToParameterSource}, ConverterParameter='/CustomImages/season-marker.svg'}" Height="12"></Image>
+                                                <TextBlock Margin="8,0,0,0" Text="{Binding RegularSeasonText}" TextDecorations="None"></TextBlock>
+                                            </StackPanel>
                                         </Grid>
 
                                         <Grid
@@ -55,7 +62,7 @@
                                             Margin="4,0,4,0"
                                             VerticalAlignment="Bottom">
                                             <Grid.Background>
-                                                <SolidColorBrush Color="{Binding CSRSeasonMarkerColor.Color}" Opacity=".3"></SolidColorBrush>
+                                                <SolidColorBrush Color="{Binding CSRSeasonMarkerColor.Color}" Opacity=".5"></SolidColorBrush>
                                             </Grid.Background>
                                             <TextBlock Text="{Binding CSRSeasonText}" TextDecorations="None"></TextBlock>
                                         </Grid>

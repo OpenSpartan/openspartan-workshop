@@ -17,6 +17,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -335,24 +336,24 @@ namespace OpenSpartan.Workshop.Core
             file.Directory.Create();
         }
 
-        private static async Task DownloadAndSetImage(string imageName, string imagePath, Action setImageAction = null, bool isOnWaypoint = false)
+        private static async Task DownloadAndSetImage(string serviceImagePath, string localImagePath, Action setImageAction = null, bool isOnWaypoint = false)
         {
-            if (!System.IO.File.Exists(imagePath))
+            if (!System.IO.File.Exists(localImagePath))
             {
                 HaloApiResultContainer<byte[], RawResponseContainer> image = null;
 
                 if (isOnWaypoint)
                 {
-                    image = await SafeAPICall(async () => await HaloClient.GameCmsGetGenericWaypointFile(imageName));
+                    image = await SafeAPICall(async () => await HaloClient.GameCmsGetGenericWaypointFile(serviceImagePath));
                 }
                 else
                 {
-                    image = await SafeAPICall(async () => await HaloClient.GameCmsGetImage(imageName));
+                    image = await SafeAPICall(async () => await HaloClient.GameCmsGetImage(serviceImagePath));
                 }
 
                 if (image != null && image.Result != null && image.Response.Code == 200)
                 {
-                    await System.IO.File.WriteAllBytesAsync(imagePath, image.Result);
+                    await System.IO.File.WriteAllBytesAsync(localImagePath, image.Result);
                 }
             }
 
@@ -1007,7 +1008,11 @@ namespace OpenSpartan.Workshop.Core
                     {
                         await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                         {
-                            SeasonCalendarViewDayItem calendarItem = new(day, csrCalendar.Result.Seasons[i].CsrSeasonFilePath.Replace(".json", string.Empty), ColorConverter.FromHex(Configuration.SeasonColors[i]));
+                            SeasonCalendarViewDayItem calendarItem = new();
+                            calendarItem.DateTime = day;
+                            calendarItem.CSRSeasonText = csrCalendar.Result.Seasons[i].CsrSeasonFilePath.Replace(".json", string.Empty);
+                            calendarItem.CSRSeasonMarkerColor = ColorConverter.FromHex(Configuration.SeasonColors[i]);
+
                             SeasonCalendarViewModel.Instance.SeasonDays.Add(calendarItem);
                         });
                     }
@@ -1028,7 +1033,24 @@ namespace OpenSpartan.Workshop.Core
             {
                 // Date ranges for season reward tracks are not structured, so we will need to extract them separately.
                 var rewardTrack = seasonRewardTracks.ElementAt(i);
-                await ProcessRegularSeasonRanges(rewardTrack.Value.DateRange.Value, rewardTrack.Value.Name.Value, i);
+
+                string? targetBackgroundPath = rewardTrack.Value?.CardBackgroundImage ??
+                                               rewardTrack.Value?.Logo ??
+                                               rewardTrack.Value?.SummaryBackgroundPath;
+
+                if (!string.IsNullOrEmpty(targetBackgroundPath))
+                {
+                    if (Path.IsPathRooted(targetBackgroundPath))
+                    {
+                        targetBackgroundPath = targetBackgroundPath.TrimStart(Path.DirectorySeparatorChar);
+                        targetBackgroundPath = targetBackgroundPath.TrimStart(Path.AltDirectorySeparatorChar);
+                    }
+
+                    string qualifiedBackgroundImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", targetBackgroundPath);
+                    await DownloadAndSetImage(targetBackgroundPath, qualifiedBackgroundImagePath);
+                }
+
+                await ProcessRegularSeasonRanges(rewardTrack.Value.DateRange.Value, rewardTrack.Value.Name.Value, i, targetBackgroundPath);
             }
 
             // Then, we process operations
@@ -1057,7 +1079,27 @@ namespace OpenSpartan.Workshop.Core
                     LogEngine.Log($"{operation.RewardTrackPath} - calendar prep completed");
                 }
 
-                await ProcessRegularSeasonRanges(compoundOperation.RewardTrackMetadata.DateRange.Value, compoundOperation.RewardTrackMetadata.Name.Value, operations.OperationRewardTracks.IndexOf(operation));
+                // If there is a background image, let's make sure that we attempt to download it.
+                // The same image may be downloaded when the Operations view is populated, but we
+                // don't know if that happened yet or not.
+
+                string? targetBackgroundPath = compoundOperation.RewardTrackMetadata?.SummaryImagePath ??
+                               compoundOperation.RewardTrackMetadata?.BackgroundImagePath ??
+                               compoundOperation.SeasonRewardTrack?.Logo;
+
+                if (!string.IsNullOrEmpty(targetBackgroundPath))
+                {
+                    if (Path.IsPathRooted(targetBackgroundPath))
+                    {
+                        targetBackgroundPath = targetBackgroundPath.TrimStart(Path.DirectorySeparatorChar);
+                        targetBackgroundPath = targetBackgroundPath.TrimStart(Path.AltDirectorySeparatorChar);
+                    }
+
+                    string qualifiedBackgroundImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", targetBackgroundPath);
+                    await DownloadAndSetImage(targetBackgroundPath, qualifiedBackgroundImagePath);
+                }
+
+                await ProcessRegularSeasonRanges(compoundOperation.RewardTrackMetadata.DateRange.Value, compoundOperation.RewardTrackMetadata.Name.Value, operations.OperationRewardTracks.IndexOf(operation), targetBackgroundPath);
             }
 
             // And now we check the event data.
@@ -1091,7 +1133,26 @@ namespace OpenSpartan.Workshop.Core
                     LogEngine.Log($"{eventEntry.RewardTrackPath} - calendar prep completed");
                 }
 
-                await ProcessRegularSeasonRanges(compoundEvent.RewardTrackMetadata.DateRange.Value, compoundEvent.RewardTrackMetadata.Name.Value, distinctEvents.IndexOf(eventEntry));
+                // If there is a background image, let's make sure that we attempt to download it.
+                // The same image may be downloaded when the Operations view is populated, but we
+                // don't know if that happened yet or not.
+                string? targetBackgroundPath = compoundEvent?.RewardTrackMetadata?.SummaryImagePath ??
+                               compoundEvent?.RewardTrackMetadata?.BackgroundImagePath ??
+                               compoundEvent?.SeasonRewardTrack?.Logo;
+
+                if (!string.IsNullOrEmpty(targetBackgroundPath))
+                {
+                    if (Path.IsPathRooted(targetBackgroundPath))
+                    {
+                        targetBackgroundPath = targetBackgroundPath.TrimStart(Path.DirectorySeparatorChar);
+                        targetBackgroundPath = targetBackgroundPath.TrimStart(Path.AltDirectorySeparatorChar);
+                    }
+
+                    string qualifiedBackgroundImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", targetBackgroundPath);
+                    await DownloadAndSetImage(targetBackgroundPath, qualifiedBackgroundImagePath);
+                }
+
+                await ProcessRegularSeasonRanges(compoundEvent.RewardTrackMetadata.DateRange.Value, compoundEvent.RewardTrackMetadata.Name.Value, distinctEvents.IndexOf(eventEntry), targetBackgroundPath);
             }
 
             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
@@ -1102,7 +1163,7 @@ namespace OpenSpartan.Workshop.Core
             return true;
         }
 
-        private async static Task ProcessRegularSeasonRanges(string rangeText, string name, int index)
+        private async static Task ProcessRegularSeasonRanges(string rangeText, string name, int index, string backgroundPath = "")
         {
             List<Tuple<DateTime, DateTime>> ranges = DateRangeParser.ExtractDateRanges(rangeText);
             foreach (var range in ranges)
@@ -1122,12 +1183,17 @@ namespace OpenSpartan.Workshop.Core
                             {
                                 targetDay.RegularSeasonText = name;
                                 targetDay.RegularSeasonMarkerColor = ColorConverter.FromHex(Configuration.SeasonColors[index]);
+                                targetDay.BackgroundImagePath = backgroundPath;
                             }
                             else
                             {
-                                SeasonCalendarViewDayItem calendarItem = new(day, string.Empty, new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.White));
+                                SeasonCalendarViewDayItem calendarItem = new();
+                                calendarItem.DateTime = day;
+                                calendarItem.CSRSeasonText = string.Empty;
+                                calendarItem.CSRSeasonMarkerColor = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.White);
                                 calendarItem.RegularSeasonText = name;
                                 calendarItem.RegularSeasonMarkerColor = ColorConverter.FromHex(Configuration.SeasonColors[index]);
+                                calendarItem.BackgroundImagePath = backgroundPath;
                                 SeasonCalendarViewModel.Instance.SeasonDays.Add(calendarItem);
                             }
                         });

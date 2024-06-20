@@ -22,6 +22,7 @@
 		<None Remove="CustomImages\cr.svg" />
 		<None Remove="CustomImages\logo-icon.png" />
 		<None Remove="CustomImages\OpenSpartan.Workshop.ico" />
+		<None Remove="CustomImages\season-marker.svg" />
 		<None Remove="CustomImages\sp.svg" />
 		<None Remove="Views\BattlePassDetailView.xaml" />
 		<None Remove="Views\BattlePassView.xaml" />
@@ -54,6 +55,9 @@
 		<Content Include="Assets\Square44x44Logo.scale-200.png" />
 		<Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
 		<Content Include="Assets\Wide310x150Logo.scale-200.png" />
+		<Content Include="CustomImages\season-marker.svg">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
 		<Content Include="CustomImages\sp.svg">
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
