@@ -84,7 +84,15 @@
         </NavigationView>
 
         <Grid Grid.RowSpan="2" Background="#2F2F2F" DataContext="{x:Bind viewmodels:SplashScreenViewModel.Instance}" Visibility="{Binding IsBlocking, Converter={StaticResource BoolToVisibilityConverter}}">
-            <Image Source="CustomImages/logo-icon.png" Height="256" VerticalAlignment="Center" HorizontalAlignment="Center"></Image>
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Image Source="CustomImages/logo-icon.png" Height="256" ></Image>
+                <Border CornerRadius="4" Margin="0,12,0,0" DataContext="{x:Bind viewmodels:SplashScreenViewModel.Instance}" Visibility="{Binding IsErrorMessageDisplayed, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel Orientation="Horizontal" Background="#D32F2F" Padding="12">
+                        <FontIcon Glyph="&#xE783;" Margin="0,0,8,0"></FontIcon>
+                        <TextBlock Text="Error connecting to Halo Infinite API or auth services. Please re-launch the app."/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
         </Grid>
     </Grid>
 </Window>

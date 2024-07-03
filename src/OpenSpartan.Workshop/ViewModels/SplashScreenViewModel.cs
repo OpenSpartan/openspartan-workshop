@@ -10,6 +10,20 @@ namespace OpenSpartan.Workshop.ViewModels
         private SplashScreenViewModel()
         { 
             IsBlocking = true;
+            IsErrorMessageDisplayed = false;
+        }
+
+        public bool IsErrorMessageDisplayed
+        {
+            get => _isErrorMessageDisplayed;
+            set
+            {
+                if (_isErrorMessageDisplayed != value)
+                {
+                    _isErrorMessageDisplayed = value;
+                    NotifyPropertyChanged();
+                }
+            }
         }
 
         public bool IsBlocking
@@ -25,6 +39,7 @@ namespace OpenSpartan.Workshop.ViewModels
             }
         }
 
+        private bool _isErrorMessageDisplayed;
         private bool _isBlocking;
 
         public void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)

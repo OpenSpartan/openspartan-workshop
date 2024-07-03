@@ -55,66 +55,66 @@
                     </Button>
                 </StackPanel>
                 <VariableSizedWrapGrid Orientation="Horizontal" ItemWidth="250" Margin="24,0,24,0">
-                        <StackPanel Background="#404040" Orientation="Vertical" BorderThickness="2" Padding="12" CornerRadius="4">
-                            <Grid>
-                                <ProgressRing Background="#2F2F2F" Height="160" Width="160" IsIndeterminate="False" Value="{Binding RankProgress}" Maximum="1" Minimum="0" HorizontalAlignment="Center" VerticalAlignment="Center"></ProgressRing>
-                                <Image VerticalAlignment="Center" HorizontalAlignment="Center" Height="100" Source="{Binding RankImage}"></Image>
-                            </Grid>
-                        </StackPanel>
-
-                        <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="36"></RowDefinition>
-                                <RowDefinition Height="*"></RowDefinition>
-                            </Grid.RowDefinitions>
-
-                            <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
-                                <TextBlock Text="Experience" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                            </Grid>
-                            <Grid Grid.Row="1" Padding="8">
-                                <StackPanel>
-                                    <TextBlock Text="Earned" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                                    <TextBlock Text="{Binding CurrentRankExperience, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
-                                    <TextBlock Text="Required" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                                    <TextBlock Text="{Binding RequiredRankExperience, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
-                                    <TextBlock Text="Percentage" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                                    <TextBlock Text="{Binding RankProgress, Converter={StaticResource DoubleToPercentageStringConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
-                                </StackPanel>
-                            </Grid>
+                    <StackPanel Background="#404040" Orientation="Vertical" BorderThickness="2" Padding="12" CornerRadius="4">
+                        <Grid>
+                            <ProgressRing Background="#2F2F2F" Height="160" Width="160" IsIndeterminate="False" Value="{Binding RankProgress}" Maximum="1" Minimum="0" HorizontalAlignment="Center" VerticalAlignment="Center"></ProgressRing>
+                            <Image VerticalAlignment="Center" HorizontalAlignment="Center" Height="100" Source="{Binding RankImage}"></Image>
                         </Grid>
+                    </StackPanel>
 
-                        <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="36"></RowDefinition>
-                                <RowDefinition Height="*"></RowDefinition>
-                            </Grid.RowDefinitions>
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
 
-                            <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
-                                <TextBlock Text="Ranks" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                            </Grid>
-                            <Grid Grid.Row="1" Padding="8">
-                                <StackPanel>
-                                    <TextBlock Text="Current" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                                    <TextBlock Text="{Binding CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
-                                    <TextBlock Text="Maximum" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                                    <TextBlock Text="{Binding MaxRank}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
-                                </StackPanel>
-                            </Grid>
+                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <TextBlock Text="Experience" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
                         </Grid>
-
-                        <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="36"></RowDefinition>
-                                <RowDefinition Height="*"></RowDefinition>
-                            </Grid.RowDefinitions>
-
-                            <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
-                                <TextBlock Text="Title" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
-                            </Grid>
-                            <Grid Grid.Row="1" Padding="8">
-                                <TextBlock Text="{Binding Title}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
-                            </Grid>
+                        <Grid Grid.Row="1" Padding="8">
+                            <StackPanel>
+                                <TextBlock Text="Earned" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                <TextBlock Text="{Binding CurrentRankExperience, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                                <TextBlock Text="Required" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                <TextBlock Text="{Binding RequiredRankExperience, Converter={StaticResource CommaAfterThousandsConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                                <TextBlock Text="Percentage" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                <TextBlock Text="{Binding RankProgress, Converter={StaticResource DoubleToPercentageStringConverter}}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                            </StackPanel>
                         </Grid>
+                    </Grid>
+
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <TextBlock Text="Ranks" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                        </Grid>
+                        <Grid Grid.Row="1" Padding="8">
+                            <StackPanel>
+                                <TextBlock Text="Current" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                <TextBlock Text="{Binding CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                                <TextBlock Text="Maximum" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                                <TextBlock Text="{Binding MaxRank}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+
+                    <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="36"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Background="#2F2F2F" Padding="8" CornerRadius="4,4,0,0">
+                            <TextBlock Text="Title" Style="{StaticResource BodyStrongTextBlockStyle}"></TextBlock>
+                        </Grid>
+                        <Grid Grid.Row="1" Padding="8">
+                            <TextBlock Text="{Binding Title}" Style="{StaticResource BodyTextBlockStyle}"></TextBlock>
+                        </Grid>
+                    </Grid>
 
                     <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
                         <Grid.RowDefinitions>
@@ -130,7 +130,7 @@
                             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding ExperienceProgress, Converter={StaticResource DoubleToPercentageStringConverter}}"></TextBlock>
                         </Grid>
                     </Grid>
-                    
+
                     <Grid Background="#404040" BorderThickness="2" CornerRadius="4">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="36"></RowDefinition>
@@ -152,7 +152,7 @@
                         </Grid>
                     </Grid>
                 </VariableSizedWrapGrid>
-                </StackPanel>
+            </StackPanel>
 
             <!-- Content -->
             <StackPanel Orientation="Vertical">
@@ -675,98 +675,5 @@
                 </VariableSizedWrapGrid>
             </StackPanel>
         </StackPanel>
-
-
-
-        <!--<ScrollViewer  HorizontalScrollBarVisibility="Hidden" x:Name="scroller"
-            HorizontalScrollMode="Enabled"
-            SizeChanged="scroller_SizeChanged"
-            VerticalScrollMode="Disabled">
-            <Grid x:Name="ContentGrid" Margin="36,0,36,0">
-                <StackPanel Orientation="Horizontal" Spacing="12">
-                    <controls:HeaderTile
-                        Title="Getting started"
-                        Description="An overview of app development options, tools, and samples."
-                        Link="https://learn.microsoft.com/windows/apps/get-started/">
-                        <controls:HeaderTile.Source>
-                            <Image Source="/Assets/StoreLogo.png" />
-                        </controls:HeaderTile.Source>
-                    </controls:HeaderTile>
-                    <controls:HeaderTile
-                        Title="Windows design"
-                        Description="Design guidelines and toolkits for creating native app experiences."
-                        Link="https://learn.microsoft.com/windows/apps/design/">
-                        <controls:HeaderTile.Source>
-                            <Image Source="/Assets/StoreLogo.png" />
-                        </controls:HeaderTile.Source>
-                    </controls:HeaderTile>
-                    <controls:HeaderTile
-                        Title="WinUI GitHub"
-                        Description="The latest Windows native controls and styles for your applications."
-                        Link="https://github.com/microsoft/microsoft-ui-xaml">
-                        <controls:HeaderTile.Source>
-                            <Image Source="/Assets/StoreLogo.png" />
-                        </controls:HeaderTile.Source>
-                    </controls:HeaderTile>
-                    <controls:HeaderTile
-                        Title="Community Toolkit"
-                        Description="A collection of helper functions, custom controls, and app services."
-                        Link="https://apps.microsoft.com/store/detail/windows-community-toolkit-sample-app/9NBLGGH4TLCQ">
-                        <controls:HeaderTile.Source>
-                            <Image Source="/Assets/StoreLogo.png" />
-                        </controls:HeaderTile.Source>
-                    </controls:HeaderTile>
-                    <controls:HeaderTile
-                        Title="Template Studio"
-                        Description="Accelerates the creation of new WinUI apps using a wizard-based experience.."
-                        Link="https://marketplace.visualstudio.com/items?itemName=TemplateStudio.TemplateStudioForWinUICs">
-                        <controls:HeaderTile.Source>
-                            <Image Source="/Assets/StoreLogo.png" />
-                        </controls:HeaderTile.Source>
-                    </controls:HeaderTile>
-                    <controls:HeaderTile
-                        Title="Code samples"
-                        Description="Find samples that demonstrate specific tasks, features, and APIs."
-                        Link="https://learn.microsoft.com/windows/apps/get-started/samples">
-                        <controls:HeaderTile.Source>
-                            <Image Source="/Assets/StoreLogo.png" />
-                        </controls:HeaderTile.Source>
-                    </controls:HeaderTile>
-                    <controls:HeaderTile
-                        Title="Partner Center"
-                        Description="Upload your app to the Store."
-                        Link="https://developer.microsoft.com/windows/">
-                        <controls:HeaderTile.Source>
-                            <Image Source="/Assets/StoreLogo.png" />
-                        </controls:HeaderTile.Source>
-                    </controls:HeaderTile>
-                </StackPanel>
-            </Grid>
-        </ScrollViewer>-->
-
-        <!--<Button
-            x:Name="ScrollBackBtn"
-            Width="16"
-            Height="38"
-            Margin="8,-16,0,0"
-            AutomationProperties.Name="Scroll left"
-            Click="ScrollBackBtn_Click"
-            Style="{StaticResource ScrollButtonStyle}"
-            ToolTipService.ToolTip="Scroll left"
-            Visibility="Collapsed">
-            <FontIcon FontSize="{ThemeResource FlipViewButtonFontSize}" Glyph="&#xedd9;" />
-        </Button>
-        <Button
-            x:Name="ScrollForwardBtn"
-            Width="16"
-            Height="38"
-            Margin="0,-16,8,0"
-            HorizontalAlignment="Right"
-            AutomationProperties.Name="Scroll right"
-            Click="ScrollForwardBtn_Click"
-            Style="{StaticResource ScrollButtonStyle}"
-            ToolTipService.ToolTip="Scroll right">
-            <FontIcon FontSize="{ThemeResource FlipViewButtonFontSize}" Glyph="&#xEDDA;" />
-        </Button>-->
     </Grid>
 </Page>

@@ -213,45 +213,53 @@ namespace OpenSpartan.Workshop.Core
                 extendedTicket = await manager.RequestXstsToken(ticket.Token, false);
             }).GetAwaiter().GetResult();
 
-            Task.Run(async () =>
+            if (haloTicket != null)
             {
-                haloToken = await haloAuthClient.GetSpartanToken(haloTicket.Token, 4);
-            }).GetAwaiter().GetResult();
-
-            if (extendedTicket != null)
-            {
-                XboxUserContext = extendedTicket;
-
-                HaloClient = new(haloToken.Token, extendedTicket.DisplayClaims.Xui[0].XUID, userAgent: $"{Configuration.PackageName}/{Configuration.Version}-{Configuration.BuildId}");
-
                 Task.Run(async () =>
                 {
-                    PlayerClearance? clearance = null;
-
-                    if ((bool)SettingsViewModel.Instance.Settings.UseObanClearance)
-                    {
-                        clearance = (await SafeAPICall(async () => { return await HaloClient.SettingsActiveFlight(SettingsViewModel.Instance.Settings.Sandbox, SettingsViewModel.Instance.Settings.Build, SettingsViewModel.Instance.Settings.Release); })).Result;
-                    }
-                    else
-                    {
-                        clearance = (await SafeAPICall(async () => { return await HaloClient.SettingsActiveClearance(SettingsViewModel.Instance.Settings.Release); })).Result;
-                    }
-
-                    if (clearance != null && !string.IsNullOrWhiteSpace(clearance.FlightConfigurationId))
-                    {
-                        HaloClient.ClearanceToken = clearance.FlightConfigurationId;
-                        LogEngine.Log($"Your clearance is {clearance.FlightConfigurationId} and it's set in the client.");
-                    }
-                    else
-                    {
-                        LogEngine.Log("Could not obtain the clearance.", LogSeverity.Error);
-                    }
+                    haloToken = await haloAuthClient.GetSpartanToken(haloTicket.Token, 4);
                 }).GetAwaiter().GetResult();
 
-                return true;
+                if (extendedTicket != null)
+                {
+                    XboxUserContext = extendedTicket;
+
+                    HaloClient = new(haloToken.Token, extendedTicket.DisplayClaims.Xui[0].XUID, userAgent: $"{Configuration.PackageName}/{Configuration.Version}-{Configuration.BuildId}");
+
+                    Task.Run(async () =>
+                    {
+                        PlayerClearance? clearance = null;
+
+                        if ((bool)SettingsViewModel.Instance.Settings.UseObanClearance)
+                        {
+                            clearance = (await SafeAPICall(async () => { return await HaloClient.SettingsActiveFlight(SettingsViewModel.Instance.Settings.Sandbox, SettingsViewModel.Instance.Settings.Build, SettingsViewModel.Instance.Settings.Release); })).Result;
+                        }
+                        else
+                        {
+                            clearance = (await SafeAPICall(async () => { return await HaloClient.SettingsActiveClearance(SettingsViewModel.Instance.Settings.Release); })).Result;
+                        }
+
+                        if (clearance != null && !string.IsNullOrWhiteSpace(clearance.FlightConfigurationId))
+                        {
+                            HaloClient.ClearanceToken = clearance.FlightConfigurationId;
+                            LogEngine.Log($"Your clearance is {clearance.FlightConfigurationId} and it's set in the client.");
+                        }
+                        else
+                        {
+                            LogEngine.Log("Could not obtain the clearance.", LogSeverity.Error);
+                        }
+                    }).GetAwaiter().GetResult();
+
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
             else
             {
+                LogEngine.Log("Halo ticket is null. Cannot authenticate.", LogSeverity.Error);
                 return false;
             }
         }
@@ -1963,105 +1971,127 @@ namespace OpenSpartan.Workshop.Core
             {
                 var instantiationResult = InitializeHaloClient(authResult);
 
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                {
-                    SplashScreenViewModel.Instance.IsBlocking = false;
-                });
-
                 if (instantiationResult)
                 {
-                    if (string.IsNullOrWhiteSpace(HaloClient.ClearanceToken))
-                    {
-                        LogEngine.Log($"The clearance is empty, so many API calls that depend on it may fail.");
-                    }
-
-                    HomeViewModel.Instance.Gamertag = XboxUserContext.DisplayClaims.Xui[0].Gamertag;
-                    HomeViewModel.Instance.Xuid = XboxUserContext.DisplayClaims.Xui[0].XUID;
-
-                    var databaseBootstrapResult = DataHandler.BootstrapDatabase();
-                    var journalingMode = DataHandler.SetWALJournalingMode();
-
-                    if (journalingMode.Equals("wal", StringComparison.Ordinal))
-                    {
-                        LogEngine.Log("Successfully set WAL journaling mode.");
-                    }
-                    else
-                    {
-                        LogEngine.Log("Could not set WAL journaling mode.", LogSeverity.Warning);
-                    }
-
                     await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                     {
-                        // Reset all collections to make sure that left-over data is not displayed.
-                        BattlePassViewModel.Instance.BattlePasses = BattlePassViewModel.Instance.BattlePasses ?? [];
-                        MatchesViewModel.Instance.MatchList = MatchesViewModel.Instance.MatchList ?? [];
-                        MedalsViewModel.Instance.Medals = MedalsViewModel.Instance.Medals ?? [];
+                        SplashScreenViewModel.Instance.IsBlocking = false;
                     });
 
-                    // We want to populate the medal metadata before we do anything else.
-                    MedalMetadata = await PrepopulateMedalMetadata();
-
-                    // Let's get career data first to make sure that it's quickly populated.
-                    _ = await PopulateCareerData();
-
-                    // Service Record data should be pulled early to make sure that we
-                    // get the latest medals quickly before everything else is populated.
-                    _ = await PopulateServiceRecordData();
-
-                    Parallel.Invoke(
-                        async () => await PopulateMedalData(),
-                        async () => await PopulateExchangeData(),
-                        async () => await PopulateCsrImages(),
-                        async () =>
+                    if (instantiationResult)
+                    {
+                        if (string.IsNullOrWhiteSpace(HaloClient.ClearanceToken))
                         {
-                            try
-                            {
-                                await PopulateSeasonCalendar();
-                            }
-                            catch (Exception ex)
-                            {
-                                LogEngine.Log($"Could not populate the calendar. {ex.Message}", LogSeverity.Error);
-                            }
-                        },
-                        async () => await PopulateUserInventory(),
-                        async () => await PopulateCustomizationData(),
-                        async () => await PopulateDecorationData(),
-                        async () =>
-                        {
-                            var matchRecordsOutcome = await PopulateMatchRecordsData();
+                            LogEngine.Log($"The clearance is empty, so many API calls that depend on it may fail.");
+                        }
 
-                            if (matchRecordsOutcome)
-                            {
-                                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                                {
-                                    MatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Completed;
-                                    MatchesViewModel.Instance.MatchLoadingParameter = string.Empty;
-                                });
-                            }
-                        },
-                        async () =>
-                        {
-                            try
-                            {
-                                await PopulateBattlePassData(BattlePassLoadingCancellationTracker.Token);
+                        HomeViewModel.Instance.Gamertag = XboxUserContext.DisplayClaims.Xui[0].Gamertag;
+                        HomeViewModel.Instance.Xuid = XboxUserContext.DisplayClaims.Xui[0].XUID;
 
-                                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                                {
-                                    BattlePassViewModel.Instance.BattlePassLoadingState = MetadataLoadingState.Completed;
-                                });
-                            }
-                            catch
-                            {
-                                BattlePassLoadingCancellationTracker = new CancellationTokenSource();
-                            }
+                        var databaseBootstrapResult = DataHandler.BootstrapDatabase();
+                        var journalingMode = DataHandler.SetWALJournalingMode();
+
+                        if (journalingMode.Equals("wal", StringComparison.Ordinal))
+                        {
+                            LogEngine.Log("Successfully set WAL journaling mode.");
+                        }
+                        else
+                        {
+                            LogEngine.Log("Could not set WAL journaling mode.", LogSeverity.Warning);
+                        }
+
+                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        {
+                            // Reset all collections to make sure that left-over data is not displayed.
+                            BattlePassViewModel.Instance.BattlePasses = BattlePassViewModel.Instance.BattlePasses ?? [];
+                            MatchesViewModel.Instance.MatchList = MatchesViewModel.Instance.MatchList ?? [];
+                            MedalsViewModel.Instance.Medals = MedalsViewModel.Instance.Medals ?? [];
                         });
 
-                    return true;
-                }
+                        // We want to populate the medal metadata before we do anything else.
+                        MedalMetadata = await PrepopulateMedalMetadata();
 
+                        // Let's get career data first to make sure that it's quickly populated.
+                        _ = await PopulateCareerData();
+
+                        // Service Record data should be pulled early to make sure that we
+                        // get the latest medals quickly before everything else is populated.
+                        _ = await PopulateServiceRecordData();
+
+                        Parallel.Invoke(
+                            async () => await PopulateMedalData(),
+                            async () => await PopulateExchangeData(),
+                            async () => await PopulateCsrImages(),
+                            async () =>
+                            {
+                                try
+                                {
+                                    await PopulateSeasonCalendar();
+                                }
+                                catch (Exception ex)
+                                {
+                                    LogEngine.Log($"Could not populate the calendar. {ex.Message}", LogSeverity.Error);
+                                }
+                            },
+                            async () => await PopulateUserInventory(),
+                            async () => await PopulateCustomizationData(),
+                            async () => await PopulateDecorationData(),
+                            async () =>
+                            {
+                                var matchRecordsOutcome = await PopulateMatchRecordsData();
+
+                                if (matchRecordsOutcome)
+                                {
+                                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                                    {
+                                        MatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Completed;
+                                        MatchesViewModel.Instance.MatchLoadingParameter = string.Empty;
+                                    });
+                                }
+                            },
+                            async () =>
+                            {
+                                try
+                                {
+                                    await PopulateBattlePassData(BattlePassLoadingCancellationTracker.Token);
+
+                                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                                    {
+                                        BattlePassViewModel.Instance.BattlePassLoadingState = MetadataLoadingState.Completed;
+                                    });
+                                }
+                                catch
+                                {
+                                    BattlePassLoadingCancellationTracker = new CancellationTokenSource();
+                                }
+                            });
+
+                        return true;
+                    }
+
+                    return false;
+                }
+                else
+                {
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    {
+                        SplashScreenViewModel.Instance.IsErrorMessageDisplayed = true;
+                    });
+
+                    LogEngine.Log("Could not authenticate with Halo services.", LogSeverity.Error);
+                    return false;
+                }
+            }
+            else
+            {
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                {
+                    SplashScreenViewModel.Instance.IsErrorMessageDisplayed = true;
+                });
+
+                LogEngine.Log("Could not authenticate with Halo services.", LogSeverity.Error);
                 return false;
             }
-            return false;
         }
     }
 }
