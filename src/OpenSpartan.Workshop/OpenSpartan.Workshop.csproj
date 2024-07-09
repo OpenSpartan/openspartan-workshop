@@ -67,7 +67,7 @@
 		<PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.0.240109" />
 		<PackageReference Include="CommunityToolkit.WinUI.Converters" Version="8.0.240109" />
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Controls.DataGrid" Version="7.1.2" />
-		<PackageReference Include="Den.Dev.Orion" Version="1.0.57" />
+		<PackageReference Include="Den.Dev.Orion" Version="1.0.58" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.6" />
 		<PackageReference Include="Microsoft.Identity.Client" Version="4.61.3" />
 		<PackageReference Include="Microsoft.Identity.Client.Broker" Version="4.61.3" />

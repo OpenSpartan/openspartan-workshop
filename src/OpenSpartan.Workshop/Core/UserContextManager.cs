@@ -1930,6 +1930,23 @@ namespace OpenSpartan.Workshop.Core
                                 },
                             };
 
+                            // There is a chance that the image lookup is going to fail. In that case, we want to
+                            // fallback to the "dumb" logic, and that is - get the offering and all the related metadata.
+                            if (string.IsNullOrWhiteSpace(metadataContainer.ImagePath))
+                            {
+                                if (offering.OfferingDisplayPath != null)
+                                {
+                                    var offeringData = await SafeAPICall(async () => await HaloClient.GameCmsGetStoreOffering(offering.OfferingDisplayPath));
+                                    if (offeringData != null && offeringData.Result != null)
+                                    {
+                                        if (!string.IsNullOrWhiteSpace(offeringData.Result.ObjectImagePath))
+                                        {
+                                            metadataContainer.ImagePath = offeringData.Result.ObjectImagePath.Replace("\\", "/");
+                                        }
+                                    }
+                                }
+                            }
+
                             if (Path.IsPathRooted(metadataContainer.ImagePath))
                             {
                                 metadataContainer.ImagePath = metadataContainer.ImagePath.TrimStart(Path.DirectorySeparatorChar);
