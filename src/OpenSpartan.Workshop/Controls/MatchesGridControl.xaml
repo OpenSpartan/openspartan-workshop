@@ -16,6 +16,8 @@
     <UserControl.Resources>
         <winuiconverters:StringFormatConverter x:Key="StringFormatConverter"/>
     </UserControl.Resources>
+    
+    
 
     <Grid>
         <controls:DataGrid IsReadOnly="True"
@@ -237,18 +239,18 @@
                                         <RowDefinition Height="*"></RowDefinition>
                                     </Grid.RowDefinitions>
 
-                                    <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Grid.Row="0"  Visibility="{Binding IsRanked, Converter={StaticResource BoolToVisibilityConverter}}">
-                                        <Image Height="64" Margin="12,0,0,0" Source="{Binding RankIdentifier, Converter={StaticResource RankIdentifierToPathConverter}}"></Image>
-                                        <StackPanel Margin="12,12,12,0" VerticalAlignment="Center">
+                                    <VariableSizedWrapGrid Orientation="Horizontal" ItemWidth="150" Grid.Row="0" Visibility="{Binding IsRanked, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <Image Height="64" Margin="0,0,0,0" Source="{Binding RankIdentifier, Converter={StaticResource RankIdentifierToPathConverter}}"/>
+                                        <StackPanel Margin="0,12,0,0" VerticalAlignment="Center">
                                             <Grid>
-                                                <ProgressBar BorderBrush="White" BorderThickness="1" CornerRadius="0" MinHeight="20" Width="200" Height="20" Minimum="{Binding TierStart}" Maximum="{Binding NextTierStart}" Value="{Binding CurrentEntity, Converter={StaticResource CsrProgressStateConverter}}" Foreground="White">
+                                                <ProgressBar BorderBrush="White" BorderThickness="1" CornerRadius="0" MinHeight="20" Height="20" Minimum="{Binding TierStart}" Maximum="{Binding NextTierStart}" Value="{Binding CurrentEntity, Converter={StaticResource CsrProgressStateConverter}}" Foreground="White">
                                                     <ProgressBar.Resources>
                                                         <x:Double x:Key="ProgressBarTrackHeight">20</x:Double>
                                                         <CornerRadius x:Key="ProgressBarTrackCornerRadius">0</CornerRadius>
                                                     </ProgressBar.Resources>
                                                 </ProgressBar>
 
-                                                <ProgressBar BorderBrush="White" BorderThickness="1" CornerRadius="0" MinHeight="20" Width="200" Height="20" Minimum="{Binding TierStart}" Maximum="{Binding NextTierStart}" Value="{Binding CurrentEntity, Converter={StaticResource CsrProgressStateConverter}, ConverterParameter='inverse'}" Background="Transparent">
+                                                <ProgressBar BorderBrush="White" BorderThickness="1" CornerRadius="0" MinHeight="20" Height="20" Minimum="{Binding TierStart}" Maximum="{Binding NextTierStart}" Value="{Binding CurrentEntity, Converter={StaticResource CsrProgressStateConverter}, ConverterParameter='inverse'}" Background="Transparent">
                                                     <ProgressBar.Resources>
                                                         <x:Double x:Key="ProgressBarTrackHeight">20</x:Double>
                                                         <CornerRadius x:Key="ProgressBarTrackCornerRadius">0</CornerRadius>
@@ -263,7 +265,7 @@
                                             </StackPanel>
                                         </StackPanel>
                                         <Image Height="64" Margin="0,0,0,0" Source="{Binding NextRankIdentifier, Converter={StaticResource RankIdentifierToPathConverter}}"></Image>
-                                    </StackPanel>
+                                    </VariableSizedWrapGrid>
 
                                     <Grid Grid.Row="1" Visibility="{Binding IsRanked, Converter={StaticResource BoolToVisibilityConverter}}">
                                         <Grid.RowDefinitions>
