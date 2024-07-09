@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -14,16 +13,20 @@ namespace OpenSpartan.Workshop.Data
     {
         public static bool IsTableAvailable(this SqliteConnection connection, string tableName)
         {
-            var verifyTableAvailabilityQuery = File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Queries", "VerifyTableAvailability.sql"), Encoding.UTF8);
-            var command = connection.CreateCommand();
-            command.CommandText = verifyTableAvailabilityQuery;
-            command.Parameters.AddWithValue("$id", tableName);
-
-            // Service record table
-            using var reader = command.ExecuteReader();
-            if (reader.HasRows)
+            string assemblyLocation = Assembly.GetExecutingAssembly().Location;
+            if (!string.IsNullOrEmpty(assemblyLocation))
             {
-                return true;
+                string queriesPath = Path.Combine(Path.GetDirectoryName(assemblyLocation)!, "Queries");
+                string filePath = Path.Combine(queriesPath, "VerifyTableAvailability.sql");
+
+                string verifyTableAvailabilityQuery = File.ReadAllText(filePath, Encoding.UTF8);
+
+                using var command = connection.CreateCommand();
+                command.CommandText = verifyTableAvailabilityQuery;
+                command.Parameters.AddWithValue("$id", tableName);
+
+                using var reader = command.ExecuteReader();
+                return reader.HasRows;
             }
             else
             {
@@ -35,20 +38,36 @@ namespace OpenSpartan.Workshop.Data
         {
             try
             {
-                var tableBootstrapQuery = File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Queries", "Bootstrap", $"{tableName}.sql"), Encoding.UTF8);
+                string assemblyLocation = Assembly.GetExecutingAssembly().Location;
 
-                var command = connection.CreateCommand();
-                command.CommandText = tableBootstrapQuery;
+                if (!string.IsNullOrEmpty(assemblyLocation))
+                {
+                    string queriesPath = Path.Combine(Path.GetDirectoryName(assemblyLocation)!, "Queries", "Bootstrap");
+                    string filePath = Path.Combine(queriesPath, $"{tableName}.sql");
 
-                command.ExecuteReader();
+                    string tableBootstrapQuery = File.ReadAllText(filePath, Encoding.UTF8);
 
-                return true;
+                    using var command = connection.CreateCommand();
+                    command.CommandText = tableBootstrapQuery;
+                    _ = command.ExecuteReader();
+
+                    return true;
+                }
+            }
+            catch (IOException ex)
+            {
+                LogEngine.Log($"File operation failed for table {tableName}. {ex.Message}", Models.LogSeverity.Error);
+            }
+            catch (SqliteException ex)
+            {
+                LogEngine.Log($"Database operation failed for table {tableName}. {ex.Message}", Models.LogSeverity.Error);
             }
             catch (Exception ex)
             {
                 LogEngine.Log($"Could not bootstrap table {tableName}. {ex.Message}", Models.LogSeverity.Error);
-                return false;
             }
+
+            return false;
         }
 
         public static void AddRange<T>(this ObservableCollection<T> collection, IEnumerable<T> items)

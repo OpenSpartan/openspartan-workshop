@@ -24,14 +24,14 @@ namespace OpenSpartan.Workshop.Data
         {
             if (MatchesViewModel.Instance.MatchList != null && MatchesViewModel.Instance.MatchList.Count > 0)
             {
-                var date = MatchesViewModel.Instance.MatchList.Min(a => a.StartTime).ToString("o", CultureInfo.InvariantCulture);
+                var date = MatchesViewModel.Instance.MatchList.Min(a => a.EndTime).ToString("o", CultureInfo.InvariantCulture);
                 var matches = Task.Run(() => (IEnumerable<MatchTableEntity>)DataHandler.GetMatches($"xuid({HomeViewModel.Instance.Xuid})", date, pageSize));
 
                 return matches;
             }
             else
             {
-                return null;
+                return Task.FromResult(Enumerable.Empty<MatchTableEntity>());
             }
         }
     }

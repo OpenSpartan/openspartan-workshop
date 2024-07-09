@@ -40,21 +40,17 @@ namespace OpenSpartan.Workshop.Data
             {
                 using var connection = new SqliteConnection($"Data Source={DatabasePath}");
                 connection.Open();
-                using var command = connection.CreateCommand();
 
+                using var command = connection.CreateCommand();
                 command.CommandText = GetQuery("Bootstrap", "SetWALJournalingMode");
+
                 using var reader = command.ExecuteReader();
-                if (reader.HasRows)
+                if (reader.Read())
                 {
-                    while (reader.Read())
-                    {
-                        return reader.GetString(0).Trim();
-                    }
+                    return reader.GetString(0).Trim();
                 }
-                else
-                {
-                    LogEngine.Log($"WAL journaling mode not set.", LogSeverity.Error);
-                }
+
+                LogEngine.Log($"WAL journaling mode not set.", LogSeverity.Error);
             }
             catch (Exception ex)
             {
@@ -135,20 +131,13 @@ namespace OpenSpartan.Workshop.Data
                 using var connection = new SqliteConnection($"Data Source={DatabasePath}");
                 connection.Open();
 
-                var command = connection.CreateCommand();
-                command.CommandText = GetQuery("Insert", "ServiceRecord"); ;
+                using var command = connection.CreateCommand();
+                command.CommandText = GetQuery("Insert", "ServiceRecord");
                 command.Parameters.AddWithValue("$ResponseBody", serviceRecordJson);
                 command.Parameters.AddWithValue("$SnapshotTimestamp", DateTimeOffset.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK", CultureInfo.InvariantCulture));
 
-                using var reader = command.ExecuteReader();
-                if (reader.RecordsAffected > 1)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                int recordsAffected = command.ExecuteNonQuery();
+                return recordsAffected > 1;
             }
             catch (Exception ex)
             {
