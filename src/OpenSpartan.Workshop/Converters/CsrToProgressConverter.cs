@@ -15,7 +15,7 @@ namespace OpenSpartan.Workshop.Converters
                 // progress to report on.
                 if (currentCsr.Value > -1)
                 {
-                    return (double)currentCsr.Value / (double)currentCsr.NextTierStart;
+                    return ((double)currentCsr.Value - (double)currentCsr.TierStart) / ((double)currentCsr.NextTierStart - (double)currentCsr.TierStart);
                 }
                 else
                 {

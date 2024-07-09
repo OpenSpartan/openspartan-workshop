@@ -21,7 +21,7 @@ The benefit of using OpenSpartan Workshop is that for any more complex analysis 
 
 You can download the application from this repository, in the **Releases** section.
 
-<a href="https://github.com/OpenSpartan/openspartan-workshop/releases/download/1.0.3/OpenSpartan.Workshop.Installer.Bundle.exe"><img alt="Download for Windows button" src="media/windows-download.gif" width="200"></a>
+<a href="https://github.com/OpenSpartan/openspartan-workshop/releases/download/1.0.6/OpenSpartan.Workshop.Installer.Bundle.exe"><img alt="Download for Windows button" src="media/windows-download.gif" width="200"></a>
 
 >[!IMPORTANT]
 >Requires Windows 10 (20H1 - `10.0.19041.0`) or later, [.NET Desktop Runtime 8.0+](https://dotnet.microsoft.com/download/dotnet/8.0), and the [latest Windows App SDK](https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads). Both are bundled with the installer.
