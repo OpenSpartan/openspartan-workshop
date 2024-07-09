@@ -11,8 +11,8 @@ namespace OpenSpartan.Workshop.Core
         internal const string HaloWaypointCsrImageEndpoint = "https://www.halowaypoint.com/images/halo-infinite/csr/";
 
         // Build-related metadata.
-        internal const string Version = "1.0.6";
-        internal const string BuildId = "CRUCIBLE-06072024";
+        internal const string Version = "1.0.7";
+        internal const string BuildId = "CYLIX-06082924";
         internal const string PackageName = "OpenSpartan.Workshop";
 
         // Authentication and setting-related metadata.
@@ -25,9 +25,9 @@ namespace OpenSpartan.Workshop.Core
         // API-related default metadata.
         internal const string DefaultRelease = "1.7";
         internal const string DefaultAPIVersion = "1";
-        internal const string DefaultHeaderImage = "progression/Switcher/Season_Switcher_S7_TENRAIIV.png";
+        internal const string DefaultHeaderImage = "progression/Switcher/Season_Switcher_S7_AVL.png";
         internal const string DefaultSandbox = "UNUSED";
-        internal const string DefaultBuild = "257697.24.05.16.1801-0";
+        internal const string DefaultBuild = "258337.24.06.12.2052-2";
 
         // Rank markers used to download the rank images.
         internal static readonly string[] HaloInfiniteRanks =
