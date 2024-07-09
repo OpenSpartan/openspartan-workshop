@@ -40,7 +40,7 @@
                         <Setter.Value>
                             <ControlTemplate>
                                 <Grid x:Name="CalendarItemGrid">
-                                    <Image Opacity=".4" HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="UniformToFill" Source="{Binding BackgroundImagePath, Converter={StaticResource ServicePathToLocalPathConverter}}">
+                                    <Image Opacity=".2" HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="UniformToFill" Source="{Binding BackgroundImagePath, Converter={StaticResource ServicePathToLocalPathConverter}}">
 
                                     </Image>
                                     
