@@ -187,79 +187,73 @@ namespace OpenSpartan.Workshop.Core
             }
         }
 
-        internal static bool InitializeHaloClient(AuthenticationResult authResult)
+        internal static async Task<bool> InitializeHaloClient(AuthenticationResult authResult)
         {
-            HaloAuthenticationClient haloAuthClient = new();
-            XboxAuthenticationClient manager = new();
-
-            var ticket = new XboxTicket();
-            var haloTicket = new XboxTicket();
-            var extendedTicket = new XboxTicket();
-            var haloToken = new SpartanToken();
-
-            Task.Run(async () =>
+            try
             {
-                ticket = await manager.RequestUserToken(authResult.AccessToken);
-                ticket ??= await manager.RequestUserToken(authResult.AccessToken);
-            }).GetAwaiter().GetResult();
+                HaloAuthenticationClient haloAuthClient = new();
+                XboxAuthenticationClient manager = new();
 
-            Task.Run(async () =>
-            {
-                haloTicket = await manager.RequestXstsToken(ticket.Token);
-            }).GetAwaiter().GetResult();
+                var ticket = await manager.RequestUserToken(authResult.AccessToken) ?? await manager.RequestUserToken(authResult.AccessToken);
 
-            Task.Run(async () =>
-            {
-                extendedTicket = await manager.RequestXstsToken(ticket.Token, false);
-            }).GetAwaiter().GetResult();
-
-            if (haloTicket != null)
-            {
-                Task.Run(async () =>
+                if (ticket == null)
                 {
-                    haloToken = await haloAuthClient.GetSpartanToken(haloTicket.Token, 4);
-                }).GetAwaiter().GetResult();
+                    LogEngine.Log("Failed to obtain Xbox user token.", LogSeverity.Error);
+                    return false;
+                }
+
+                var haloTicketTask = manager.RequestXstsToken(ticket.Token);
+                var extendedTicketTask = manager.RequestXstsToken(ticket.Token, false);
+
+                var haloTicket = await haloTicketTask;
+                var extendedTicket = await extendedTicketTask;
+
+                if (haloTicket == null)
+                {
+                    LogEngine.Log("Failed to obtain Halo XSTS token.", LogSeverity.Error);
+                    return false;
+                }
+
+                var haloToken = await haloAuthClient.GetSpartanToken(haloTicket.Token, 4);
 
                 if (extendedTicket != null)
                 {
                     XboxUserContext = extendedTicket;
 
-                    HaloClient = new(haloToken.Token, extendedTicket.DisplayClaims.Xui[0].XUID, userAgent: $"{Configuration.PackageName}/{Configuration.Version}-{Configuration.BuildId}");
+                    HaloClient = new HaloInfiniteClient(haloToken.Token, extendedTicket.DisplayClaims.Xui[0].XUID, userAgent: $"{Configuration.PackageName}/{Configuration.Version}-{Configuration.BuildId}");
 
-                    Task.Run(async () =>
+                    PlayerClearance? clearance = null;
+
+                    if (SettingsViewModel.Instance.Settings.UseObanClearance)
                     {
-                        PlayerClearance? clearance = null;
+                        clearance = (await SafeAPICall(async () => await HaloClient.SettingsActiveFlight(SettingsViewModel.Instance.Settings.Sandbox, SettingsViewModel.Instance.Settings.Build, SettingsViewModel.Instance.Settings.Release)))?.Result;
+                    }
+                    else
+                    {
+                        clearance = (await SafeAPICall(async () => await HaloClient.SettingsActiveClearance(SettingsViewModel.Instance.Settings.Release)))?.Result;
+                    }
 
-                        if ((bool)SettingsViewModel.Instance.Settings.UseObanClearance)
-                        {
-                            clearance = (await SafeAPICall(async () => { return await HaloClient.SettingsActiveFlight(SettingsViewModel.Instance.Settings.Sandbox, SettingsViewModel.Instance.Settings.Build, SettingsViewModel.Instance.Settings.Release); })).Result;
-                        }
-                        else
-                        {
-                            clearance = (await SafeAPICall(async () => { return await HaloClient.SettingsActiveClearance(SettingsViewModel.Instance.Settings.Release); })).Result;
-                        }
-
-                        if (clearance != null && !string.IsNullOrWhiteSpace(clearance.FlightConfigurationId))
-                        {
-                            HaloClient.ClearanceToken = clearance.FlightConfigurationId;
-                            LogEngine.Log($"Your clearance is {clearance.FlightConfigurationId} and it's set in the client.");
-                        }
-                        else
-                        {
-                            LogEngine.Log("Could not obtain the clearance.", LogSeverity.Error);
-                        }
-                    }).GetAwaiter().GetResult();
-
-                    return true;
+                    if (clearance != null && !string.IsNullOrWhiteSpace(clearance.FlightConfigurationId))
+                    {
+                        HaloClient.ClearanceToken = clearance.FlightConfigurationId;
+                        LogEngine.Log($"Your clearance is {clearance.FlightConfigurationId} and it's set in the client.");
+                        return true;
+                    }
+                    else
+                    {
+                        LogEngine.Log("Could not obtain the clearance.", LogSeverity.Error);
+                        return false;
+                    }
                 }
                 else
                 {
+                    LogEngine.Log("Extended ticket is null. Cannot authenticate.", LogSeverity.Error);
                     return false;
                 }
             }
-            else
+            catch (Exception ex)
             {
-                LogEngine.Log("Halo ticket is null. Cannot authenticate.", LogSeverity.Error);
+                LogEngine.Log($"Error initializing Halo client: {ex.Message}", LogSeverity.Error);
                 return false;
             }
         }
@@ -914,7 +908,7 @@ namespace OpenSpartan.Workshop.Core
             var authResult = await InitializePublicClientApplication();
             if (authResult != null)
             {
-                var result = InitializeHaloClient(authResult);
+                var result = await InitializeHaloClient(authResult);
 
                 return result;
             }
@@ -995,14 +989,17 @@ namespace OpenSpartan.Workshop.Core
             // returned, we can abort.
             var operations = await GetOperations();
 
-            if (settings.ExcludedOperations != null)
+            if (operations != null)
             {
-                foreach (var excludedOperation in settings.ExcludedOperations.ToList())
+                if (settings.ExcludedOperations != null)
                 {
-                    var operationToRemove = operations.OperationRewardTracks.FirstOrDefault(x => x.RewardTrackPath == excludedOperation);
-                    if (operationToRemove != null)
+                    foreach (var excludedOperation in settings.ExcludedOperations.ToList())
                     {
-                        operations.OperationRewardTracks.Remove(operationToRemove);
+                        var operationToRemove = operations.OperationRewardTracks.FirstOrDefault(x => x.RewardTrackPath == excludedOperation);
+                        if (operationToRemove != null)
+                        {
+                            operations.OperationRewardTracks.Remove(operationToRemove);
+                        }
                     }
                 }
             }
@@ -1061,53 +1058,56 @@ namespace OpenSpartan.Workshop.Core
                 await ProcessRegularSeasonRanges(rewardTrack.Value.DateRange.Value, rewardTrack.Value.Name.Value, i, targetBackgroundPath);
             }
 
-            // Then, we process operations
-            foreach (var operation in operations.OperationRewardTracks)
+            if (operations != null)
             {
-                var compoundOperation = new OperationCompoundModel { RewardTrack = operation, SeasonRewardTrack = seasonRewardTracks.GetValueOrDefault(operation.RewardTrackPath) };
-
-                var isRewardTrackAvailable = DataHandler.IsOperationRewardTrackAvailable(operation.RewardTrackPath);
-
-                if (isRewardTrackAvailable)
+                // Then, we process operations
+                foreach (var operation in operations.OperationRewardTracks)
                 {
-                    var operationDetails = DataHandler.GetOperationResponseBody(operation.RewardTrackPath);
-                    if (operationDetails != null)
-                        compoundOperation.RewardTrackMetadata = operationDetails;
+                    var compoundOperation = new OperationCompoundModel { RewardTrack = operation, SeasonRewardTrack = seasonRewardTracks.GetValueOrDefault(operation.RewardTrackPath) };
 
-                    LogEngine.Log($"{operation.RewardTrackPath} (Local) - calendar prep completed");
-                }
-                else
-                {
-                    var apiResult = await SafeAPICall(async () => await HaloClient.GameCmsGetEvent(operation.RewardTrackPath, HaloClient.ClearanceToken));
-                    if (apiResult?.Result != null)
-                        DataHandler.UpdateOperationRewardTracks(apiResult.Response.Message, operation.RewardTrackPath);
+                    var isRewardTrackAvailable = DataHandler.IsOperationRewardTrackAvailable(operation.RewardTrackPath);
 
-                    compoundOperation.RewardTrackMetadata = apiResult.Result;
-
-                    LogEngine.Log($"{operation.RewardTrackPath} - calendar prep completed");
-                }
-
-                // If there is a background image, let's make sure that we attempt to download it.
-                // The same image may be downloaded when the Operations view is populated, but we
-                // don't know if that happened yet or not.
-
-                string? targetBackgroundPath = compoundOperation.RewardTrackMetadata?.SummaryImagePath ??
-                               compoundOperation.RewardTrackMetadata?.BackgroundImagePath ??
-                               compoundOperation.SeasonRewardTrack?.Logo;
-
-                if (!string.IsNullOrEmpty(targetBackgroundPath))
-                {
-                    if (Path.IsPathRooted(targetBackgroundPath))
+                    if (isRewardTrackAvailable)
                     {
-                        targetBackgroundPath = targetBackgroundPath.TrimStart(Path.DirectorySeparatorChar);
-                        targetBackgroundPath = targetBackgroundPath.TrimStart(Path.AltDirectorySeparatorChar);
+                        var operationDetails = DataHandler.GetOperationResponseBody(operation.RewardTrackPath);
+                        if (operationDetails != null)
+                            compoundOperation.RewardTrackMetadata = operationDetails;
+
+                        LogEngine.Log($"{operation.RewardTrackPath} (Local) - calendar prep completed");
+                    }
+                    else
+                    {
+                        var apiResult = await SafeAPICall(async () => await HaloClient.GameCmsGetEvent(operation.RewardTrackPath, HaloClient.ClearanceToken));
+                        if (apiResult?.Result != null)
+                            DataHandler.UpdateOperationRewardTracks(apiResult.Response.Message, operation.RewardTrackPath);
+
+                        compoundOperation.RewardTrackMetadata = apiResult.Result;
+
+                        LogEngine.Log($"{operation.RewardTrackPath} - calendar prep completed");
                     }
 
-                    string qualifiedBackgroundImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", targetBackgroundPath);
-                    await DownloadAndSetImage(targetBackgroundPath, qualifiedBackgroundImagePath);
-                }
+                    // If there is a background image, let's make sure that we attempt to download it.
+                    // The same image may be downloaded when the Operations view is populated, but we
+                    // don't know if that happened yet or not.
 
-                await ProcessRegularSeasonRanges(compoundOperation.RewardTrackMetadata.DateRange.Value, compoundOperation.RewardTrackMetadata.Name.Value, operations.OperationRewardTracks.IndexOf(operation), targetBackgroundPath);
+                    string? targetBackgroundPath = compoundOperation.RewardTrackMetadata?.SummaryImagePath ??
+                                   compoundOperation.RewardTrackMetadata?.BackgroundImagePath ??
+                                   compoundOperation.SeasonRewardTrack?.Logo;
+
+                    if (!string.IsNullOrEmpty(targetBackgroundPath))
+                    {
+                        if (Path.IsPathRooted(targetBackgroundPath))
+                        {
+                            targetBackgroundPath = targetBackgroundPath.TrimStart(Path.DirectorySeparatorChar);
+                            targetBackgroundPath = targetBackgroundPath.TrimStart(Path.AltDirectorySeparatorChar);
+                        }
+
+                        string qualifiedBackgroundImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", targetBackgroundPath);
+                        await DownloadAndSetImage(targetBackgroundPath, qualifiedBackgroundImagePath);
+                    }
+
+                    await ProcessRegularSeasonRanges(compoundOperation.RewardTrackMetadata.DateRange.Value, compoundOperation.RewardTrackMetadata.Name.Value, operations.OperationRewardTracks.IndexOf(operation), targetBackgroundPath);
+                }
             }
 
             // And now we check the event data.
@@ -1986,7 +1986,7 @@ namespace OpenSpartan.Workshop.Core
             var authResult = await InitializePublicClientApplication();
             if (authResult != null)
             {
-                var instantiationResult = InitializeHaloClient(authResult);
+                var instantiationResult = await InitializeHaloClient(authResult);
 
                 if (instantiationResult)
                 {

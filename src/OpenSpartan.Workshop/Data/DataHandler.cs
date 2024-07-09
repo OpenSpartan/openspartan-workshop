@@ -153,22 +153,15 @@ namespace OpenSpartan.Workshop.Data
                 using var connection = new SqliteConnection($"Data Source={DatabasePath}");
                 connection.Open();
 
-                var command = connection.CreateCommand();
-                command.CommandText = GetQuery("Insert", "PlaylistCSR"); ;
+                using var command = connection.CreateCommand();
+                command.CommandText = GetQuery("Insert", "PlaylistCSR");
                 command.Parameters.AddWithValue("$ResponseBody", playlistCsrJson);
                 command.Parameters.AddWithValue("$PlaylistId", playlistId);
                 command.Parameters.AddWithValue("$PlaylistVersion", playlistVersion);
                 command.Parameters.AddWithValue("$SnapshotTimestamp", DateTimeOffset.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK", CultureInfo.InvariantCulture));
 
-                using var reader = command.ExecuteReader();
-                if (reader.RecordsAffected > 1)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                int recordsAffected = command.ExecuteNonQuery();
+                return recordsAffected > 1;
             }
             catch (Exception ex)
             {
@@ -188,56 +181,45 @@ namespace OpenSpartan.Workshop.Data
                 command.CommandText = GetQuery("Select", "DistinctMatchIds");
 
                 using var reader = command.ExecuteReader();
-                if (reader.HasRows)
+                List<Guid> matchIds = [];
+                while (reader.Read())
                 {
-                    List<Guid> matchIds = new List<Guid>();
-                    while (reader.Read())
-                    {
-                        matchIds.Add(Guid.Parse(reader.GetString(0).Trim()));
-                    }
+                    matchIds.Add(reader.GetGuid(0));
+                }
 
-                    return matchIds;
-                }
-                else
+                if (matchIds.Count == 0)
                 {
-                    LogEngine.Log($"No rows returned for distinct match IDs.", LogSeverity.Warning);
+                    LogEngine.Log("No rows returned for distinct match IDs.", LogSeverity.Warning);
                 }
+
+                return matchIds;
             }
             catch (Exception ex)
             {
                 LogEngine.Log($"An error occurred obtaining unique match IDs. {ex.Message}", LogSeverity.Error);
+                return [];
             }
-
-            return null;
         }
 
         internal static RewardTrackMetadata GetOperationResponseBody(string operationPath)
         {
             try
             {
-                using SqliteConnection connection = new($"Data Source={DatabasePath}");
+                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
                 connection.Open();
 
                 using var command = connection.CreateCommand();
                 command.CommandText = GetQuery("Select", "OperationResponseBody");
                 command.Parameters.AddWithValue("$OperationPath", operationPath);
 
-                using SqliteDataReader reader = command.ExecuteReader();
-                if (reader.HasRows)
+                using var reader = command.ExecuteReader();
+                if (reader.Read())
                 {
-                    RewardTrackMetadata response = new();
-
-                    while (reader.Read())
-                    {
-                        response = JsonSerializer.Deserialize<RewardTrackMetadata>(reader.GetString(0).Trim(), serializerOptions);
-                    }
-
-                    return response;
+                    string jsonString = reader.GetString(0).Trim();
+                    return JsonSerializer.Deserialize<RewardTrackMetadata>(jsonString, serializerOptions);
                 }
-                else
-                {
-                    LogEngine.Log($"No rows returned for operations.", LogSeverity.Warning);
-                }
+
+                LogEngine.Log("No rows returned for operations.", LogSeverity.Warning);
             }
             catch (Exception ex)
             {
@@ -251,25 +233,25 @@ namespace OpenSpartan.Workshop.Data
         {
             try
             {
-                using SqliteConnection connection = new($"Data Source={DatabasePath}");
+                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
                 connection.Open();
 
-                // In this context, we want the command to be literal rather than parameterized.
-                using var command = connection.CreateCommand();
-                command.CommandText = GetQuery("Select", "ExistingMatchCount").Replace("$MatchGUIDList", string.Join(", ", matchIds.Select(g => $"'{g}'")), StringComparison.InvariantCultureIgnoreCase);
+                // Build the command text with the matchIds directly embedded (literal query)
+                string matchIdsString = string.Join(", ", matchIds.Select(g => $"'{g}'"));
+                string query = GetQuery("Select", "ExistingMatchCount").Replace("$MatchGUIDList", matchIdsString, StringComparison.InvariantCultureIgnoreCase);
 
-                using SqliteDataReader reader = command.ExecuteReader();
-                if (reader.HasRows)
+                using var command = connection.CreateCommand();
+                command.CommandText = query;
+
+                using var reader = command.ExecuteReader();
+                if (reader.Read())
                 {
-                    while (reader.Read())
-                    {
-                        var resultOrdinal = reader.GetOrdinal("ExistingMatchCount");
-                        return reader.IsDBNull(resultOrdinal) ? -1 : reader.GetFieldValue<int>(resultOrdinal);
-                    }
+                    var resultOrdinal = reader.GetOrdinal("ExistingMatchCount");
+                    return reader.IsDBNull(resultOrdinal) ? -1 : reader.GetFieldValue<int>(resultOrdinal);
                 }
                 else
                 {
-                    LogEngine.Log($"No rows returned for existing match metadata.", LogSeverity.Warning);
+                    LogEngine.Log("No rows returned for existing match metadata.", LogSeverity.Warning);
                 }
             }
             catch (Exception ex)
@@ -301,46 +283,43 @@ namespace OpenSpartan.Workshop.Data
                 if (medalNameId.HasValue)
                 {
                     command.CommandText = GetQuery("Select", "PlayerMatchesBasedOnMedal");
-                    command.Parameters.AddWithValue("MedalNameId", medalNameId.Value);
+                    command.Parameters.AddWithValue("$MedalNameId", medalNameId.Value);
                 }
                 else
                 {
                     command.CommandText = GetQuery("Select", "PlayerMatches");
                 }
 
-                command.Parameters.AddWithValue("PlayerXuid", playerXuid);
-                command.Parameters.AddWithValue("BoundaryTime", boundaryTime);
-                command.Parameters.AddWithValue("BoundaryLimit", boundaryLimit);
+                command.Parameters.AddWithValue("$PlayerXuid", playerXuid);
+                command.Parameters.AddWithValue("$BoundaryTime", boundaryTime);
+                command.Parameters.AddWithValue("$BoundaryLimit", boundaryLimit);
 
                 using var reader = command.ExecuteReader();
-                if (reader.HasRows)
+                List<MatchTableEntity> matches = [];
+                while (reader.Read())
                 {
-                    List<MatchTableEntity> matches = [];
-                    while (reader.Read())
-                    {
-                        var matchEntry = ReadMatchTableEntity(reader);
-                        
-                        if (matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals != null && matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals.Count > 0)
-                        {
-                            matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals = UserContextManager.EnrichMedalMetadata(matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals);
-                        }
+                    var matchEntry = ReadMatchTableEntity(reader);
 
-                        matches.Add(matchEntry);
+                    if (matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals != null && matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals.Count > 0)
+                    {
+                        matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals = UserContextManager.EnrichMedalMetadata(matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals);
                     }
 
-                    return matches;
+                    matches.Add(matchEntry);
                 }
-                else
+
+                if (matches.Count == 0)
                 {
-                    LogEngine.Log($"No rows returned for player match IDs.", LogSeverity.Warning);
+                    LogEngine.Log("No rows returned for player match IDs.", LogSeverity.Warning);
                 }
+
+                return matches;
             }
             catch (Exception ex)
             {
                 LogEngine.Log($"An error occurred obtaining matches. {ex.Message}", LogSeverity.Error);
+                return new List<MatchTableEntity>();
             }
-
-            return null;
         }
 
         private static MatchTableEntity ReadMatchTableEntity(SqliteDataReader reader)
@@ -437,16 +416,14 @@ namespace OpenSpartan.Workshop.Data
                 using var connection = new SqliteConnection($"Data Source={DatabasePath}");
                 connection.Open();
 
-                using (SqliteCommand command = connection.CreateCommand())
-                {
-                    command.CommandText = GetQuery("Select", "MatchStatsAvailability");
-                    command.Parameters.AddWithValue("$MatchId", matchId);
+                using var command = connection.CreateCommand();
+                command.CommandText = GetQuery("Select", "MatchStatsAvailability");
+                command.Parameters.AddWithValue("$MatchId", matchId);
 
-                    using var reader = command.ExecuteReader();
-                    if (reader.HasRows && reader.Read())
-                    {
-                        return (Convert.ToBoolean(reader.GetFieldValue<int>(0)), Convert.ToBoolean(reader.GetFieldValue<int>(1)));
-                    }
+                using var reader = command.ExecuteReader();
+                if (reader.Read())
+                {
+                    return (reader.GetBoolean(0), reader.GetBoolean(1));
                 }
             }
             catch (Exception ex)
@@ -464,50 +441,42 @@ namespace OpenSpartan.Workshop.Data
                 using var connection = new SqliteConnection($"Data Source={DatabasePath}");
                 connection.Open();
 
-                using var insertionCommand = connection.CreateCommand();
-                insertionCommand.CommandText = GetQuery("Insert", "PlayerMatchStats");
-                insertionCommand.Parameters.AddWithValue("$MatchId", matchId);
-                insertionCommand.Parameters.AddWithValue("$ResponseBody", statsBody);
+                using var command = connection.CreateCommand();
+                command.CommandText = GetQuery("Insert", "PlayerMatchStats");
+                command.Parameters.AddWithValue("$MatchId", matchId);
+                command.Parameters.AddWithValue("$ResponseBody", statsBody);
 
-                var insertionResult = insertionCommand.ExecuteNonQuery();
+                var rowsAffected = command.ExecuteNonQuery();
 
-                if (insertionResult > 0)
-                {
-                    return true;
-                }
+                return rowsAffected > 0;
             }
             catch (Exception ex)
             {
                 LogEngine.Log($"An error occurred inserting player match and stats. {ex.Message}", LogSeverity.Error);
+                return false;
             }
-
-            return false;
         }
 
-        internal static bool InsertMatchStats (string matchBody)
+        internal static bool InsertMatchStats(string matchBody)
         {
             try
             {
                 using var connection = new SqliteConnection($"Data Source={DatabasePath}");
                 connection.Open();
 
-                using var insertionCommand = connection.CreateCommand();
-                insertionCommand.CommandText = GetQuery("Insert", "MatchStats");
-                insertionCommand.Parameters.AddWithValue("$ResponseBody", matchBody);
+                using var command = connection.CreateCommand();
+                command.CommandText = GetQuery("Insert", "MatchStats");
+                command.Parameters.AddWithValue("$ResponseBody", matchBody);
 
-                var insertionResult = insertionCommand.ExecuteNonQuery();
+                var rowsAffected = command.ExecuteNonQuery();
 
-                if (insertionResult > 0)
-                {
-                    return true;
-                }
+                return rowsAffected > 0;
             }
             catch (Exception ex)
             {
                 LogEngine.Log($"An error occurred inserting match and stats. {ex.Message}", LogSeverity.Error);
+                return false;
             }
-
-            return false;
         }
 
         internal static async Task<bool> UpdateMatchAssetRecords(MatchStats result)
@@ -517,29 +486,32 @@ namespace OpenSpartan.Workshop.Data
                 bool mapAvailable = false;
                 bool gameVariantAvailable = false;
                 bool engineGameVariantAvailable = false;
-
                 bool playlistAvailable = true;
                 bool playlistMapModePairAvailable = true;
-
                 UGCGameVariant targetGameVariant = null;
 
                 using var connection = new SqliteConnection($"Data Source={DatabasePath}");
                 await connection.OpenAsync();
-                
-                string query = "SELECT EXISTS(SELECT 1 FROM Maps WHERE AssetId = $MapAssetId AND VersionId = $MapVersionId) AS MAP_AVAILABLE, " +
-                      "EXISTS(SELECT 1 FROM GameVariants WHERE AssetId = $GameVariantAssetId AND VersionId = $GameVariantVersionId) AS GAMEVARIANT_AVAILABLE";
 
+                // Construct the initial query
+                var queryBuilder = new StringBuilder();
+                queryBuilder.Append("SELECT ");
+                queryBuilder.Append("EXISTS(SELECT 1 FROM Maps WHERE AssetId = $MapAssetId AND VersionId = $MapVersionId) AS MAP_AVAILABLE, ");
+                queryBuilder.Append("EXISTS(SELECT 1 FROM GameVariants WHERE AssetId = $GameVariantAssetId AND VersionId = $GameVariantVersionId) AS GAMEVARIANT_AVAILABLE");
+
+                // Conditionally add more parts to the query based on available parameters
                 if (result.MatchInfo.Playlist != null)
                 {
-                    query += ", EXISTS(SELECT 1 FROM Playlists WHERE AssetId = $PlaylistAssetId AND VersionId = $PlaylistVersionId) AS PLAYLIST_AVAILABLE";
+                    queryBuilder.Append(", EXISTS(SELECT 1 FROM Playlists WHERE AssetId = $PlaylistAssetId AND VersionId = $PlaylistVersionId) AS PLAYLIST_AVAILABLE");
                 }
 
                 if (result.MatchInfo.PlaylistMapModePair != null)
                 {
-                    query += ", EXISTS(SELECT 1 FROM PlaylistMapModePairs WHERE AssetId = $PlaylistMapModePairAssetId AND VersionId = $PlaylistMapModePairVersionId) AS PLAYLISTMAPMODEPAIR_AVAILABLE";
+                    queryBuilder.Append(", EXISTS(SELECT 1 FROM PlaylistMapModePairs WHERE AssetId = $PlaylistMapModePairAssetId AND VersionId = $PlaylistMapModePairVersionId) AS PLAYLISTMAPMODEPAIR_AVAILABLE");
                 }
 
-                using (SqliteCommand command = new(query, connection))
+                // Execute the constructed query
+                using (var command = new SqliteCommand(queryBuilder.ToString(), connection))
                 {
                     command.Parameters.AddWithValue("$MapAssetId", result.MatchInfo.MapVariant.AssetId.ToString());
                     command.Parameters.AddWithValue("$MapVersionId", result.MatchInfo.MapVariant.VersionId.ToString());
@@ -568,6 +540,7 @@ namespace OpenSpartan.Workshop.Data
                     }
                 }
 
+                // Update assets if they are not available
                 if (!mapAvailable)
                 {
                     var map = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.HIUGCDiscoveryGetMap(result.MatchInfo.MapVariant.AssetId.ToString(), result.MatchInfo.MapVariant.VersionId.ToString()));
@@ -635,17 +608,15 @@ namespace OpenSpartan.Workshop.Data
                     {
                         targetGameVariant = gameVariant.Result;
 
-                        using (var insertionCommand = connection.CreateCommand())
+                        using var insertionCommand = connection.CreateCommand();
+                        insertionCommand.CommandText = GetQuery("Insert", "GameVariants");
+                        insertionCommand.Parameters.AddWithValue("$ResponseBody", gameVariant.Response.Message);
+
+                        var insertionResult = await insertionCommand.ExecuteNonQueryAsync();
+
+                        if (insertionResult > 0)
                         {
-                            insertionCommand.CommandText = GetQuery("Insert", "GameVariants");
-                            insertionCommand.Parameters.AddWithValue("$ResponseBody", gameVariant.Response.Message);
-
-                            var insertionResult = await insertionCommand.ExecuteNonQueryAsync();
-
-                            if (insertionResult > 0)
-                            {
-                                LogEngine.Log($"Stored game variant: {result.MatchInfo.UgcGameVariant.AssetId}/{result.MatchInfo.UgcGameVariant.VersionId}");
-                            }
+                            LogEngine.Log($"Stored game variant: {result.MatchInfo.UgcGameVariant.AssetId}/{result.MatchInfo.UgcGameVariant.VersionId}");
                         }
 
                         using var egvQueryCommand = connection.CreateCommand();
@@ -682,7 +653,7 @@ namespace OpenSpartan.Workshop.Data
             }
             catch (Exception ex)
             {
-                LogEngine.Log($"Error updating match stats. {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"Error updating match asset records. {ex.Message}", LogSeverity.Error);
                 return false;
             }
         }
@@ -703,104 +674,115 @@ namespace OpenSpartan.Workshop.Data
                 using var command = connection.CreateCommand();
                 command.CommandText = GetQuery("Select", "LatestMedalsSnapshot");
 
-                using var reader = command.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    List<Medal> matchIds = [];
-                    while (reader.Read())
-                    {
-                        matchIds.AddRange(JsonSerializer.Deserialize<List<Medal>>(reader.GetString(0)));
-                    }
+                List<Medal> medals = [];
 
-                    return matchIds;
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    medals.AddRange(JsonSerializer.Deserialize<List<Medal>>(reader.GetString(0)));
                 }
-                else
+
+                if (medals.Count == 0)
                 {
                     LogEngine.Log($"No rows returned for medals.", LogSeverity.Warning);
                 }
+
+                return medals;
             }
             catch (Exception ex)
             {
                 LogEngine.Log($"An error occurred obtaining medals from the database. {ex.Message}", LogSeverity.Error);
+                return null;
             }
-
-            return null;
         }
 
         internal static bool UpdateOperationRewardTracks(string response, string path)
         {
-            using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-            using var insertionCommand = connection.CreateCommand();
-
-            insertionCommand.CommandText = GetQuery("Insert", "OperationRewardTracks");
-            insertionCommand.Parameters.AddWithValue("$ResponseBody", response);
-            insertionCommand.Parameters.AddWithValue("$Path", path);
-            insertionCommand.Parameters.AddWithValue("$LastUpdated", DateTimeOffset.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK", CultureInfo.InvariantCulture));
-
-            connection.Open();
-
-            var insertionResult = insertionCommand.ExecuteNonQuery();
-
-            if (insertionResult > 0)
+            try
             {
-                LogEngine.Log($"Stored reward track {path}.");
-                return true;
+                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
+                connection.Open();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = GetQuery("Insert", "OperationRewardTracks");
+                command.Parameters.AddWithValue("$ResponseBody", response);
+                command.Parameters.AddWithValue("$Path", path);
+                command.Parameters.AddWithValue("$LastUpdated", DateTimeOffset.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK", CultureInfo.InvariantCulture));
+
+                var insertionResult = command.ExecuteNonQuery();
+
+                if (insertionResult > 0)
+                {
+                    LogEngine.Log($"Stored reward track {path}.");
+                    return true;
+                }
+                else
+                {
+                    LogEngine.Log($"Could not store reward track {path}.", LogSeverity.Error);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return false;
+                LogEngine.Log($"An error occurred updating operation reward tracks. {ex.Message}", LogSeverity.Error);
             }
+
+            return false;
         }
 
         internal static bool UpdateInventoryItems(string response, string path)
         {
-            using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-            using var insertionCommand = connection.CreateCommand();
-
-            insertionCommand.CommandText = GetQuery("Insert", "InventoryItems");
-            insertionCommand.Parameters.AddWithValue("$ResponseBody", response);
-            insertionCommand.Parameters.AddWithValue("$Path", path);
-            insertionCommand.Parameters.AddWithValue("$LastUpdated", DateTimeOffset.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK", CultureInfo.InvariantCulture));
-
-            connection.Open();
-
-            var insertionResult = insertionCommand.ExecuteNonQuery();
-
-            if (insertionResult > 0)
+            try
             {
-                LogEngine.Log($"Stored inventory item {path}.");
-                return true;
+                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
+                connection.Open();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = GetQuery("Insert", "InventoryItems");
+                command.Parameters.AddWithValue("$ResponseBody", response);
+                command.Parameters.AddWithValue("$Path", path);
+                command.Parameters.AddWithValue("$LastUpdated", DateTimeOffset.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffK", CultureInfo.InvariantCulture));
+
+                var insertionResult = command.ExecuteNonQuery();
+
+                if (insertionResult > 0)
+                {
+                    LogEngine.Log($"Stored inventory item {path}.");
+                    return true;
+                }
+                else
+                {
+                    LogEngine.Log($"Could not store inventory item {path}.", LogSeverity.Error);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return false;
+                LogEngine.Log($"An error occurred updating inventory items. {ex.Message}", LogSeverity.Error);
             }
+
+            return false;
         }
 
         internal static bool IsOperationRewardTrackAvailable(string path)
         {
-            using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-            using var command = connection.CreateCommand();
-
-            command.CommandText = $"SELECT EXISTS(SELECT 1 FROM OperationRewardTracks WHERE Path='{path}') AS OPERATION_AVAILABLE";
-
-            connection.Open();
-
-            using var reader = command.ExecuteReader();
-            if (reader.HasRows)
+            try
             {
-                while (reader.Read())
+                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
+                connection.Open();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = "SELECT EXISTS(SELECT 1 FROM OperationRewardTracks WHERE Path = @Path) AS OPERATION_AVAILABLE";
+                command.Parameters.AddWithValue("@Path", path);
+
+                var result = command.ExecuteScalar();
+
+                if (result != null && result != DBNull.Value)
                 {
-                    var operationAvailable = reader.GetFieldValue<int>(0);
-                    if (operationAvailable > 0)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
+                    return Convert.ToInt32(result) > 0;
                 }
+            }
+            catch (Exception ex)
+            {
+                LogEngine.Log($"An error occurred checking operation reward track availability. {ex.Message}", LogSeverity.Error);
             }
 
             return false;
@@ -808,28 +790,25 @@ namespace OpenSpartan.Workshop.Data
 
         internal static bool IsInventoryItemAvailable(string path)
         {
-            using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-            using var command = connection.CreateCommand();
-
-            command.CommandText = $"SELECT EXISTS(SELECT 1 FROM InventoryItems WHERE Path='{path}') AS INVENTORY_ITEM_AVAILABLE";
-
-            connection.Open();
-
-            using var reader = command.ExecuteReader();
-            if (reader.HasRows)
+            try
             {
-                while (reader.Read())
+                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
+                connection.Open();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = "SELECT EXISTS(SELECT 1 FROM InventoryItems WHERE Path = @Path) AS INVENTORY_ITEM_AVAILABLE";
+                command.Parameters.AddWithValue("@Path", path);
+
+                var result = command.ExecuteScalar();
+
+                if (result != null && result != DBNull.Value)
                 {
-                    var operationAvailable = reader.GetFieldValue<int>(0);
-                    if (operationAvailable > 0)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
+                    return Convert.ToInt32(result) > 0;
                 }
+            }
+            catch (Exception ex)
+            {
+                LogEngine.Log($"An error occurred checking inventory item availability. {ex.Message}", LogSeverity.Error);
             }
 
             return false;
@@ -847,12 +826,9 @@ namespace OpenSpartan.Workshop.Data
                 command.Parameters.AddWithValue("$Path", path);
 
                 using var reader = command.ExecuteReader();
-                if (reader.HasRows)
+                if (reader.Read())
                 {
-                    while (reader.Read())
-                    {
-                        return JsonSerializer.Deserialize<InGameItem>(reader.GetString(0), serializerOptions);
-                    }
+                    return JsonSerializer.Deserialize<InGameItem>(reader.GetString(0), serializerOptions);
                 }
                 else
                 {
@@ -874,21 +850,21 @@ namespace OpenSpartan.Workshop.Data
                 using var connection = new SqliteConnection($"Data Source={DatabasePath}");
                 await connection.OpenAsync();
 
-                var command = GetQuery("Insert", "OwnedInventoryItems");
+                var commandText = GetQuery("Insert", "OwnedInventoryItems");
 
                 foreach (var item in result.Items)
                 {
-                    using var insertionCommand = connection.CreateCommand();
-                    insertionCommand.CommandText = command;
-                    insertionCommand.Parameters.AddWithValue("$Amount", item.Amount);
-                    insertionCommand.Parameters.AddWithValue("$ItemId", item.ItemId);
-                    insertionCommand.Parameters.AddWithValue("$ItemPath", item.ItemPath);
-                    insertionCommand.Parameters.AddWithValue("$ItemType", item.ItemType);
-                    insertionCommand.Parameters.AddWithValue("$FirstAcquiredDate", item.FirstAcquiredDate.ISO8601Date);
+                    using var command = connection.CreateCommand();
+                    command.CommandText = commandText;
+                    command.Parameters.AddWithValue("$Amount", item.Amount);
+                    command.Parameters.AddWithValue("$ItemId", item.ItemId);
+                    command.Parameters.AddWithValue("$ItemPath", item.ItemPath);
+                    command.Parameters.AddWithValue("$ItemType", item.ItemType);
+                    command.Parameters.AddWithValue("$FirstAcquiredDate", item.FirstAcquiredDate.ISO8601Date);
 
-                    var insertionResult = await insertionCommand.ExecuteNonQueryAsync();
+                    var rowsAffected = await command.ExecuteNonQueryAsync();
 
-                    if (insertionResult > 0)
+                    if (rowsAffected > 0)
                     {
                         LogEngine.Log($"Stored owned inventory item {item.ItemId}.");
                     }
@@ -906,6 +882,5 @@ namespace OpenSpartan.Workshop.Data
                 return false;
             }
         }
-
     }
 }
