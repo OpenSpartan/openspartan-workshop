@@ -239,7 +239,7 @@
                                         <RowDefinition Height="*"></RowDefinition>
                                     </Grid.RowDefinitions>
 
-                                    <VariableSizedWrapGrid Orientation="Horizontal" ItemWidth="150" Grid.Row="0" Visibility="{Binding IsRanked, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <VariableSizedWrapGrid Orientation="Horizontal" ItemWidth="125" Grid.Row="0" Visibility="{Binding IsRanked, Converter={StaticResource BoolToVisibilityConverter}}">
                                         <Image Height="64" Margin="0,0,0,0" Source="{Binding RankIdentifier, Converter={StaticResource RankIdentifierToPathConverter}}"/>
                                         <StackPanel Margin="0,12,0,0" VerticalAlignment="Center">
                                             <Grid>
