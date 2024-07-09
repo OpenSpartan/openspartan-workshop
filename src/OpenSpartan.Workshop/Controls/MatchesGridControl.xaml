@@ -188,7 +188,7 @@
                             <StackPanel Grid.Column="1">
                                 <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Accuracy}"/>
                                 <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Assists}"/>
-                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.AverageLifeDuration}"/>
+                                <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.AverageLifeDuration, Converter={StaticResource ComplexTimeToSimpleTimeConverter}}"/>
                                 <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.Betrayals}"/>
                                 <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.CalloutAssists}"/>
                                 <TextBlock Text="{Binding PlayerTeamStats[0].Stats.CoreStats.DamageDealt}"/>
