@@ -13,7 +13,7 @@ namespace OpenSpartan.Workshop.Converters
                 return dateTime.ToString("MMMM d, yyyy h:mm tt", CultureInfo.CurrentCulture);
             }
 
-            return value;
+            return string.Empty; // Handle null value gracefully or return an appropriate default
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

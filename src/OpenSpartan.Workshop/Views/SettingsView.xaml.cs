@@ -1,6 +1,5 @@
 using CommunityToolkit.WinUI;
 using Microsoft.UI.Xaml.Controls;
-using NLog;
 using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.ViewModels;
 using System;
@@ -21,7 +20,7 @@ namespace OpenSpartan.Workshop.Views
             ContentDialog deleteFileDialog = new ContentDialog
             {
                 Title = "Log out",
-                Content = "Are you sure you want to log out?",
+                Content = "Are you sure you want to log out? Your data will not be deleted.",
                 PrimaryButtonText = "Yes",
                 CloseButtonText = "No",
                 DefaultButton = ContentDialogButton.Close,

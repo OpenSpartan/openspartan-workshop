@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.Common;
-using CommunityToolkit.WinUI;
+﻿using CommunityToolkit.WinUI;
 using Den.Dev.Orion.Authentication;
 using Den.Dev.Orion.Core;
 using Den.Dev.Orion.Models;
@@ -24,7 +23,6 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -454,13 +452,16 @@ namespace OpenSpartan.Workshop.Core
                             {
                                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                                 {
-                                    RankedViewModel.Instance.Playlists.Add(new PlaylistCSRSnapshot
+                                    if (!RankedViewModel.Instance.Playlists.Any(x => x.Id == playlist))
                                     {
-                                        Name = playlistMetadata.Result.PublicName,
-                                        Id = playlist,
-                                        Version = playlistConfigurationResult.Result.UgcPlaylistVersion,
-                                        Snapshot = playlistCsr.Result.Value[0] // Assuming we only get data for one player
-                                    });
+                                        RankedViewModel.Instance.Playlists.Add(new PlaylistCSRSnapshot
+                                        {
+                                            Name = playlistMetadata.Result.PublicName,
+                                            Id = playlist,
+                                            Version = playlistConfigurationResult.Result.UgcPlaylistVersion,
+                                            Snapshot = playlistCsr.Result.Value[0] // Assuming we only get data for one player
+                                        });
+                                    }
                                 });
                             }
                         }
@@ -1938,7 +1939,10 @@ namespace OpenSpartan.Workshop.Core
                             {
                                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                                 {
-                                    ExchangeViewModel.Instance.ExchangeItems.Add(metadataContainer);
+                                    if (!ExchangeViewModel.Instance.ExchangeItems.Any(x => x.ItemDetails.CommonData.Id == metadataContainer.ItemDetails.CommonData.Id))
+                                    {
+                                        ExchangeViewModel.Instance.ExchangeItems.Add(metadataContainer);
+                                    }
                                 });
                             }
 

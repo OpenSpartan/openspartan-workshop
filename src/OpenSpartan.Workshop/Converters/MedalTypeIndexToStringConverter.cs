@@ -8,17 +8,21 @@ namespace OpenSpartan.Workshop.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            int typeIndex = System.Convert.ToInt32(value, CultureInfo.InvariantCulture);
-            return typeIndex switch
+            if (value is int typeIndex)
             {
-                0 => "Spree",
-                1 => "Mode",
-                2 => "Multikill",
-                3 => "Proficiency",
-                4 => "Skill",
-                5 => "Style",
-                _ => "N/A",
-            };
+                return typeIndex switch
+                {
+                    0 => "Spree",
+                    1 => "Mode",
+                    2 => "Multikill",
+                    3 => "Proficiency",
+                    4 => "Skill",
+                    5 => "Style",
+                    _ => "N/A",
+                };
+            }
+
+            return "N/A"; // Handle non-integer or null values gracefully
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

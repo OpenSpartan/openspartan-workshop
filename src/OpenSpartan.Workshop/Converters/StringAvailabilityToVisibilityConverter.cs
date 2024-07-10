@@ -8,7 +8,8 @@ namespace OpenSpartan.Workshop.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value != null && !string.IsNullOrWhiteSpace((string)value))
+            // Check if value is a non-null and non-empty string
+            if (!string.IsNullOrEmpty(value as string))
             {
                 return Visibility.Visible;
             }

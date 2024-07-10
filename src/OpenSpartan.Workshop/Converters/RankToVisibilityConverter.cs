@@ -8,16 +8,12 @@ namespace OpenSpartan.Workshop.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            Tuple<int, int> ranks = (Tuple<int, int>)value;
+            if (value is Tuple<int, int> ranks)
+            {
+                return ranks.Item1 <= ranks.Item2 ? Visibility.Visible : Visibility.Collapsed;
+            }
 
-            if (ranks.Item1 <= ranks.Item2)
-            {
-                return Visibility.Visible;
-            }
-            else
-            {
-                return Visibility.Collapsed;
-            }
+            return Visibility.Collapsed;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

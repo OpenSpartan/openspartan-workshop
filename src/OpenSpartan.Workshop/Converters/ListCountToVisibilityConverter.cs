@@ -2,7 +2,6 @@
 using Microsoft.UI.Xaml.Data;
 using System;
 using System.Collections;
-using System.Linq;
 
 namespace OpenSpartan.Workshop.Converters
 {
@@ -10,9 +9,9 @@ namespace OpenSpartan.Workshop.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value is IEnumerable enumerable)
+            if (value is IEnumerable enumerable && enumerable.GetEnumerator().MoveNext())
             {
-                return enumerable.Cast<object>().Any() ? Visibility.Visible : Visibility.Collapsed;
+                return Visibility.Visible;
             }
 
             return Visibility.Collapsed;

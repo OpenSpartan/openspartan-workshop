@@ -1,29 +1,27 @@
 ﻿using Microsoft.UI.Xaml.Data;
 using OpenSpartan.Workshop.Models;
-using System;
-using System.Collections.Generic;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI;
+using System;
 
 namespace OpenSpartan.Workshop.Converters
 {
     internal sealed class PerformanceToColorConverter : IValueConverter
     {
-        private readonly Dictionary<PerformanceMeasure, SolidColorBrush> performanceBrushMap = new Dictionary<PerformanceMeasure, SolidColorBrush>
-        {
-            { PerformanceMeasure.Outperformed, new SolidColorBrush(Windows.UI.Color.FromArgb(255, 40, 199, 111)) },
-            { PerformanceMeasure.Underperformed, new SolidColorBrush(Windows.UI.Color.FromArgb(255, 234, 84, 85)) },
-            { PerformanceMeasure.MetExpectations, new SolidColorBrush(Windows.UI.Color.FromArgb(255, 115, 103, 240)) },
-        };
-
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value is PerformanceMeasure performance && performanceBrushMap.TryGetValue(performance, out SolidColorBrush brush))
+            if (value is PerformanceMeasure performance)
             {
-                return brush;
+                return performance switch
+                {
+                    PerformanceMeasure.Outperformed => new SolidColorBrush(Windows.UI.Color.FromArgb(255, 40, 199, 111)),
+                    PerformanceMeasure.Underperformed => new SolidColorBrush(Windows.UI.Color.FromArgb(255, 234, 84, 85)),
+                    PerformanceMeasure.MetExpectations => new SolidColorBrush(Windows.UI.Color.FromArgb(255, 115, 103, 240)),
+                    _ => new SolidColorBrush(Colors.Black),
+                };
             }
 
-            // Return a default SolidColorBrush (e.g., Black) if the conversion fails
+            // Return a default SolidColorBrush (e.g., Black) if the input value is null or not of expected type
             return new SolidColorBrush(Colors.Black);
         }
 

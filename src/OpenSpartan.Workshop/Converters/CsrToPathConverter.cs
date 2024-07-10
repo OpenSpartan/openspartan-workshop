@@ -9,24 +9,17 @@ namespace OpenSpartan.Workshop.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            Csr csr = (Csr)value;
-            string tierPath = string.Empty;
-            // Tier is zero-indexed, but the images are starting from 1, so we need to ensure
-            // that we increment the tier to get the right image.
-            if (!string.IsNullOrEmpty(csr.Tier))
-            {
-                tierPath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", "csr", $"{csr.Tier.ToLowerInvariant()}_{csr.SubTier + 1}.png");
-            }
-            else
-            {
-                tierPath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", "csr", $"unranked_{csr.InitialMeasurementMatches - csr.MeasurementMatchesRemaining}.png");
-            }
-            return tierPath;
+            if (value is not Csr csr)
+                return string.Empty;
+
+            string fileName = !string.IsNullOrEmpty(csr.Tier)
+                ? $"{csr.Tier.ToLowerInvariant()}_{csr.SubTier + 1}.png"
+                : $"unranked_{csr.InitialMeasurementMatches - csr.MeasurementMatchesRemaining}.png";
+
+            return Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", "csr", fileName);
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, string language)
-        {
+        public object ConvertBack(object value, Type targetType, object parameter, string language) =>
             throw new NotImplementedException();
-        }
     }
 }

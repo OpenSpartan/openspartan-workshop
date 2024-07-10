@@ -9,9 +9,7 @@ namespace OpenSpartan.Workshop.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            var state = (MetadataLoadingState)value;
-            
-            if (state != MetadataLoadingState.Completed)
+            if (value is MetadataLoadingState state && state != MetadataLoadingState.Completed)
             {
                 return Visibility.Visible;
             }

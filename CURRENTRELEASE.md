@@ -1,4 +1,4 @@
-# OpenSpartan Workshop 1.0.7 (`CYLIX-06082924`)
+# OpenSpartan Workshop 1.0.7 (`CYLIX-06082024`)
 
 - [#30] Prevent auth loops if incorrect release number is used.
 - [#38] Battlepass data now correctly renders on smaller screens, allowing scrolling.
@@ -12,5 +12,7 @@
 - Inside match metadata, medals and ranked counterfactuals correctly flow when screen is resized.
 - The app now correctly reacts at startup to an error with authentication token acquisition. A message is shown if that is not possible.
 - General performance optimizations and maintainability cleanup.
+- Fixed an issue where duplicate ranked playlist may render in the **Ranked Progression** view.
+- Fixed an issue where duplicate items may render in the **Exchange** view.
 
 Refer to [**getting started guide**](https://openspartan.com/docs/workshop/guides/get-started/) to start using OpenSpartan Workshop.

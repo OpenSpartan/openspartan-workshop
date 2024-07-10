@@ -12,7 +12,7 @@ namespace OpenSpartan.Workshop.Core
 
         // Build-related metadata.
         internal const string Version = "1.0.7";
-        internal const string BuildId = "CYLIX-06082924";
+        internal const string BuildId = "CYLIX-06082024";
         internal const string PackageName = "OpenSpartan.Workshop";
 
         // Authentication and setting-related metadata.
@@ -76,29 +76,15 @@ namespace OpenSpartan.Workshop.Core
         ];
 
         internal static readonly string[] SeasonColors =
-        [
-            "#08B2E3",
-            "#EE6352",
-            "#57A773",
-            "#AB2346",
-            "#D5A021",
-            "#550527",
-            "#688E26",
-            "#F44708",
-            "#A10702",
-            "#38405F",
-            "#FF0035",
-            "#820263",
-            "#D90368",
-            "#170F11",
-            "#36C9C6",
-            "#D8A7CA",
-            "#7E3F8F",
-            "#402039",
-            "#313715",
-            "#390099",
-            "#1E555C",
-            "#941C2F",
-        ];
+        {
+            "#08B2E3", "#EE6352", "#57A773", "#AB2346", "#D5A021", "#550527", "#688E26", "#F44708",
+            "#A10702", "#38405F", "#FF0035", "#820263", "#D90368", "#170F11", "#36C9C6", "#D8A7CA",
+            "#7E3F8F", "#402039", "#313715", "#390099", "#1E555C", "#941C2F", "#0D98BA", "#FF5733",
+            "#28A745", "#DA70D6", "#FF4500", "#FFD700", "#FF1493", "#00FA9A", "#7FFFD4", "#4682B4",
+            "#FF8C00", "#00CED1", "#9400D3", "#FF00FF", "#800000", "#00FF7F", "#7CFC00", "#FF6347",
+            "#EE82EE", "#BA55D3", "#FA8072", "#B22222", "#008080", "#DAA520", "#000080", "#FF4500",
+            "#ADFF2F", "#FFDEAD", "#00FF00", "#FFFF54", "#B0E57C", "#DC143C", "#32CD32", "#FFD700",
+            "#8A2BE2", "#FF69B4", "#4B0082",
+        };
     }
 }
