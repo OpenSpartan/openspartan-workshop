@@ -101,7 +101,7 @@ namespace OpenSpartan.Workshop.Core
                 .WithDefaultRedirectUri()
                 .WithAuthority(AadAuthorityAudience.PersonalMicrosoftAccount);
 
-            if ((bool)SettingsViewModel.Instance.UseBroker)
+            if (SettingsViewModel.Instance.UseBroker)
             {
                 BrokerOptions options = new(BrokerOptions.OperatingSystems.Windows)
                 {
@@ -738,7 +738,7 @@ namespace OpenSpartan.Workshop.Core
             var matchStats = await SafeAPICall(async () => await HaloClient.StatsGetMatchStats(matchId));
             if (matchStats == null || matchStats.Result == null)
             {
-                LogEngine.Log($"[{completionProgress:#.00}%] [Error] Getting match stats failed for {matchId}.", LogSeverity.Error);
+                LogEngine.Log($"[{completionProgress:#.00}%] [Error] Getting match stats from the Halo Infinite API failed for {matchId}.", LogSeverity.Error);
                 return null;
             }
 
@@ -750,7 +750,7 @@ namespace OpenSpartan.Workshop.Core
             var matchStats = await HaloClient.StatsGetMatchStats(matchId);
             if (matchStats == null || matchStats.Result == null || matchStats.Result.Players == null)
             {
-                LogEngine.Log($"[Error] Could not obtain player stats for match {matchId} because the match metadata was unavailable.", LogSeverity.Error);
+                LogEngine.Log($"[Error] Could not obtain player stats from the Halo Infinite API for match {matchId} because the match metadata was unavailable.", LogSeverity.Error);
                 return null;
             }
 
@@ -760,7 +760,7 @@ namespace OpenSpartan.Workshop.Core
             var playerStatsSnapshot = await SafeAPICall(async () => await HaloClient.SkillGetMatchPlayerResult(matchId, targetPlayers!));
             if (playerStatsSnapshot == null || playerStatsSnapshot.Result == null || playerStatsSnapshot.Result.Value == null)
             {
-                LogEngine.Log($"Could not obtain player stats for match {matchId}. Requested {targetPlayers.Count} XUIDs.", LogSeverity.Error);
+                LogEngine.Log($"Could not obtain player stats from the Halo Infinite API for match {matchId}. Requested {targetPlayers.Count} XUIDs.", LogSeverity.Error);
                 return null;
             }
 
@@ -1290,37 +1290,38 @@ namespace OpenSpartan.Workshop.Core
 
                 // Retrieve locally stored medals
                 var medals = DataHandler.GetMedals();
-                if (medals == null)
+                if (medals == null || medals.Count == 0)
                 {
                     LogEngine.Log("Locally stored medals not found.", LogSeverity.Warning);
 
-                    var coreStats = HomeViewModel.Instance.ServiceRecord?.CoreStats;
-                    var serviceRecordMedals = coreStats?.Medals;
-
-                    if (serviceRecordMedals != null && serviceRecordMedals.Count > 0)
+                    if (HomeViewModel.Instance.ServiceRecord != null && HomeViewModel.Instance.ServiceRecord.CoreStats != null
+                        && HomeViewModel.Instance.ServiceRecord.CoreStats.Medals != null && HomeViewModel.Instance.ServiceRecord.CoreStats.Medals.Count > 0)
                     {
-                        medals = serviceRecordMedals;
-                        LogEngine.Log("Using medals from the local service record.", LogSeverity.Info);
+                        medals = HomeViewModel.Instance.ServiceRecord.CoreStats.Medals;
+                        LogEngine.Log("Instead of using medals from the database, using medals from the local service record.", LogSeverity.Info);
                     }
                     else
                     {
                         LogEngine.Log("Re-acquiring service record to get medal data.", LogSeverity.Info);
-                        if (await PopulateServiceRecordData())
+                        var serviceRecordResult = await PopulateServiceRecordData();
+                        if (serviceRecordResult)
                         {
-                            serviceRecordMedals = coreStats?.Medals;
-                            if (serviceRecordMedals != null && serviceRecordMedals.Count > 0)
+                            if (HomeViewModel.Instance.ServiceRecord != null && HomeViewModel.Instance.ServiceRecord.CoreStats != null && HomeViewModel.Instance.ServiceRecord.CoreStats.Medals != null && HomeViewModel.Instance.ServiceRecord.CoreStats.Medals.Count > 0)
                             {
-                                medals = serviceRecordMedals;
-                                LogEngine.Log("Using medals from the local service record after re-acquiring.", LogSeverity.Info);
+                                medals = HomeViewModel.Instance.ServiceRecord.CoreStats.Medals;
+                                LogEngine.Log("Instead of using medals from the database, using medals from the local service record after re-acquiring.", LogSeverity.Info);
                             }
                             else
                             {
                                 LogEngine.Log("Medals could not be populated because the service record contents are empty.", LogSeverity.Warning);
+                                return false;
                             }
                         }
+                        else
+                        {
+                            return false;
+                        }
                     }
-
-                    return false;
                 }
 
                 // Join locally stored medals with metadata to create compound medals
@@ -1366,35 +1367,33 @@ namespace OpenSpartan.Workshop.Core
                 if (spriteContent != null)
                 {
                     // Decode sprite content into SKBitmap
-                    using (MemoryStream ms = new MemoryStream(spriteContent))
+                    using (MemoryStream ms = new(spriteContent))
                     {
                         SkiaSharp.SKBitmap bmp = SkiaSharp.SKBitmap.Decode(ms);
-                        using (var pixmap = bmp.PeekPixels())
+                        using var pixmap = bmp.PeekPixels();
+                        // Download and save medal images
+                        foreach (var medal in MedalMetadata.Medals)
                         {
-                            // Download and save medal images
-                            foreach (var medal in MedalMetadata.Medals)
+                            string medalImagePath = Path.Combine(qualifiedMedalPath, $"{medal.NameId}.png");
+                            EnsureDirectoryExists(medalImagePath);
+
+                            // Skip writing if file already exists
+                            if (!System.IO.File.Exists(medalImagePath))
                             {
-                                string medalImagePath = Path.Combine(qualifiedMedalPath, $"{medal.NameId}.png");
-                                EnsureDirectoryExists(medalImagePath);
+                                // Calculate position and size of medal sprite
+                                var row = (int)Math.Floor(medal.SpriteIndex / 16.0);
+                                var column = (int)(medal.SpriteIndex % 16.0);
+                                SkiaSharp.SKRectI rectI = SkiaSharp.SKRectI.Create(column * 256, row * 256, 256, 256);
 
-                                // Skip writing if file already exists
-                                if (!System.IO.File.Exists(medalImagePath))
+                                // Extract subset of pixmap and encode as PNG
+                                var subset = pixmap.ExtractSubset(rectI);
+                                using (var data = subset.Encode(SkiaSharp.SKPngEncoderOptions.Default))
                                 {
-                                    // Calculate position and size of medal sprite
-                                    var row = (int)Math.Floor(medal.SpriteIndex / 16.0);
-                                    var column = (int)(medal.SpriteIndex % 16.0);
-                                    SkiaSharp.SKRectI rectI = SkiaSharp.SKRectI.Create(column * 256, row * 256, 256, 256);
-
-                                    // Extract subset of pixmap and encode as PNG
-                                    var subset = pixmap.ExtractSubset(rectI);
-                                    using (var data = subset.Encode(SkiaSharp.SKPngEncoderOptions.Default))
-                                    {
-                                        await System.IO.File.WriteAllBytesAsync(medalImagePath, data.ToArray());
-                                    }
-
-                                    // Log successful write
-                                    LogEngine.Log($"Wrote medal to file: {medalImagePath}");
+                                    await System.IO.File.WriteAllBytesAsync(medalImagePath, data.ToArray());
                                 }
+
+                                // Log successful write
+                                LogEngine.Log($"Wrote medal to file: {medalImagePath}");
                             }
                         }
                     }
@@ -1446,9 +1445,12 @@ namespace OpenSpartan.Workshop.Core
             })).Result;
         }
 
-        public static async Task<bool> PopulateBattlePassData(CancellationToken cancellationToken)
+        public static async Task<bool> PopulateBattlePassData()
         {
             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.BattlePassLoadingState = MetadataLoadingState.Loading);
+
+            await BattlePassLoadingCancellationTracker.CancelAsync();
+            BattlePassLoadingCancellationTracker = new CancellationTokenSource();
 
             // Using this as a reference point for extra rituals and excluded events.
             var settings = SettingsManager.LoadSettings();
@@ -1481,7 +1483,7 @@ namespace OpenSpartan.Workshop.Core
             // Let's get the data for each of the operations.
             foreach (var operation in operations.OperationRewardTracks)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                BattlePassLoadingCancellationTracker.Token.ThrowIfCancellationRequested();
                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.BattlePassLoadingParameter = operation.RewardTrackPath);
 
                 var compoundOperation = await ProcessOperation(operation, seasonRewardTracks);
@@ -1496,7 +1498,7 @@ namespace OpenSpartan.Workshop.Core
             {
                 // Tell the user that the operations are currently being loaded by changing the
                 // loading parameter to the reward track path.
-                cancellationToken.ThrowIfCancellationRequested();
+                BattlePassLoadingCancellationTracker.Token.ThrowIfCancellationRequested();
                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.BattlePassLoadingParameter = eventEntry.RewardTrackPath);
 
                 OperationCompoundModel compoundEvent = new()
@@ -1873,6 +1875,11 @@ namespace OpenSpartan.Workshop.Core
             {
                 LogEngine.Log($"Failed to finish updating The Exchange content. Reason: {ex.Message}");
 
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                {
+                    ExchangeViewModel.Instance.ExchangeLoadingState = MetadataLoadingState.Completed;
+                });
+
                 return false;
             }
         }
@@ -2022,41 +2029,51 @@ namespace OpenSpartan.Workshop.Core
                 });
 
                 // Concurrently populate MatchRecordsData and BattlePassData with other tasks
-                await Task.WhenAll(
-                    PopulateMatchRecordsData().ContinueWith(async t =>
+                Parallel.Invoke(
+                    async () => await PopulateMatchRecordsData().ContinueWith(async t =>
                     {
-                        if (t.Result)
+                        if (await t)
                         {
-                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                            {
-                                MatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Completed;
-                                MatchesViewModel.Instance.MatchLoadingParameter = string.Empty;
-                            });
-                        }
-                    }, TaskScheduler.FromCurrentSynchronizationContext()),
-                    PopulateBattlePassData(BattlePassLoadingCancellationTracker.Token).ContinueWith(async t =>
-                    {
-                        if (t.IsCompletedSuccessfully)
-                        {
-                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                            {
-                                BattlePassViewModel.Instance.BattlePassLoadingState = MetadataLoadingState.Completed;
-                            });
+                            LogEngine.Log("Successfully populated the match data from within the app bootstrap sequence.");
                         }
                         else if (t.IsFaulted)
                         {
-                            BattlePassLoadingCancellationTracker = new CancellationTokenSource();
+                            LogEngine.Log("Could not populate the match data from within the app bootstrap sequence.");
                         }
-                    }, TaskScheduler.FromCurrentSynchronizationContext()),
-                    PopulateCareerData(),
-                    PopulateServiceRecordData(),
-                    PopulateMedalData(),
-                    PopulateExchangeData(),
-                    PopulateCsrImages(),
-                    PopulateSeasonCalendar(),
-                    PopulateUserInventory(),
-                    PopulateCustomizationData(),
-                    PopulateDecorationData()
+
+                        // Right now, regardless of result I want to make sure that we reset
+                        // the completion state.
+                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        {
+                            MatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Completed;
+                            MatchesViewModel.Instance.MatchLoadingParameter = string.Empty;
+                        });
+                    }, TaskScheduler.Current),
+                    async () => await PopulateBattlePassData().ContinueWith(async t =>
+                    {
+                        if (await t)
+                        {
+                            LogEngine.Log("Successfully populated the battle pass data from within the app bootstrap sequence.");
+                        }
+                        else if (t.IsFaulted)
+                        {
+                            LogEngine.Log("Could not populate the battle pass data from within the app bootstrap sequence.");
+                        }
+
+                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        {
+                            BattlePassViewModel.Instance.BattlePassLoadingState = MetadataLoadingState.Completed;
+                        });
+                    }, TaskScheduler.Current),
+                    async() => await PopulateCareerData(),
+                    async () => await PopulateServiceRecordData(),
+                    async () => await PopulateMedalData(),
+                    async () => await PopulateExchangeData(),
+                    async () => await PopulateCsrImages(),
+                    async () => await PopulateSeasonCalendar(),
+                    async () => await PopulateUserInventory(),
+                    async () => await PopulateCustomizationData(),
+                    async () => await PopulateDecorationData()
                 );
 
                 return true;

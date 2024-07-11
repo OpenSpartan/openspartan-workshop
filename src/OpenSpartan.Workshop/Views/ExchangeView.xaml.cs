@@ -28,13 +28,10 @@ namespace OpenSpartan.Workshop.Views
         {
             var matchRecordsOutcome = await UserContextManager.PopulateExchangeData();
 
-            if (matchRecordsOutcome)
+            await UserContextManager.DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
             {
-                await UserContextManager.DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                {
-                    ExchangeViewModel.Instance.ExchangeLoadingState = MetadataLoadingState.Completed;
-                });
-            }
+                ExchangeViewModel.Instance.ExchangeLoadingState = MetadataLoadingState.Completed;
+            });
         }
     }
 }
