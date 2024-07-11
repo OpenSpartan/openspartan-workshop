@@ -1293,6 +1293,33 @@ namespace OpenSpartan.Workshop.Core
                 if (medals == null)
                 {
                     LogEngine.Log("Locally stored medals not found.", LogSeverity.Warning);
+
+                    var coreStats = HomeViewModel.Instance.ServiceRecord?.CoreStats;
+                    var serviceRecordMedals = coreStats?.Medals;
+
+                    if (serviceRecordMedals != null && serviceRecordMedals.Count > 0)
+                    {
+                        medals = serviceRecordMedals;
+                        LogEngine.Log("Using medals from the local service record.", LogSeverity.Info);
+                    }
+                    else
+                    {
+                        LogEngine.Log("Re-acquiring service record to get medal data.", LogSeverity.Info);
+                        if (await PopulateServiceRecordData())
+                        {
+                            serviceRecordMedals = coreStats?.Medals;
+                            if (serviceRecordMedals != null && serviceRecordMedals.Count > 0)
+                            {
+                                medals = serviceRecordMedals;
+                                LogEngine.Log("Using medals from the local service record after re-acquiring.", LogSeverity.Info);
+                            }
+                            else
+                            {
+                                LogEngine.Log("Medals could not be populated because the service record contents are empty.", LogSeverity.Warning);
+                            }
+                        }
+                    }
+
                     return false;
                 }
 
@@ -1817,7 +1844,6 @@ namespace OpenSpartan.Workshop.Core
 
                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                 {
-                    ExchangeViewModel.Instance.ExchangeItems = new ObservableCollection<ItemMetadataContainer>();
                     ExchangeViewModel.Instance.ExchangeLoadingState = MetadataLoadingState.Loading;
                 });
 
@@ -1828,6 +1854,12 @@ namespace OpenSpartan.Workshop.Core
 
                 if (exchangeOfferings != null && exchangeOfferings.Result != null)
                 {
+                    // Only clear out exchange items if the previous call to get them from the store succeeded.
+                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    {
+                        ExchangeViewModel.Instance.ExchangeItems = [];
+                    });
+
                     _ = Task.Run(async () =>
                     {
                         await ProcessExchangeItems(exchangeOfferings.Result, ExchangeCancellationTracker.Token);
