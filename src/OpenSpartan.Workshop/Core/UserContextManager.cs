@@ -368,6 +368,10 @@ namespace OpenSpartan.Workshop.Core
                 // Check if the image retrieval was successful
                 if (image != null && image.Result != null && image.Response.Code == 200)
                 {
+                    // In case the folder does not exist, make sure we create it.
+                    FileInfo file = new(localImagePath);
+                    file.Directory.Create();
+
                     await System.IO.File.WriteAllBytesAsync(localImagePath, image.Result);
 
                     if (setImageAction != null)
@@ -486,30 +490,13 @@ namespace OpenSpartan.Workshop.Core
             try
             {
                 string backgroundPath = SettingsViewModel.Instance.Settings.HeaderImagePath;
+                string cachedImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", backgroundPath);
 
-                // Get initial service record details
-                string qualifiedBackgroundImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", backgroundPath);
-
-                if (!System.IO.File.Exists(qualifiedBackgroundImagePath))
-                {
-                    var backgroundImageResult = await SafeAPICall(async () =>
-                    {
-                        return await HaloClient.GameCmsGetImage(backgroundPath);
-                    });
-
-                    if (backgroundImageResult.Result != null && backgroundImageResult.Response.Code == 200)
-                    {
-                        // Let's make sure that we create the directory if it does not exist.
-                        FileInfo file = new(qualifiedBackgroundImagePath);
-                        file.Directory.Create();
-
-                        await System.IO.File.WriteAllBytesAsync(qualifiedBackgroundImagePath, backgroundImageResult.Result);
-                    }
-                }
+                await DownloadAndSetImage(backgroundPath, cachedImagePath);
 
                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                 {
-                    HomeViewModel.Instance.SeasonalBackground = qualifiedBackgroundImagePath;
+                    HomeViewModel.Instance.SeasonalBackground = cachedImagePath;
                 });
 
                 return true;
