@@ -4,6 +4,8 @@
 - [#38] Battlepass data now correctly renders on smaller screens, allowing scrolling.
 - [#39] Removes the odd cross-out line in the calendar view.
 - [#41] Fixes average life positioning, ensuring that it can't cause overflow.
+- [#43] Fixed the issue where the medals are not rendered on first cold boot.
+- [#45] Fixed an issue where refreshing The Exchange with no internet will result in an infinite spinning loading indicator.
 - Improved image fallback for The Exchange, so that missing items now render properly.
 - Season calendar now includes background images for each event, operation, and battle pass season.
 - Calendar colors are now easier to read.
