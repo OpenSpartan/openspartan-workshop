@@ -14,5 +14,6 @@
 - General performance optimizations and maintainability cleanup.
 - Fixed an issue where duplicate ranked playlist may render in the **Ranked Progression** view.
 - Fixed an issue where duplicate items may render in the **Exchange** view.
+- Massive speed up to the **Operations** view load times - the app no longer issues unnecessary REST API calls to get currency data.
 
 Refer to [**getting started guide**](https://openspartan.com/docs/workshop/guides/get-started/) to start using OpenSpartan Workshop.

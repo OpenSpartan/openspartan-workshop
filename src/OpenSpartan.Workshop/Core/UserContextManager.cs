@@ -54,6 +54,8 @@ namespace OpenSpartan.Workshop.Core
 
         internal static XboxTicket XboxUserContext { get; set; }
 
+        internal static Dictionary<string, CurrencyDefinition> currencyDefinitions = [];
+
         internal static readonly JsonSerializerOptions SerializerOptions = new()
         {
             PropertyNameCaseInsensitive = true,
@@ -1654,7 +1656,7 @@ namespace OpenSpartan.Workshop.Core
 
         internal static async Task<List<ItemMetadataContainer>> ExtractCurrencyRewards(int rank, int playerRank, IEnumerable<CurrencyAmount> currencyItems, bool isFree)
         {
-            List<ItemMetadataContainer> rewardContainers = new();
+            List<ItemMetadataContainer> rewardContainers = [];
 
             foreach (var currencyReward in currencyItems)
             {
@@ -1663,8 +1665,18 @@ namespace OpenSpartan.Workshop.Core
                     Ranks = new Tuple<int, int>(rank, playerRank),
                     IsFree = isFree,
                     ItemValue = currencyReward.Amount,
-                    CurrencyDetails = await GetInGameCurrency(currencyReward.CurrencyPath)
                 };
+
+                if (!currencyDefinitions.Any(x => x.Key == currencyReward.CurrencyPath))
+                {
+                    var currencyDetails = await GetInGameCurrency(currencyReward.CurrencyPath);
+                    container.CurrencyDetails = currencyDetails;
+                    currencyDefinitions.Add(currencyReward.CurrencyPath, currencyDetails);
+                }
+                else
+                {
+                    container.CurrencyDetails = currencyDefinitions[currencyReward.CurrencyPath];
+                }
 
                 if (container.CurrencyDetails != null)
                 {
@@ -1688,19 +1700,9 @@ namespace OpenSpartan.Workshop.Core
                     }
 
                     string currencyImageLocation = GetCurrencyImageLocation(container.Type);
-
                     container.ImagePath = currencyImageLocation;
 
-                    string qualifiedImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", currencyImageLocation);
-
-                    EnsureDirectoryExists(qualifiedImagePath);
-
-                    var rankImage = await SafeAPICall(async () => await HaloClient.GameCmsGetImage(currencyImageLocation));
-
-                    if (rankImage.Result != null && rankImage.Response.Code == 200)
-                    {
-                        await WriteImageToFileAsync(qualifiedImagePath, rankImage.Result);
-                    }
+                    await DownloadAndSetImage(container.ImagePath, Path.Combine(Configuration.AppDataDirectory, "imagecache", currencyImageLocation));
                 }
 
                 rewardContainers.Add(container);
