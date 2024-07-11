@@ -54,7 +54,7 @@ namespace OpenSpartan.Workshop.Core
 
         internal static XboxTicket XboxUserContext { get; set; }
 
-        internal static Dictionary<string, CurrencyDefinition> currencyDefinitions = [];
+        internal static Dictionary<string, CurrencyDefinition> CurrencyDefinitions = [];
 
         internal static readonly JsonSerializerOptions SerializerOptions = new()
         {
@@ -1667,16 +1667,13 @@ namespace OpenSpartan.Workshop.Core
                     ItemValue = currencyReward.Amount,
                 };
 
-                if (!currencyDefinitions.Any(x => x.Key == currencyReward.CurrencyPath))
+                if (!CurrencyDefinitions.TryGetValue(currencyReward.CurrencyPath, out var currencyDetails))
                 {
-                    var currencyDetails = await GetInGameCurrency(currencyReward.CurrencyPath);
-                    container.CurrencyDetails = currencyDetails;
-                    currencyDefinitions.Add(currencyReward.CurrencyPath, currencyDetails);
+                    currencyDetails = await GetInGameCurrency(currencyReward.CurrencyPath);
+                    CurrencyDefinitions.Add(currencyReward.CurrencyPath, currencyDetails);
                 }
-                else
-                {
-                    container.CurrencyDetails = currencyDefinitions[currencyReward.CurrencyPath];
-                }
+
+                container.CurrencyDetails = currencyDetails;
 
                 if (container.CurrencyDetails != null)
                 {
