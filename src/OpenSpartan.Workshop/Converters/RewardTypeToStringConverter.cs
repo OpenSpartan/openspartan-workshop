@@ -23,7 +23,6 @@ namespace OpenSpartan.Workshop.Converters
                     case ItemClass.ChallengeReroll:
                         return "Challenge Swap";
                     case ItemClass.StandardReward:
-                        break;
                     default:
                         return type.ItemDetails.CommonData.Title.Value;
                 }
