@@ -4,24 +4,23 @@ using System;
 
 namespace OpenSpartan.Workshop.Converters
 {
-
     internal sealed class SingleValueAvailabilityToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
         {
-            public object Convert(object value, Type targetType, object parameter, string language)
+            if (value is float floatValue && floatValue > 0)
             {
-                if (value != null && (float)value > 0)
-                {
-                    return Visibility.Visible;
-                }
-                else
-                {
-                    return Visibility.Collapsed;
-                }
+                return Visibility.Visible;
             }
-
-            public object ConvertBack(object value, Type targetType, object parameter, string language)
+            else
             {
-                throw new NotImplementedException();
+                return Visibility.Collapsed;
             }
         }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

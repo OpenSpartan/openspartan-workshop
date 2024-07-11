@@ -6,14 +6,10 @@ namespace OpenSpartan.Workshop.Converters
 {
     internal sealed class CommaAfterThousandsConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, string language)
-        {
-            return string.Format(CultureInfo.InvariantCulture, "{0:n0}", value);
-        }
+        public object Convert(object value, Type targetType, object parameter, string language) =>
+            string.Format(CultureInfo.InvariantCulture, "{0:n0}", value);
 
-        public object ConvertBack(object value, Type targetType, object parameter, string language)
-        {
+        public object ConvertBack(object value, Type targetType, object parameter, string language) =>
             throw new NotImplementedException();
-        }
     }
 }

@@ -8,16 +8,27 @@ namespace OpenSpartan.Workshop.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            ItemMetadataContainer type = (ItemMetadataContainer)value;
-            return type.Type switch
+            if (value is ItemMetadataContainer type)
             {
-                ItemClass.XPGrant => "XP Grant",
-                ItemClass.SpartanPoints => "Spartan Points",
-                ItemClass.Credits => "Credits",
-                ItemClass.XPBoost => "XP Boost",
-                ItemClass.ChallengeReroll => "Challenge Swap",
-                _ => type.ItemDetails.CommonData.Title.Value,
-            };
+                switch (type.Type)
+                {
+                    case ItemClass.XPGrant:
+                        return "XP Grant";
+                    case ItemClass.SpartanPoints:
+                        return "Spartan Points";
+                    case ItemClass.Credits:
+                        return "Credits";
+                    case ItemClass.XPBoost:
+                        return "XP Boost";
+                    case ItemClass.ChallengeReroll:
+                        return "Challenge Swap";
+                    case ItemClass.StandardReward:
+                    default:
+                        return type.ItemDetails.CommonData.Title.Value;
+                }
+            }
+
+            return string.Empty;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

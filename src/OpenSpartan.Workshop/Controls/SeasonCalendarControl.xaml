@@ -12,6 +12,7 @@
             x:Name="CalendarViewControl"
             IsTodayHighlighted="true"
             TodayForeground="Transparent"
+            TodayBlackoutForeground="#FFFFFF"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
             CalendarItemBorderBrush="DimGray"
@@ -19,11 +20,11 @@
             CalendarItemCornerRadius="0"
             BlackoutStrikethroughBrush="Transparent"
             BlackoutBackground="#5B6163"
-            BlackoutForeground="#2F2F2F"
-            DayItemFontSize="{StaticResource BodyTextBlockFontSize}"
+            BlackoutForeground="#B3A8AA"
+            DayItemFontSize="{StaticResource SubtitleTextBlockFontSize}"
             DayItemMargin="4,0,0,0"
             IsGroupLabelVisible="True"
-            FirstOfMonthLabelFontSize="{StaticResource BodyTextBlockFontSize}"
+            FirstOfMonthLabelFontSize="{StaticResource SubtitleTextBlockFontSize}"
             FirstOfMonthLabelFontWeight="Bold"
             HorizontalFirstOfMonthLabelAlignment="Right"
             FirstOfMonthLabelMargin="0,0,4,0"
@@ -39,7 +40,7 @@
                         <Setter.Value>
                             <ControlTemplate>
                                 <Grid x:Name="CalendarItemGrid">
-                                    <Image Opacity=".4" HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="UniformToFill" Source="{Binding BackgroundImagePath, Converter={StaticResource ServicePathToLocalPathConverter}}">
+                                    <Image Opacity=".2" HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="UniformToFill" Source="{Binding BackgroundImagePath, Converter={StaticResource ServicePathToLocalPathConverter}}">
 
                                     </Image>
                                     

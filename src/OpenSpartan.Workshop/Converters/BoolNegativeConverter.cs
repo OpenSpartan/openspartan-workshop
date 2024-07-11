@@ -5,24 +5,10 @@ namespace OpenSpartan.Workshop.Converters
 {
     public class BoolNegativeConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, string language)
-        {
-            if (value is bool boolValue)
-            {
-                return !boolValue;
-            }
+        public object Convert(object value, Type targetType, object parameter, string language) =>
+            value is bool boolValue ? !boolValue : (object)null;
 
-            return null;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, string language)
-        {
-            if (value is bool boolValue)
-            {
-                return !boolValue;
-            }
-
-            return false;
-        }
+        public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+            value is bool boolValue ? !boolValue : (object)false;
     }
 }

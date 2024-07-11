@@ -12,8 +12,8 @@
 		<WindowsPackageType>None</WindowsPackageType>
 		<EnableMsixTooling>true</EnableMsixTooling>
 		<AnalysisMode>All</AnalysisMode>
-		<AssemblyVersion>1.0.6.0</AssemblyVersion>
-		<FileVersion>1.0.6.0</FileVersion>
+		<AssemblyVersion>1.0.7.0</AssemblyVersion>
+		<FileVersion>1.0.7.0</FileVersion>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<ItemGroup>
@@ -44,7 +44,7 @@
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</EmbeddedResource>
 		<Content Include="CustomImages\cr.svg">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
 		<Content Include="CustomImages\OpenSpartan.Workshop.ico" />
 	</ItemGroup>
@@ -56,10 +56,10 @@
 		<Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
 		<Content Include="Assets\Wide310x150Logo.scale-200.png" />
 		<Content Include="CustomImages\season-marker.svg">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
 		<Content Include="CustomImages\sp.svg">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
 	<ItemGroup>
@@ -67,7 +67,7 @@
 		<PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.0.240109" />
 		<PackageReference Include="CommunityToolkit.WinUI.Converters" Version="8.0.240109" />
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Controls.DataGrid" Version="7.1.2" />
-		<PackageReference Include="Den.Dev.Orion" Version="1.0.57" />
+		<PackageReference Include="Den.Dev.Orion" Version="1.0.58" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.6" />
 		<PackageReference Include="Microsoft.Identity.Client" Version="4.61.3" />
 		<PackageReference Include="Microsoft.Identity.Client.Broker" Version="4.61.3" />
@@ -93,7 +93,7 @@
 			<Generator>MSBuild:Compile</Generator>
 		</Page>
 		<Page Update="Controls\SeasonCalendarControl.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</Page>
 		<None Update="NLog.config">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -126,7 +126,7 @@
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 		<None Update="Queries\Bootstrap\PlaylistCSRSnapshots.sql">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 		<None Update="Queries\Bootstrap\PlaylistMapModePairs.sql">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -165,7 +165,7 @@
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 		<None Update="Queries\Insert\PlaylistCSR.sql">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 		<None Update="Queries\Insert\PlaylistMapModePairs.sql">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -180,7 +180,7 @@
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 		<None Update="Queries\Select\ExistingMatchCount.sql">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 		<None Update="Queries\Select\InventoryItem.sql">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -204,16 +204,16 @@
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 		<Page Update="Views\RankedView.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</Page>
 		<Page Update="Views\SeasonCalendarView.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</Page>
 		<Page Update="Views\ExchangeView.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</Page>
 		<Page Update="Views\EventDetailView.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</Page>
 		<Page Update="Views\MedalMatchesView.xaml">
 			<Generator>MSBuild:Compile</Generator>
@@ -230,13 +230,9 @@
 		<Page Update="Views\MatchesView.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</Page>
-	</ItemGroup>
-	<ItemGroup>
 		<Page Update="Views\HomeView.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</Page>
-	</ItemGroup>
-	<ItemGroup>
 		<Page Update="Views\SettingsView.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</Page>

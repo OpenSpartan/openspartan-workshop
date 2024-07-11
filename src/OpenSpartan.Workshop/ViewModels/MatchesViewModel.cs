@@ -35,6 +35,7 @@ namespace OpenSpartan.Workshop.ViewModels
                 {
                     MetadataLoadingState.Calculating => $"Calculating matches. Identified {MatchLoadingParameter} matches so far...",
                     MetadataLoadingState.Loading => $"Loading match details. Currently processing {MatchLoadingParameter}...",
+                    MetadataLoadingState.Failed => $"Failed processing match. {MatchLoadingParameter}",
                     MetadataLoadingState.Completed => "Completed",
                     _ => "NOOP - Never Seen",
                 };

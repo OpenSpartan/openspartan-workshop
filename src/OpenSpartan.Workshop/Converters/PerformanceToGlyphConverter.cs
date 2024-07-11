@@ -9,20 +9,16 @@ namespace OpenSpartan.Workshop.Converters
     {
         private readonly Dictionary<PerformanceMeasure, string> performanceGlyphMap = new()
         {
-            { PerformanceMeasure.Outperformed, "e742" },
-            { PerformanceMeasure.Underperformed, "e741" },
-            { PerformanceMeasure.MetExpectations, "e73f" },
+            { PerformanceMeasure.Outperformed, "\xE742" },
+            { PerformanceMeasure.Underperformed, "\xE741" },
+            { PerformanceMeasure.MetExpectations, "\xE73F" },
         };
 
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value is PerformanceMeasure performance && performanceGlyphMap.TryGetValue(performance, out string unicodeString))
+            if (value is PerformanceMeasure performance && performanceGlyphMap.TryGetValue(performance, out string glyph))
             {
-                if (int.TryParse(unicodeString, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out int unicodeValue))
-                {
-                    char glyphChar = (char)unicodeValue;
-                    return glyphChar.ToString();
-                }
+                return glyph;
             }
 
             return string.Empty;

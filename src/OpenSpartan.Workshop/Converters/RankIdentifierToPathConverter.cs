@@ -8,8 +8,12 @@ namespace OpenSpartan.Workshop.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            var tierPath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", "csr", $"{value}.png");
-            return tierPath;
+            if (value is string rankIdentifier)
+            {
+                return Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", "csr", $"{rankIdentifier}.png");
+            }
+
+            return null;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

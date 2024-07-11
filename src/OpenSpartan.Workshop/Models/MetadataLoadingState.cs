@@ -4,6 +4,7 @@
     {
         Calculating,
         Loading,
-        Completed
+        Completed,
+        Failed
     }
 }
