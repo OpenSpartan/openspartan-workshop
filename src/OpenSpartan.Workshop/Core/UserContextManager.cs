@@ -735,14 +735,28 @@ namespace OpenSpartan.Workshop.Core
 
         private static async Task<HaloApiResultContainer<MatchStats, RawResponseContainer>> GetMatchStats(string matchId, double completionProgress)
         {
-            var matchStats = await SafeAPICall(async () => await HaloClient.StatsGetMatchStats(matchId));
-            if (matchStats == null || matchStats.Result == null)
+            int retryCount = 0;
+            const int maxRetries = 3;
+            HaloApiResultContainer<MatchStats, RawResponseContainer> matchStats = null;
+
+            while (retryCount < maxRetries)
             {
-                LogEngine.Log($"[{completionProgress:#.00}%] [Error] Getting match stats from the Halo Infinite API failed for {matchId}.", LogSeverity.Error);
-                return null;
+                matchStats = await SafeAPICall(async () => await HaloClient.StatsGetMatchStats(matchId));
+                if (matchStats != null && matchStats.Result != null)
+                {
+                    return matchStats;
+                }
+
+                retryCount++;
+                if (retryCount < maxRetries)
+                {
+                    LogEngine.Log($"[{completionProgress:#.00}%] [Warning] Getting match stats from the Halo Infinite API failed for {matchId}. Retrying... ({retryCount}/{maxRetries})", LogSeverity.Warning);
+                    await Task.Delay(1000); // Optional: delay between retries
+                }
             }
 
-            return matchStats;
+            LogEngine.Log($"[{completionProgress:#.00}%] [Error] Getting match stats from the Halo Infinite API failed for {matchId} after {maxRetries} attempts.", LogSeverity.Error);
+            return null;
         }
 
         private static async Task<HaloApiResultContainer<MatchSkillInfo, RawResponseContainer>> GetPlayerStats(string matchId)
