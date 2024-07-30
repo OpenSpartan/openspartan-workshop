@@ -9,6 +9,7 @@ using Microsoft.Identity.Client.Broker;
 using Microsoft.Identity.Client.Extensions.Msal;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
+using NLog;
 using OpenSpartan.Workshop.Data;
 using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.ViewModels;
@@ -1170,40 +1171,47 @@ namespace OpenSpartan.Workshop.Core
 
         private async static Task ProcessRegularSeasonRanges(string rangeText, string name, int index, string backgroundPath = "")
         {
-            List<Tuple<DateTime, DateTime>> ranges = DateRangeParser.ExtractDateRanges(rangeText);
-            foreach (var range in ranges)
+            try
             {
-                var days = GenerateDateList(range.Item1, range.Item2);
-                if (days != null)
+                List<Tuple<DateTime, DateTime>> ranges = DateRangeParser.ExtractDateRanges(rangeText);
+                foreach (var range in ranges)
                 {
-                    foreach (var day in days)
+                    var days = GenerateDateList(range.Item1, range.Item2);
+                    if (days != null)
                     {
-                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        foreach (var day in days)
                         {
-                            var targetDay = SeasonCalendarViewModel.Instance.SeasonDays
-                                .Where(x => x.DateTime.Date == day.Date)
-                                .FirstOrDefault();
+                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                            {
+                                var targetDay = SeasonCalendarViewModel.Instance.SeasonDays
+                                    .Where(x => x.DateTime.Date == day.Date)
+                                    .FirstOrDefault();
 
-                            if (targetDay != null)
-                            {
-                                targetDay.RegularSeasonText = name;
-                                targetDay.RegularSeasonMarkerColor = ColorConverter.FromHex(Configuration.SeasonColors[index]);
-                                targetDay.BackgroundImagePath = backgroundPath;
-                            }
-                            else
-                            {
-                                SeasonCalendarViewDayItem calendarItem = new();
-                                calendarItem.DateTime = day;
-                                calendarItem.CSRSeasonText = string.Empty;
-                                calendarItem.CSRSeasonMarkerColor = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.White);
-                                calendarItem.RegularSeasonText = name;
-                                calendarItem.RegularSeasonMarkerColor = ColorConverter.FromHex(Configuration.SeasonColors[index]);
-                                calendarItem.BackgroundImagePath = backgroundPath;
-                                SeasonCalendarViewModel.Instance.SeasonDays.Add(calendarItem);
-                            }
-                        });
+                                if (targetDay != null)
+                                {
+                                    targetDay.RegularSeasonText = name;
+                                    targetDay.RegularSeasonMarkerColor = ColorConverter.FromHex(Configuration.SeasonColors[index]);
+                                    targetDay.BackgroundImagePath = backgroundPath;
+                                }
+                                else
+                                {
+                                    SeasonCalendarViewDayItem calendarItem = new();
+                                    calendarItem.DateTime = day;
+                                    calendarItem.CSRSeasonText = string.Empty;
+                                    calendarItem.CSRSeasonMarkerColor = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.White);
+                                    calendarItem.RegularSeasonText = name;
+                                    calendarItem.RegularSeasonMarkerColor = ColorConverter.FromHex(Configuration.SeasonColors[index]);
+                                    calendarItem.BackgroundImagePath = backgroundPath;
+                                    SeasonCalendarViewModel.Instance.SeasonDays.Add(calendarItem);
+                                }
+                            });
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                LogEngine.Log($"Could not process regular season ranges. {ex.Message}", LogSeverity.Error);
             }
         }
 

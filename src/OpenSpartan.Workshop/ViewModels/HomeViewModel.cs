@@ -221,7 +221,7 @@ namespace OpenSpartan.Workshop.ViewModels
             {
                 if (CurrentRankExperience != null && RequiredRankExperience != null)
                 {
-                    return Convert.ToDouble(CurrentRankExperience) / Convert.ToDouble(RequiredRankExperience);
+                    return Convert.ToDouble(CurrentRankExperience, CultureInfo.CurrentCulture) / Convert.ToDouble(RequiredRankExperience, CultureInfo.CurrentCulture);
                 }
                 else
                 {
@@ -293,7 +293,7 @@ namespace OpenSpartan.Workshop.ViewModels
 
         public double? ExperienceProgress
         {
-            get => Convert.ToDouble(ExperienceEarnedToDate, CultureInfo.InvariantCulture) / Convert.ToDouble(ExperienceTotalRequired, CultureInfo.InvariantCulture);
+            get => Convert.ToDouble(ExperienceEarnedToDate, CultureInfo.CurrentCulture) / Convert.ToDouble(ExperienceTotalRequired, CultureInfo.CurrentCulture);
         }
 
         public void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
