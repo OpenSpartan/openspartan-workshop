@@ -17,7 +17,7 @@ namespace OpenSpartan.Workshop.Views
 
         private async void btnLogOut_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
         {
-            ContentDialog deleteFileDialog = new ContentDialog
+            ContentDialog deleteFileDialog = new()
             {
                 Title = "Log out",
                 Content = "Are you sure you want to log out? Your data will not be deleted.",

@@ -2,7 +2,7 @@
 	 xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
 	 xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx">
 	
-	<Bundle Name="OpenSpartan Workshop" Manufacturer="Den Delimarsky" Version="1.0.2.0" UpgradeCode="cf3576f5-2f23-4095-94b9-c6c44e6b4891">
+	<Bundle Name="OpenSpartan Workshop" Manufacturer="Den Delimarsky" Version="1.0.9.0" UpgradeCode="cf3576f5-2f23-4095-94b9-c6c44e6b4891">
 		<netfx:DotNetCoreSearchRef Id="SearchForDotNet8" />
 
 		<BootstrapperApplication>
@@ -23,7 +23,7 @@
 			<!-- .NET 8, latest preview as used by this installer and the projects -->
 			<ExePackage
 				DisplayName="Microsoft .NET 8 Desktop Runtime"
-				SourceFile="Dependencies\windowsdesktop-runtime-8.0.2-win-x64.exe"
+				SourceFile="Dependencies\windowsdesktop-runtime-8.0.8-win-x64.exe"
 				Permanent="true"
 				Compressed="true"
 				InstallCondition="VersionNT64"

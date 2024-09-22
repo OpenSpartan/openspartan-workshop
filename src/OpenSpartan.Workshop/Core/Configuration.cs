@@ -25,7 +25,7 @@ namespace OpenSpartan.Workshop.Core
         // API-related default metadata.
         internal const string DefaultRelease = "1.8";
         internal const string DefaultAPIVersion = "1";
-        internal const string DefaultHeaderImage = "progression/Switcher/Season_Switcher_S8_Fleetcom.png";
+        internal const string DefaultHeaderImage = "progression/Switcher/Season_Switcher_S8_Champions.png";
         internal const string DefaultSandbox = "UNUSED";
         internal const string DefaultBuild = "259234.24.07.25.1725-2";
 

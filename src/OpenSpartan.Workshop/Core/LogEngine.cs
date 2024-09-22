@@ -9,7 +9,7 @@ namespace OpenSpartan.Workshop.Core
     {
         private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 
-        internal static void Log(string message, LogSeverity severity = LogSeverity.Info, [CallerMemberName] string caller = null)
+        internal static void Log(string message, LogSeverity severity = LogSeverity.Info, [CallerMemberName] string caller = "")
         {
             if (SettingsViewModel.Instance.EnableLogging)
             {
