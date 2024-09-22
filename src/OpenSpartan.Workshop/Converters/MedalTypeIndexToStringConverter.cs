@@ -1,6 +1,5 @@
 ﻿using Microsoft.UI.Xaml.Data;
 using System;
-using System.Globalization;
 
 namespace OpenSpartan.Workshop.Converters
 {

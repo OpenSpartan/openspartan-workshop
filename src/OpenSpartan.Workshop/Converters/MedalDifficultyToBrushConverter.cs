@@ -11,7 +11,7 @@ namespace OpenSpartan.Workshop.Converters
         {
             if (value is int typeIndex)
             {
-                GradientStopCollection gCollection = new GradientStopCollection();
+                GradientStopCollection gCollection = [];
 
                 switch (typeIndex)
                 {

@@ -11,8 +11,8 @@ namespace OpenSpartan.Workshop.Core
         internal const string HaloWaypointCsrImageEndpoint = "https://www.halowaypoint.com/images/halo-infinite/csr/";
 
         // Build-related metadata.
-        internal const string Version = "1.0.8";
-        internal const string BuildId = "SLIPSPACE-06282024";
+        internal const string Version = "1.0.9";
+        internal const string BuildId = "GRUNT-07302024";
         internal const string PackageName = "OpenSpartan.Workshop";
 
         // Authentication and setting-related metadata.
@@ -25,7 +25,7 @@ namespace OpenSpartan.Workshop.Core
         // API-related default metadata.
         internal const string DefaultRelease = "1.8";
         internal const string DefaultAPIVersion = "1";
-        internal const string DefaultHeaderImage = "progression/Switcher/Season_Switcher_S8_Fleetcom.png";
+        internal const string DefaultHeaderImage = "progression/Switcher/Season_Switcher_S8_Champions.png";
         internal const string DefaultSandbox = "UNUSED";
         internal const string DefaultBuild = "259234.24.07.25.1725-2";
 

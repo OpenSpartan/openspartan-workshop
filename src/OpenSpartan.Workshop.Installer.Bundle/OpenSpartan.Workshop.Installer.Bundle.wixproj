@@ -14,6 +14,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Dependencies\WindowsAppRuntimeInstall-x64.exe" />
-    <None Include="Dependencies\windowsdesktop-runtime-8.0.2-win-x64.exe" />
+    <None Include="Dependencies\windowsdesktop-runtime-8.0.8-win-x64.exe" />
   </ItemGroup>
 </Project>
