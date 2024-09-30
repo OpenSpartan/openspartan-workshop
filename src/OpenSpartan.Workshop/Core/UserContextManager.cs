@@ -291,12 +291,32 @@ namespace OpenSpartan.Workshop.Core
 
                         if (HomeViewModel.Instance.CareerSnapshot != null)
                         {
-                            var currentRank = HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank + 1;
+                            var currentRank = 0;
+
+                            // If we're talking about Hero rank, then we don't need to append an extra 1.
+                            if (HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank != 272)
+                            {
+                                currentRank = HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank + 1;
+                            }
+                            else
+                            {
+                                currentRank = HomeViewModel.Instance.CareerSnapshot.RewardTracks[0].Result.CurrentProgress.Rank;
+                            }
+
                             var currentCareerStage = careerTrackContainerResult.Result.Ranks.FirstOrDefault(c => c.Rank == currentRank);
 
                             if (currentCareerStage != null)
                             {
-                                HomeViewModel.Instance.Title = $"{currentCareerStage.TierType} {currentCareerStage.RankTitle.Value} {currentCareerStage.RankTier.Value}";
+                                if (currentCareerStage.Rank != 272)
+                                {
+                                    HomeViewModel.Instance.Title = $"{currentCareerStage.TierType} {currentCareerStage.RankTitle.Value} {currentCareerStage.RankTier.Value}";
+                                }
+                                else
+                                {
+                                    // Hero rank is just "Hero" - no need to interpolate with other strings.
+                                    HomeViewModel.Instance.Title = currentCareerStage.RankTitle.Value;
+                                }
+
                                 HomeViewModel.Instance.CurrentRankExperience = careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
                                 HomeViewModel.Instance.RequiredRankExperience = currentCareerStage.XpRequiredForRank;
 
@@ -357,7 +377,7 @@ namespace OpenSpartan.Workshop.Core
                     return;
                 }
 
-                HaloApiResultContainer<byte[], RawResponseContainer> image = null;
+                HaloApiResultContainer<byte[], RawResponseContainer>? image = null;
 
                 Func<Task<HaloApiResultContainer<byte[], RawResponseContainer>>> apiCall = isOnWaypoint ?
                     async () => await HaloClient.GameCmsGetGenericWaypointFile(serviceImagePath) :
