@@ -310,15 +310,15 @@ namespace OpenSpartan.Workshop.Core
                                 if (currentCareerStage.Rank != 272)
                                 {
                                     HomeViewModel.Instance.Title = $"{currentCareerStage.TierType} {currentCareerStage.RankTitle.Value} {currentCareerStage.RankTier.Value}";
+                                    HomeViewModel.Instance.CurrentRankExperience = careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
+                                    HomeViewModel.Instance.RequiredRankExperience = currentCareerStage.XpRequiredForRank;
                                 }
                                 else
                                 {
                                     // Hero rank is just "Hero" - no need to interpolate with other strings.
                                     HomeViewModel.Instance.Title = currentCareerStage.RankTitle.Value;
+                                    HomeViewModel.Instance.CurrentRankExperience = HomeViewModel.Instance.RequiredRankExperience = currentCareerStage.XpRequiredForRank;
                                 }
-
-                                HomeViewModel.Instance.CurrentRankExperience = careerTrackResult.Result.RewardTracks[0].Result.CurrentProgress.PartialProgress;
-                                HomeViewModel.Instance.RequiredRankExperience = currentCareerStage.XpRequiredForRank;
 
                                 HomeViewModel.Instance.ExperienceTotalRequired = careerTrackContainerResult.Result.Ranks.Sum(item => item.XpRequiredForRank);
 
@@ -1952,7 +1952,7 @@ namespace OpenSpartan.Workshop.Core
                             return await HaloClient.GameCmsGetItem(item.ItemPath, HaloClient.ClearanceToken);
                         });
 
-                        if (itemMetadata != null)
+                        if (itemMetadata != null && itemMetadata.Result != null)
                         {
                             string folderPath = !string.IsNullOrWhiteSpace(itemMetadata.Result.CommonData.DisplayPath.FolderPath) ? itemMetadata.Result.CommonData.DisplayPath.FolderPath : itemMetadata.Result.CommonData.DisplayPath.Media.FolderPath;
                             string fileName = !string.IsNullOrWhiteSpace(itemMetadata.Result.CommonData.DisplayPath.FileName) ? itemMetadata.Result.CommonData.DisplayPath.FileName : itemMetadata.Result.CommonData.DisplayPath.Media.FileName;
@@ -2013,6 +2013,10 @@ namespace OpenSpartan.Workshop.Core
                             }
 
                             LogEngine.Log($"Got item for Exchange listing: {item.ItemPath}");
+                        }
+                        else
+                        {
+                            LogEngine.Log($"Failed to obtain exchange item: {item.ItemPath}", LogSeverity.Error);
                         }
                     }
                 }

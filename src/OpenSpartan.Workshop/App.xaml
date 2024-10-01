@@ -166,6 +166,7 @@
             <converters:CsrToProgressConverter x:Key="CsrToProgressConverter"/>
             <converters:CsrToTooltipValueConverter x:Key="CsrToTooltipValueConverter"/>
             <converters:StringAvailabilityToParameterSource x:Key="StringAvailabilityToParameterSource"/>
+            <converters:RankToProgressColorConverter x:Key="RankToProgressColorConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -221,7 +221,14 @@ namespace OpenSpartan.Workshop.ViewModels
             {
                 if (CurrentRankExperience != null && RequiredRankExperience != null)
                 {
-                    return Convert.ToDouble(CurrentRankExperience, CultureInfo.CurrentCulture) / Convert.ToDouble(RequiredRankExperience, CultureInfo.CurrentCulture);
+                    if (CurrentRankExperience <= RequiredRankExperience)
+                    {
+                        return Convert.ToDouble(CurrentRankExperience, CultureInfo.CurrentCulture) / Convert.ToDouble(RequiredRankExperience, CultureInfo.CurrentCulture);
+                    }
+                    else
+                    {
+                        return 0;
+                    }
                 }
                 else
                 {
@@ -267,6 +274,7 @@ namespace OpenSpartan.Workshop.ViewModels
                     NotifyPropertyChanged();
                     NotifyPropertyChanged(nameof(ExperienceRemaining));
                     NotifyPropertyChanged(nameof(ExperienceProgress));
+                    NotifyPropertyChanged(nameof(RankProgress));
                 }
             }
         }
@@ -282,6 +290,7 @@ namespace OpenSpartan.Workshop.ViewModels
                     NotifyPropertyChanged();
                     NotifyPropertyChanged(nameof(ExperienceRemaining));
                     NotifyPropertyChanged(nameof(ExperienceProgress));
+                    NotifyPropertyChanged(nameof(RankProgress));
                 }
             }
         }
