@@ -2,6 +2,7 @@
 using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -25,7 +26,8 @@ namespace OpenSpartan.Workshop.Data
             if (MatchesViewModel.Instance.MatchList != null && MatchesViewModel.Instance.MatchList.Count > 0)
             {
                 var date = MatchesViewModel.Instance.MatchList.Min(a => a.EndTime).ToString("o", CultureInfo.InvariantCulture);
-                var matches = Task.Run(() => (IEnumerable<MatchTableEntity>)DataHandler.GetMatches($"xuid({HomeViewModel.Instance.Xuid})", date, pageSize));
+                var universalDate = DateTime.Parse(date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+                var matches = Task.Run(() => (IEnumerable<MatchTableEntity>)DataHandler.GetMatches($"xuid({HomeViewModel.Instance.Xuid})", universalDate, pageSize));
 
                 return matches;
             }

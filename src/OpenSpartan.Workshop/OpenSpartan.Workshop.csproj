@@ -70,11 +70,11 @@
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Controls.DataGrid" Version="7.1.2" />
 		<PackageReference Include="Den.Dev.Orion" Version="1.0.58" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.8" />
-		<PackageReference Include="Microsoft.Identity.Client" Version="4.64.1" />
-		<PackageReference Include="Microsoft.Identity.Client.Broker" Version="4.64.1" />
-		<PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="4.64.1" />
-		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.240829007" />
-		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1" />
+		<PackageReference Include="Microsoft.Identity.Client" Version="4.65.0" />
+		<PackageReference Include="Microsoft.Identity.Client.Broker" Version="4.65.0" />
+		<PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="4.65.0" />
+		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.240923002" />
+		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
 		<PackageReference Include="NLog" Version="5.3.4" />
 		<PackageReference Include="SkiaSharp" Version="2.88.8" />
 		<PackageReference Include="System.Net.Http" Version="4.3.4" />
