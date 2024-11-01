@@ -37,6 +37,10 @@ jobs:
         source-url: ${{ env.NUGET_URL }}
       env:
         NUGET_AUTH_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
+    - run: Invoke-webrequest -uri https://aka.ms/windowsappsdk/1.6/latest/windowsappruntimeinstall-x64.exe -OutFile windowsappruntimeinstall.exe
+      shell: powershell
+    - run: '&.\windowsappruntimeinstall.exe'
+      shell: powershell
     - name: Verify commit exists in origin/master
       run: |
         git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
