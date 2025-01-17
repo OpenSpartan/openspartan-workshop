@@ -1,9 +1,9 @@
 ﻿using CommunityToolkit.WinUI;
-using Den.Dev.Orion.Authentication;
-using Den.Dev.Orion.Core;
-using Den.Dev.Orion.Models;
-using Den.Dev.Orion.Models.HaloInfinite;
-using Den.Dev.Orion.Models.Security;
+using Den.Dev.Grunt.Authentication;
+using Den.Dev.Grunt.Core;
+using Den.Dev.Grunt.Models;
+using Den.Dev.Grunt.Models.HaloInfinite;
+using Den.Dev.Grunt.Models.Security;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Broker;
 using Microsoft.Identity.Client.Extensions.Msal;
@@ -873,7 +873,7 @@ namespace OpenSpartan.Workshop.Core
             List<Guid> successfulMatches = [];
             List<(string xuid, int start, int count)> retryQueue = [];
 
-            var matches = await SafeAPICall(async () => await HaloClient.StatsGetMatchHistory($"xuid({xuid})", start, count, Den.Dev.Orion.Models.HaloInfinite.MatchType.All));
+            var matches = await SafeAPICall(async () => await HaloClient.StatsGetMatchHistory($"xuid({xuid})", start, count, Den.Dev.Grunt.Models.HaloInfinite.MatchType.All));
 
             if (matches.Response.Code == 200)
             {
@@ -904,7 +904,7 @@ namespace OpenSpartan.Workshop.Core
 
             do
             {
-                retryMatches = await SafeAPICall(async () => await HaloClient.StatsGetMatchHistory($"xuid({retryRequest.xuid})", retryRequest.start, retryRequest.count, Den.Dev.Orion.Models.HaloInfinite.MatchType.All));
+                retryMatches = await SafeAPICall(async () => await HaloClient.StatsGetMatchHistory($"xuid({retryRequest.xuid})", retryRequest.start, retryRequest.count, Den.Dev.Grunt.Models.HaloInfinite.MatchType.All));
 
                 if (retryMatches.Response.Code == 200)
                 {

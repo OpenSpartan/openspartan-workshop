@@ -1,4 +1,4 @@
-﻿using Den.Dev.Orion.Models.HaloInfinite;
+﻿using Den.Dev.Grunt.Models.HaloInfinite;
 using OpenSpartan.Workshop.Core;
 using System;
 using System.Globalization;
