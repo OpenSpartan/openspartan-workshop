@@ -1,9 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net8.0-windows10.0.26100.0</TargetFramework>
-		<TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
-		<WindowsSdkPackageVersion>10.0.26100.41</WindowsSdkPackageVersion>
+		<TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
+		<WindowsSdkPackageVersion>10.0.26100.71</WindowsSdkPackageVersion>
 		<RootNamespace>OpenSpartan.Workshop</RootNamespace>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<Platforms>x86;x64;ARM64</Platforms>
@@ -17,6 +16,7 @@
 		<FileVersion>1.0.11.0</FileVersion>
 		<Nullable>enable</Nullable>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
 	</PropertyGroup>
 	<ItemGroup>
 		<None Remove="Controls\MatchesGridControl.xaml" />
@@ -69,15 +69,15 @@
 		<PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.250402" />
 		<PackageReference Include="CommunityToolkit.WinUI.Converters" Version="8.2.250402" />
 		<PackageReference Include="CommunityToolkit.WinUI.UI.Controls.DataGrid" Version="7.1.2" />
-		<PackageReference Include="Den.Dev.Orion" Version="1.0.61" />
-		<PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.3" />
-		<PackageReference Include="Microsoft.Identity.Client" Version="4.70.0" />
-		<PackageReference Include="Microsoft.Identity.Client.Broker" Version="4.70.0" />
-		<PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="4.70.0" />
-		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.7.250310001" />
-		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
-		<PackageReference Include="NLog" Version="5.4.0" />
-		<PackageReference Include="SkiaSharp" Version="3.116.1" />
+		<PackageReference Include="Den.Dev.Grunt" Version="1.0.66" />
+		<PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.7" />
+		<PackageReference Include="Microsoft.Identity.Client" Version="4.74.1" />
+		<PackageReference Include="Microsoft.Identity.Client.Broker" Version="4.74.1" />
+		<PackageReference Include="Microsoft.Identity.Client.Extensions.Msal" Version="4.74.1" />
+		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.7.250606001" />
+		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4654" />
+		<PackageReference Include="NLog" Version="6.0.2" />
+		<PackageReference Include="SkiaSharp" Version="3.119.0" />
 		<PackageReference Include="System.Net.Http" Version="4.3.4" />
 		<PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
 		<Manifest Include="$(ApplicationManifest)" />
