@@ -83,7 +83,7 @@ namespace OpenSpartan.Workshop
                     Build = Configuration.DefaultBuild,
                     SyncSettings = true,
                     EnableLogging = false,
-                    UseBroker = true,
+                    UseBroker = false,
                     UseObanClearance = false,
                     EnableLooseMatchSearch = false,
                 };
