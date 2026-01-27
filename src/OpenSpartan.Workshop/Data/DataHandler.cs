@@ -320,6 +320,66 @@ namespace OpenSpartan.Workshop.Data
             }
         }
 
+        internal static async Task<List<MatchTableEntity>> GetMatchesAsync(string playerXuid, string boundaryTime, int boundaryLimit)
+        {
+            return await GetMatchesInternalAsync(playerXuid, null, boundaryTime, boundaryLimit);
+        }
+
+        internal static async Task<List<MatchTableEntity>> GetMatchesWithMedalAsync(string playerXuid, long medalNameId, string boundaryTime, int boundaryLimit)
+        {
+            return await GetMatchesInternalAsync(playerXuid, medalNameId, boundaryTime, boundaryLimit);
+        }
+
+        private static async Task<List<MatchTableEntity>> GetMatchesInternalAsync(string playerXuid, long? medalNameId, string boundaryTime, int boundaryLimit)
+        {
+            try
+            {
+                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                if (medalNameId.HasValue)
+                {
+                    command.CommandText = GetQuery("Select", "PlayerMatchesBasedOnMedal");
+                    command.Parameters.AddWithValue("$MedalNameId", medalNameId.Value);
+                }
+                else
+                {
+                    command.CommandText = GetQuery("Select", "PlayerMatches");
+                }
+
+                command.Parameters.AddWithValue("$PlayerXuid", playerXuid);
+                command.Parameters.AddWithValue("$BoundaryTime", boundaryTime);
+                command.Parameters.AddWithValue("$BoundaryLimit", boundaryLimit);
+
+                using var reader = await command.ExecuteReaderAsync();
+                List<MatchTableEntity> matches = [];
+                while (await reader.ReadAsync())
+                {
+                    var matchEntry = ReadMatchTableEntity(reader);
+
+                    if (matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals != null && matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals.Count > 0)
+                    {
+                        matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals = UserContextManager.EnrichMedalMetadata(matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals);
+                    }
+
+                    matches.Add(matchEntry);
+                }
+
+                if (matches.Count == 0)
+                {
+                    LogEngine.Log("No rows returned for player match IDs.", LogSeverity.Warning);
+                }
+
+                return matches;
+            }
+            catch (Exception ex)
+            {
+                LogEngine.Log($"An error occurred obtaining matches. {ex.Message}", LogSeverity.Error);
+                return new List<MatchTableEntity>();
+            }
+        }
+
         private static MatchTableEntity ReadMatchTableEntity(SqliteDataReader reader)
         {
             var matchOrdinal = reader.GetOrdinal("MatchId");
@@ -541,7 +601,7 @@ namespace OpenSpartan.Workshop.Data
                 // Update assets if they are not available
                 if (!mapAvailable)
                 {
-                    var map = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.HIUGCDiscoveryGetMap(result.MatchInfo.MapVariant.AssetId.ToString(), result.MatchInfo.MapVariant.VersionId.ToString()));
+                    var map = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.UgcDiscovery.GetMap(result.MatchInfo.MapVariant.AssetId.ToString(), result.MatchInfo.MapVariant.VersionId.ToString()));
                     if (map != null && map.Result != null && map.Response.Code == 200)
                     {
                         using var insertionCommand = connection.CreateCommand();
@@ -561,7 +621,7 @@ namespace OpenSpartan.Workshop.Data
                 {
                     if (result.MatchInfo.Playlist != null)
                     {
-                        var playlist = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.HIUGCDiscoveryGetPlaylist(result.MatchInfo.Playlist.AssetId.ToString(), result.MatchInfo.Playlist.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken));
+                        var playlist = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.UgcDiscovery.GetPlaylist(result.MatchInfo.Playlist.AssetId.ToString(), result.MatchInfo.Playlist.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken));
                         if (playlist != null && playlist.Result != null && playlist.Response.Code == 200)
                         {
                             using var insertionCommand = connection.CreateCommand();
@@ -582,7 +642,7 @@ namespace OpenSpartan.Workshop.Data
                 {
                     if (result.MatchInfo.PlaylistMapModePair != null)
                     {
-                        var playlistMmp = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.HIUGCDiscoveryGetMapModePair(result.MatchInfo.PlaylistMapModePair.AssetId.ToString(), result.MatchInfo.PlaylistMapModePair.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken));
+                        var playlistMmp = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.UgcDiscovery.GetMapModePair(result.MatchInfo.PlaylistMapModePair.AssetId.ToString(), result.MatchInfo.PlaylistMapModePair.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken));
                         if (playlistMmp != null && playlistMmp.Result != null && playlistMmp.Response.Code == 200)
                         {
                             using var insertionCommand = connection.CreateCommand();
@@ -601,7 +661,7 @@ namespace OpenSpartan.Workshop.Data
 
                 if (!gameVariantAvailable)
                 {
-                    var gameVariant = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.HIUGCDiscoveryGetUgcGameVariant(result.MatchInfo.UgcGameVariant.AssetId.ToString(), result.MatchInfo.UgcGameVariant.VersionId.ToString()));
+                    var gameVariant = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.UgcDiscovery.GetUgcGameVariant(result.MatchInfo.UgcGameVariant.AssetId.ToString(), result.MatchInfo.UgcGameVariant.VersionId.ToString()));
                     if (gameVariant != null && gameVariant.Result != null && gameVariant.Response.Code == 200)
                     {
                         targetGameVariant = gameVariant.Result;
@@ -630,7 +690,7 @@ namespace OpenSpartan.Workshop.Data
 
                 if (!engineGameVariantAvailable && targetGameVariant != null)
                 {
-                    var engineGameVariant = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.HIUGCDiscoveryGetEngineGameVariant(targetGameVariant.EngineGameVariantLink.AssetId.ToString(), targetGameVariant.EngineGameVariantLink.VersionId.ToString()));
+                    var engineGameVariant = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.UgcDiscovery.GetEngineGameVariant(targetGameVariant.EngineGameVariantLink.AssetId.ToString(), targetGameVariant.EngineGameVariantLink.VersionId.ToString()));
 
                     if (engineGameVariant != null && engineGameVariant.Result != null && engineGameVariant.Response.Code == 200)
                     {
@@ -850,29 +910,41 @@ namespace OpenSpartan.Workshop.Data
 
                 var commandText = GetQuery("Insert", "OwnedInventoryItems");
 
-                foreach (var item in result.Items)
+                // Use transaction for batched inserts (100 items = 100x fewer transactions)
+                using var transaction = connection.BeginTransaction();
+                try
                 {
-                    using var command = connection.CreateCommand();
-                    command.CommandText = commandText;
-                    command.Parameters.AddWithValue("$Amount", item.Amount);
-                    command.Parameters.AddWithValue("$ItemId", item.ItemId);
-                    command.Parameters.AddWithValue("$ItemPath", item.ItemPath);
-                    command.Parameters.AddWithValue("$ItemType", item.ItemType);
-                    command.Parameters.AddWithValue("$FirstAcquiredDate", item.FirstAcquiredDate.ISO8601Date);
-
-                    var rowsAffected = await command.ExecuteNonQueryAsync();
-
-                    if (rowsAffected > 0)
+                    foreach (var item in result.Items)
                     {
-                        LogEngine.Log($"Stored owned inventory item {item.ItemId}.");
+                        using var command = connection.CreateCommand();
+                        command.Transaction = transaction;
+                        command.CommandText = commandText;
+                        command.Parameters.AddWithValue("$Amount", item.Amount);
+                        command.Parameters.AddWithValue("$ItemId", item.ItemId);
+                        command.Parameters.AddWithValue("$ItemPath", item.ItemPath);
+                        command.Parameters.AddWithValue("$ItemType", item.ItemType);
+                        command.Parameters.AddWithValue("$FirstAcquiredDate", item.FirstAcquiredDate.ISO8601Date);
+
+                        var rowsAffected = await command.ExecuteNonQueryAsync();
+
+                        if (rowsAffected > 0)
+                        {
+                            LogEngine.Log($"Stored owned inventory item {item.ItemId}.");
+                        }
+                        else
+                        {
+                            LogEngine.Log($"Could not store owned inventory item {item.ItemId}.", LogSeverity.Error);
+                        }
                     }
-                    else
-                    {
-                        LogEngine.Log($"Could not store owned inventory item {item.ItemId}.", LogSeverity.Error);
-                    }
+
+                    transaction.Commit();
+                    return true;
                 }
-
-                return true;
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
             }
             catch (Exception ex)
             {

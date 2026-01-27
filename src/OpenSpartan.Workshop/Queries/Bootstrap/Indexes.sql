@@ -21,3 +21,6 @@ ON Playlists (AssetId, VersionId);
 
 CREATE UNIQUE INDEX IF NOT EXISTS IDX_PLAYLIST_MAP_MODE_PAIRS
 ON PlaylistMapModePairs (AssetId, VersionId);
+
+CREATE INDEX IF NOT EXISTS IDX_PLAYER_MATCH_STATS_MATCH_ID
+ON PlayerMatchStats(MatchId);
