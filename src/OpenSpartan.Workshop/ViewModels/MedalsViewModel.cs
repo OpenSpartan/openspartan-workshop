@@ -16,11 +16,11 @@ namespace OpenSpartan.Workshop.ViewModels
             NavigateCommand = new RelayCommand<long>(NavigateToAnotherView);
         }
 
-        private ObservableCollection<IGrouping<int, Medal>> _medals;
+        private ObservableCollection<IGrouping<int, Medal>> _medals = [];
 
         public RelayCommand<long> NavigateCommand { get; }
 
-        public event EventHandler<long> NavigationRequested;
+        public event EventHandler<long>? NavigationRequested;
 
         public ObservableCollection<IGrouping<int, Medal>> Medals
         {

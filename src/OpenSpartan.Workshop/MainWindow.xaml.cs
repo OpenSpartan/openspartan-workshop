@@ -81,8 +81,11 @@ namespace OpenSpartan.Workshop
             }
             else if (args.InvokedItemContainer?.Tag is string typeName)
             {
-                Type navPageType = Type.GetType(typeName);
-                NavView_Navigate(navPageType, args.RecommendedNavigationTransitionInfo);
+                Type? navPageType = Type.GetType(typeName);
+                if (navPageType != null)
+                {
+                    NavView_Navigate(navPageType, args.RecommendedNavigationTransitionInfo);
+                }
             }
         }
 

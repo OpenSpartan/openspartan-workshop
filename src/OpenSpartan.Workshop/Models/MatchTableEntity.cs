@@ -6,13 +6,13 @@ namespace OpenSpartan.Workshop.Models
 {
     internal sealed class MatchTableEntity
     {
-        public string MatchId { get; set; }
+        public string MatchId { get; set; } = string.Empty;
 
         public DateTimeOffset StartTime { get; set; }
 
         public DateTimeOffset EndTime { get; set; }
 
-        public List<Team> Teams { get; set; }
+        public List<Team> Teams { get; set; } = [];
 
         public TimeSpan Duration { get; set; }
 
@@ -22,17 +22,17 @@ namespace OpenSpartan.Workshop.Models
 
         public GameVariantCategory Category { get; set; }
 
-        public string Map { get; set; }
+        public string Map { get; set; } = string.Empty;
 
-        public string Playlist { get; set; }
+        public string Playlist { get; set; } = string.Empty;
 
-        public string GameVariant { get; set; }
+        public string GameVariant { get; set; } = string.Empty;
 
         public int? LastTeamId { get; set; }
 
-        public ParticipationInfo ParticipationInfo { get; set; }
+        public ParticipationInfo? ParticipationInfo { get; set; }
 
-        public List<PlayerTeamStat> PlayerTeamStats { get; set; }
+        public List<PlayerTeamStat> PlayerTeamStats { get; set; } = [];
 
         public float? TeamMmr { get; set; }
 
@@ -102,10 +102,11 @@ namespace OpenSpartan.Workshop.Models
                 {
                     return $"unranked_{InitialMeasurementMatches - MeasurementMatchesRemaining}";
                 }
-                else
+                else if (!string.IsNullOrEmpty(NextTier) && NextTierLevel.HasValue)
                 {
                     return $"{NextTier}_{NextTierLevel + 1}";
                 }
+                return null;
             }
         }
 
@@ -117,10 +118,11 @@ namespace OpenSpartan.Workshop.Models
                 {
                     return $"unranked_{InitialMeasurementMatches - MeasurementMatchesRemaining}";
                 }
-                else
+                else if (!string.IsNullOrEmpty(Tier) && TierLevel.HasValue)
                 {
                     return $"{Tier}_{TierLevel + 1}";
                 }
+                return null;
             }
         }
 
@@ -144,9 +146,13 @@ namespace OpenSpartan.Workshop.Models
         {
             get
             {
-                return ExpectedKills == PlayerTeamStats[0].Stats.CoreStats.Kills
+                var coreStats = PlayerTeamStats.Count > 0 ? PlayerTeamStats[0].Stats?.CoreStats : null;
+                if (coreStats == null)
+                    return null;
+
+                return ExpectedKills == coreStats.Kills
                     ? PerformanceMeasure.MetExpectations
-                    : (ExpectedKills > PlayerTeamStats[0].Stats.CoreStats.Kills ? PerformanceMeasure.Underperformed : PerformanceMeasure.Outperformed);
+                    : (ExpectedKills > coreStats.Kills ? PerformanceMeasure.Underperformed : PerformanceMeasure.Outperformed);
             }
         }
 
@@ -154,9 +160,13 @@ namespace OpenSpartan.Workshop.Models
         {
             get
             {
-                return ExpectedDeaths == PlayerTeamStats[0].Stats.CoreStats.Deaths
+                var coreStats = PlayerTeamStats.Count > 0 ? PlayerTeamStats[0].Stats?.CoreStats : null;
+                if (coreStats == null)
+                    return null;
+
+                return ExpectedDeaths == coreStats.Deaths
                     ? PerformanceMeasure.MetExpectations
-                    : (ExpectedDeaths > PlayerTeamStats[0].Stats.CoreStats.Deaths ? PerformanceMeasure.Outperformed : PerformanceMeasure.Underperformed);
+                    : (ExpectedDeaths > coreStats.Deaths ? PerformanceMeasure.Outperformed : PerformanceMeasure.Underperformed);
             }
         }
 

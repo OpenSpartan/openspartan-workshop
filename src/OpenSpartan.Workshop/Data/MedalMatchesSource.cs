@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace OpenSpartan.Workshop.Data
 {
-    public class MedalMatchesSource : IIncrementalSource<MatchTableEntity>
+    public sealed class MedalMatchesSource : IIncrementalSource<MatchTableEntity>
     {
         public MedalMatchesSource()
         {

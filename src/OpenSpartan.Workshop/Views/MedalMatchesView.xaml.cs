@@ -24,7 +24,7 @@ namespace OpenSpartan.Workshop.Views
             ((MedalMatchesViewModel)this.DataContext).NavigationRequested += MedalMatchesView_NavigationRequested;
         }
 
-        private void MedalMatchesView_NavigationRequested(object sender, long e)
+        private void MedalMatchesView_NavigationRequested(object? sender, long e)
         {
             // Once navigation starts, it's safe to assume that the match loading begins, so
             // we want to make sure that the infobar is properly displayed once the view is rendered.
@@ -42,8 +42,8 @@ namespace OpenSpartan.Workshop.Views
                 // Access the parameter using QueryParameter
                 if (e.Parameter != null && e.Parameter is long parameter)
                 {
-                    await Task.Run(() => {
-                        UserContextManager.DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    await Task.Run(async () => {
+                        await UserContextManager.DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                         {
                             MedalMatchesViewModel.Instance.Medal = MedalsViewModel.Instance.Medals
                             .SelectMany(group => group)

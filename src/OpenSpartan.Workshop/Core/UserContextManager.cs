@@ -383,7 +383,7 @@ namespace OpenSpartan.Workshop.Core
             file.Directory.Create();
         }
 
-        private static async Task DownloadAndSetImage(string serviceImagePath, string localImagePath, Action setImageAction = null, bool isOnWaypoint = false)
+        private static async Task DownloadAndSetImage(string serviceImagePath, string localImagePath, Action? setImageAction = null, bool isOnWaypoint = false)
         {
             try
             {
@@ -1364,7 +1364,7 @@ namespace OpenSpartan.Workshop.Core
             }
         }
 
-        internal static List<Medal>? EnrichMedalMetadata(List<Medal> medals, [CallerMemberName] string caller = null)
+        internal static List<Medal>? EnrichMedalMetadata(List<Medal> medals, [CallerMemberName] string? caller = null)
         {
             try
             {

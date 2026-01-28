@@ -6,7 +6,7 @@ namespace OpenSpartan.Workshop.Core
 {
     internal static class UserInterface
     {
-        internal static T FindChildElement<T>(DependencyObject parent) where T : FrameworkElement
+        internal static T? FindChildElement<T>(DependencyObject? parent) where T : FrameworkElement
         {
             if (parent == null)
                 return null;
@@ -21,7 +21,7 @@ namespace OpenSpartan.Workshop.Core
                     return typedChild;
                 }
 
-                T result = FindChildElement<T>(child);
+                T? result = FindChildElement<T>(child);
                 if (result != null)
                     return result;
             }
@@ -29,9 +29,9 @@ namespace OpenSpartan.Workshop.Core
             return null;
         }
 
-        internal static T FindParentElement<T>(DependencyObject childElement) where T : FrameworkElement
+        internal static T? FindParentElement<T>(DependencyObject? childElement) where T : FrameworkElement
         {
-            DependencyObject currentElement = childElement;
+            DependencyObject? currentElement = childElement;
 
             while (currentElement != null)
             {

@@ -2,7 +2,7 @@
 
 namespace OpenSpartan.Workshop.Core
 {
-    internal class ColorConverter
+    internal static class ColorConverter
     {
         /// <summary>
         /// Parses a hex color string and returns a Color.

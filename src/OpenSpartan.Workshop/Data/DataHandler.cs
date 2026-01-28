@@ -32,7 +32,7 @@ namespace OpenSpartan.Workshop.Data
             },
         };
 
-        internal static string SetWALJournalingMode()
+        internal static string? SetWALJournalingMode()
         {
             try
             {
@@ -94,7 +94,7 @@ namespace OpenSpartan.Workshop.Data
         private static void EnsureDatabaseDirectoryExists()
         {
             FileInfo file = new(DatabasePath);
-            file.Directory.Create();
+            file.Directory?.Create();
         }
 
         private static void BootstrapTableIfNotExists(SqliteConnection connection, string tableName)
@@ -199,7 +199,7 @@ namespace OpenSpartan.Workshop.Data
             }
         }
 
-        internal static RewardTrackMetadata GetOperationResponseBody(string operationPath)
+        internal static RewardTrackMetadata? GetOperationResponseBody(string operationPath)
         {
             try
             {
@@ -300,7 +300,11 @@ namespace OpenSpartan.Workshop.Data
 
                     if (matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals != null && matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals.Count > 0)
                     {
-                        matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals = UserContextManager.EnrichMedalMetadata(matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals);
+                        var enrichedMedals = UserContextManager.EnrichMedalMetadata(matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals);
+                        if (enrichedMedals != null)
+                        {
+                            matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals = enrichedMedals;
+                        }
                     }
 
                     matches.Add(matchEntry);
@@ -360,7 +364,11 @@ namespace OpenSpartan.Workshop.Data
 
                     if (matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals != null && matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals.Count > 0)
                     {
-                        matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals = UserContextManager.EnrichMedalMetadata(matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals);
+                        var enrichedMedals = UserContextManager.EnrichMedalMetadata(matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals);
+                        if (enrichedMedals != null)
+                        {
+                            matchEntry.PlayerTeamStats[0].Stats.CoreStats.Medals = enrichedMedals;
+                        }
                     }
 
                     matches.Add(matchEntry);

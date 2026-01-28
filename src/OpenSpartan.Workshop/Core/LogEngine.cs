@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.Core
 {
-    internal class LogEngine
+    internal static class LogEngine
     {
         private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 

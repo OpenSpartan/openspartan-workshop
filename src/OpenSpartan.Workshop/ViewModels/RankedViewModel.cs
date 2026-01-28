@@ -5,16 +5,15 @@ using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.ViewModels
 {
-    internal class RankedViewModel : Observable
+    internal sealed class RankedViewModel : Observable
     {
         private MetadataLoadingState _rankedLoadingState;
-        private ObservableCollection<PlaylistCSRSnapshot> _playlists;
+        private ObservableCollection<PlaylistCSRSnapshot> _playlists = [];
 
         public static RankedViewModel Instance { get; } = new RankedViewModel();
 
-        public RankedViewModel()
+        private RankedViewModel()
         {
-            Playlists = [];
         }
 
         public ObservableCollection<PlaylistCSRSnapshot> Playlists
@@ -43,7 +42,7 @@ namespace OpenSpartan.Workshop.ViewModels
             }
         }
 
-        public void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
+        public void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             OnPropertyChanged(propertyName);
         }

@@ -7,13 +7,13 @@ namespace OpenSpartan.Workshop.Models
     {
         public bool IsFree { get; set; }
 
-        public Tuple<int, int> Ranks { get; set; }  
+        public Tuple<int, int>? Ranks { get; set; }
 
-        public InGameItem ItemDetails { get; set; }
+        public InGameItem? ItemDetails { get; set; }
 
-        public CurrencyDefinition CurrencyDetails {  get; set; }
+        public CurrencyDefinition? CurrencyDetails {  get; set; }
 
-        public string ImagePath { get; set; }
+        public string ImagePath { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the numeric value associated with the currency
@@ -23,8 +23,8 @@ namespace OpenSpartan.Workshop.Models
 
         public ItemClass Type { get; set; }
 
-        public string ItemType { get; set; }
+        public string ItemType { get; set; } = string.Empty;
 
-        public string ItemPath { get; set; }
+        public string ItemPath { get; set; } = string.Empty;
     }
 }

@@ -8,14 +8,17 @@ namespace OpenSpartan.Workshop.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value is string targetPath)
+            if (value is string targetPath && !string.IsNullOrEmpty(targetPath))
             {
                 // Normalize the targetPath by removing leading directory separators
                 targetPath = targetPath.TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
                 // Construct the local path
                 var localPath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", targetPath);
-                return localPath;
+                if (File.Exists(localPath))
+                {
+                    return localPath;
+                }
             }
 
             return string.Empty;

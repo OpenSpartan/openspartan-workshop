@@ -5,7 +5,7 @@ using System;
 
 namespace OpenSpartan.Workshop.Converters
 {
-    internal class RewardTypeToVisibilityConverter : IValueConverter
+    internal sealed class RewardTypeToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

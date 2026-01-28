@@ -7,23 +7,21 @@ namespace OpenSpartan.Workshop.Models
 {
     internal sealed class WorkshopSettings : Observable
     {
-        private string _release;
+        private string _release = string.Empty;
         private bool _syncSettings;
         private bool _enableLogging;
-        private string _apiVersion;
-        private string _headerImagePath;
+        private string _apiVersion = string.Empty;
+        private string _headerImagePath = string.Empty;
         private bool _useBroker;
-        private string _sandbox;
-        private string _build;
+        private string _sandbox = string.Empty;
+        private string _build = string.Empty;
         private bool _useObanClearance;
         private bool _enableLooseMatchSearch;
-        private List<string> _extraRitualEvents;
-        private List<string> _excludedOperations;
+        private List<string> _extraRitualEvents = [];
+        private List<string> _excludedOperations = [];
 
         public WorkshopSettings()
         {
-            ExcludedOperations = [];
-            ExtraRitualEvents = [];
         }
 
         [JsonPropertyName("release")]
@@ -194,7 +192,7 @@ namespace OpenSpartan.Workshop.Models
             }
         }
 
-        public void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
+        public void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             OnPropertyChanged(propertyName);
         }

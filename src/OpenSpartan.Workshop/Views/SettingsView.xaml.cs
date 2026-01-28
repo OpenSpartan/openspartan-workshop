@@ -45,13 +45,13 @@ namespace OpenSpartan.Workshop.Views
                         SplashScreenViewModel.Instance.IsBlocking = true;
 
                         // Reset the player details.
-                        HomeViewModel.Instance.Xuid = null;
-                        HomeViewModel.Instance.Gamertag = null;
+                        HomeViewModel.Instance.Xuid = string.Empty;
+                        HomeViewModel.Instance.Gamertag = string.Empty;
 
                         // Clear out the user's previous data.
-                        BattlePassViewModel.Instance.BattlePasses = null;
-                        MatchesViewModel.Instance.MatchList = null;
-                        MedalsViewModel.Instance.Medals = null;
+                        BattlePassViewModel.Instance.BattlePasses.Clear();
+                        MatchesViewModel.Instance.MatchList.Clear();
+                        MedalsViewModel.Instance.Medals.Clear();
                     });
 
                     var authResult = await UserContextManager.InitializeAllDataOnLaunch();

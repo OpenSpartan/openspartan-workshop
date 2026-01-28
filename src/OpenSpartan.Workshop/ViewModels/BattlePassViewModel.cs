@@ -8,18 +8,16 @@ namespace OpenSpartan.Workshop.ViewModels
     internal sealed class BattlePassViewModel : Observable
     {
         private MetadataLoadingState _battlePassLoadingState;
-        private string _battlePassLoadingParameter;
-        private string _currentlySelectedBattlePass;
-        private string _currentlySelectedEvent;
-        private ObservableCollection<OperationCompoundModel> _battlePasses;
-        private ObservableCollection<OperationCompoundModel> _events;
+        private string _battlePassLoadingParameter = string.Empty;
+        private string _currentlySelectedBattlePass = string.Empty;
+        private string _currentlySelectedEvent = string.Empty;
+        private ObservableCollection<OperationCompoundModel> _battlePasses = [];
+        private ObservableCollection<OperationCompoundModel> _events = [];
 
         public static BattlePassViewModel Instance { get; } = new BattlePassViewModel();
 
         private BattlePassViewModel()
         {
-            BattlePasses = [];
-            Events = [];
         }
 
         public ObservableCollection<OperationCompoundModel> BattlePasses
@@ -116,7 +114,7 @@ namespace OpenSpartan.Workshop.ViewModels
             }
         }
 
-        public void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
+        public void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             OnPropertyChanged(propertyName);
         }

@@ -4,7 +4,7 @@ using System;
 
 namespace OpenSpartan.Workshop.Converters
 {
-    internal class RewardTypeToStringConverter : IValueConverter
+    internal sealed class RewardTypeToStringConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -24,7 +24,7 @@ namespace OpenSpartan.Workshop.Converters
                         return "Challenge Swap";
                     case ItemClass.StandardReward:
                     default:
-                        return type.ItemDetails.CommonData.Title.Value;
+                        return type.ItemDetails?.CommonData?.Title?.Value ?? string.Empty;
                 }
             }
 
