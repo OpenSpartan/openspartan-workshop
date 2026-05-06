@@ -10,19 +10,17 @@ namespace OpenSpartan.Workshop.ViewModels
     internal sealed class MatchesViewModel : Observable
     {
         private MetadataLoadingState _matchLoadingState;
-        private string _matchLoadingParameter;
-        private IncrementalLoadingCollection<MatchesSource, MatchTableEntity> _matchList;
+        private string _matchLoadingParameter = "0";
+        private IncrementalLoadingCollection<MatchesSource, MatchTableEntity> _matchList = [];
 
         public static MatchesViewModel Instance { get; } = new MatchesViewModel();
 
         public RelayCommand<long> NavigateCommand { get; }
 
-        public event EventHandler<long> NavigationRequested;
+        public event EventHandler<long>? NavigationRequested;
 
         private MatchesViewModel()
         {
-            MatchLoadingParameter = "0";
-            MatchList = [];
             NavigateCommand = new RelayCommand<long>(NavigateToAnotherView);
         }
 

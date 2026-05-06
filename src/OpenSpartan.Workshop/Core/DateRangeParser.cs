@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace OpenSpartan.Workshop.Core
 {
-    internal class DateRangeParser
+    internal static class DateRangeParser
     {
         internal static List<Tuple<DateTime, DateTime>> ExtractDateRanges(string input)
         {

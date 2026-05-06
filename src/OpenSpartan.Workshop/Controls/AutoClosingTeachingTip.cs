@@ -3,9 +3,9 @@ using System;
 
 namespace OpenSpartan.Workshop.Controls
 {
-    public class AutoClosingTeachingTip : Microsoft.UI.Xaml.Controls.TeachingTip
+    public sealed class AutoClosingTeachingTip : Microsoft.UI.Xaml.Controls.TeachingTip
     {
-        private DispatcherTimer _timer;
+        private DispatcherTimer? _timer;
         private long _token;
 
         public AutoClosingTeachingTip() : base()
@@ -72,7 +72,7 @@ namespace OpenSpartan.Workshop.Controls
             _timer.Tick -= Timer_Tick;
         }
 
-        private void Timer_Tick(object sender, object e)
+        private void Timer_Tick(object? sender, object e)
         {
             this.IsOpen = false;
         }

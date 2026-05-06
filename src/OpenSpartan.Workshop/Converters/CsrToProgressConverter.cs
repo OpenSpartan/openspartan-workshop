@@ -4,12 +4,17 @@ using System;
 
 namespace OpenSpartan.Workshop.Converters
 {
-    internal class CsrToProgressConverter : IValueConverter
+    internal sealed class CsrToProgressConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, string language) =>
-            value is Csr currentCsr && currentCsr.Value > -1
-                ? (double)(currentCsr.Value - currentCsr.TierStart) / (currentCsr.NextTierStart - currentCsr.TierStart)
-                : (double)0;
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value is Csr currentCsr && currentCsr.Value > -1 &&
+                currentCsr.TierStart.HasValue && currentCsr.NextTierStart.HasValue)
+            {
+                return (double)(currentCsr.Value - currentCsr.TierStart.Value) / (currentCsr.NextTierStart.Value - currentCsr.TierStart.Value);
+            }
+            return (double)0;
+        }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language) =>
             throw new NotImplementedException();

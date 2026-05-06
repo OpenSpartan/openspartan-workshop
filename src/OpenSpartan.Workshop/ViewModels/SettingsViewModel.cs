@@ -182,9 +182,9 @@ namespace OpenSpartan.Workshop.ViewModels
             get => $"{Configuration.Version}-{Configuration.BuildId}";
         }
 
-        private WorkshopSettings _settings;
+        private WorkshopSettings _settings = new();
 
-        public void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
+        public void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             OnPropertyChanged(propertyName);
         }

@@ -8,12 +8,17 @@ namespace OpenSpartan.Workshop.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value is string rankIdentifier)
+            if (value is string rankIdentifier && !string.IsNullOrEmpty(rankIdentifier))
             {
-                return Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", "csr", $"{rankIdentifier}.png");
+                var imagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", "csr", $"{rankIdentifier}.png");
+                if (File.Exists(imagePath))
+                {
+                    return imagePath;
+                }
             }
 
-            return null;
+            // Return empty string instead of null - Image controls handle this better
+            return string.Empty;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

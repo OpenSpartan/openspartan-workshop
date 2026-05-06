@@ -6,17 +6,16 @@ using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.ViewModels
 {
-    internal class ExchangeViewModel : Observable
+    internal sealed class ExchangeViewModel : Observable
     {
-        private APIFormattedDate _expirationDate;
+        private APIFormattedDate? _expirationDate;
         private MetadataLoadingState _exchangeLoadingState;
-        private ObservableCollection<ItemMetadataContainer> _exchangeItems;
+        private ObservableCollection<ItemMetadataContainer> _exchangeItems = [];
 
         public static ExchangeViewModel Instance { get; } = new ExchangeViewModel();
 
-        public ExchangeViewModel()
+        private ExchangeViewModel()
         {
-            ExchangeItems = [];
         }
 
         public ObservableCollection<ItemMetadataContainer> ExchangeItems
@@ -32,7 +31,7 @@ namespace OpenSpartan.Workshop.ViewModels
             }
         }
 
-        public APIFormattedDate ExpirationDate
+        public APIFormattedDate? ExpirationDate
         {
             get => _expirationDate;
             set
@@ -58,7 +57,7 @@ namespace OpenSpartan.Workshop.ViewModels
             }
         }
 
-        public void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
+        public void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             OnPropertyChanged(propertyName);
         }

@@ -45,9 +45,13 @@ namespace OpenSpartan.Workshop
                 // Make sure that we default logging to true prior to settings
                 // being loaded so that we can capture any errors that might be
                 // happening with settings initialization.
-                SettingsViewModel.Instance.Settings = SettingsManager.LoadSettings();
+                var loadedSettings = SettingsManager.LoadSettings();
+                if (loadedSettings != null)
+                {
+                    SettingsViewModel.Instance.Settings = loadedSettings;
+                }
 
-                if ((bool)SettingsViewModel.Instance.Settings.SyncSettings)
+                if (SettingsViewModel.Instance.Settings.SyncSettings)
                 {
                     try
                     {
@@ -90,6 +94,6 @@ namespace OpenSpartan.Workshop
             }
         }
 
-        internal Window m_window;
+        internal Window m_window = null!;
     }
 }

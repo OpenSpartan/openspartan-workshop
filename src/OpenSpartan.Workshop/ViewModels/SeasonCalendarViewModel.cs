@@ -5,16 +5,15 @@ using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.ViewModels
 {
-    internal class SeasonCalendarViewModel : Observable
+    internal sealed class SeasonCalendarViewModel : Observable
     {
         private MetadataLoadingState _calendarLoadingState;
-        private ObservableCollection<SeasonCalendarViewDayItem> _seasonDays;
+        private ObservableCollection<SeasonCalendarViewDayItem> _seasonDays = [];
 
         public static SeasonCalendarViewModel Instance { get; } = new SeasonCalendarViewModel();
 
         private SeasonCalendarViewModel()
         {
-            SeasonDays = [];
         }
 
         public MetadataLoadingState CalendarLoadingState
@@ -43,7 +42,7 @@ namespace OpenSpartan.Workshop.ViewModels
             }
         }
 
-        public void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
+        public void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             OnPropertyChanged(propertyName);
         }

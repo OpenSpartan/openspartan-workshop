@@ -5,19 +5,18 @@ using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.Models
 {
-    public class SeasonCalendarViewDayItem: Observable
+    public sealed class SeasonCalendarViewDayItem: Observable
     {
         public SeasonCalendarViewDayItem()
         {
-            RegularSeasonText = string.Empty;
         }
 
         private DateTime _dateTime;
-        private string _csrSeasonText;
-        private SolidColorBrush _csrSeasonMarkerColor;
-        private string _regularSeasonText;
-        private SolidColorBrush _regularSeasonMarkerColor;
-        private string _backgroundImagePath;
+        private string _csrSeasonText = string.Empty;
+        private SolidColorBrush? _csrSeasonMarkerColor;
+        private string _regularSeasonText = string.Empty;
+        private SolidColorBrush? _regularSeasonMarkerColor;
+        private string _backgroundImagePath = string.Empty;
 
         public DateTime DateTime
         {
@@ -45,7 +44,7 @@ namespace OpenSpartan.Workshop.Models
             }
         }
 
-        public SolidColorBrush CSRSeasonMarkerColor
+        public SolidColorBrush? CSRSeasonMarkerColor
         {
             get => _csrSeasonMarkerColor;
             set
@@ -71,7 +70,7 @@ namespace OpenSpartan.Workshop.Models
             }
         }
 
-        public SolidColorBrush RegularSeasonMarkerColor
+        public SolidColorBrush? RegularSeasonMarkerColor
         {
             get => _regularSeasonMarkerColor;
             set
@@ -97,7 +96,7 @@ namespace OpenSpartan.Workshop.Models
             }
         }
 
-        public void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
+        public void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             OnPropertyChanged(propertyName);
         }

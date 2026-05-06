@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.ViewModels
 {
-    internal class MedalMatchesViewModel : Observable, IDisposable
+    internal sealed class MedalMatchesViewModel : Observable, IDisposable
     {
         public static MedalMatchesViewModel? Instance { get; } = new MedalMatchesViewModel();
 
@@ -20,7 +20,7 @@ namespace OpenSpartan.Workshop.ViewModels
 
         public event EventHandler<long>? NavigationRequested;
 
-        public MedalMatchesViewModel()
+        private MedalMatchesViewModel()
         {
             MatchList = [];
             NavigateCommand = new RelayCommand<long>(NavigateToAnotherView);
@@ -90,7 +90,7 @@ namespace OpenSpartan.Workshop.ViewModels
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (disposing)
             {

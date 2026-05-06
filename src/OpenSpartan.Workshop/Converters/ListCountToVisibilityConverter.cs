@@ -5,7 +5,7 @@ using System.Collections;
 
 namespace OpenSpartan.Workshop.Converters
 {
-    internal class ListCountToVisibilityConverter : IValueConverter
+    internal sealed class ListCountToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

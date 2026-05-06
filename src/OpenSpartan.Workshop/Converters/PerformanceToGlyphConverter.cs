@@ -16,7 +16,7 @@ namespace OpenSpartan.Workshop.Converters
 
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value is PerformanceMeasure performance && performanceGlyphMap.TryGetValue(performance, out string glyph))
+            if (value is PerformanceMeasure performance && performanceGlyphMap.TryGetValue(performance, out var glyph))
             {
                 return glyph;
             }

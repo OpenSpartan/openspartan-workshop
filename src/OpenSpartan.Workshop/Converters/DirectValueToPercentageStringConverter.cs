@@ -4,7 +4,7 @@ using System.Globalization;
 
 namespace OpenSpartan.Workshop.Converters
 {
-    internal class DirectValueToPercentageStringConverter : IValueConverter
+    internal sealed class DirectValueToPercentageStringConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

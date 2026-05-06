@@ -12,22 +12,22 @@ namespace OpenSpartan.Workshop.ViewModels
 
         private HomeViewModel() { }
 
-        private string _gamerTag;
-        private string _xuid;
-        private PlayerServiceRecord _serviceRecord;
-        private RewardTrackResultContainer _careerSnapshot;
-        private string _title;
-        private string _rankImage;
-        private string _adornmentImage;
-        private string _serviceTag;
-        private string _nameplate;
-        private string _emblem;
-        private string _backdrop;
-        private string _idBadgeTextColor;
+        private string _gamerTag = string.Empty;
+        private string _xuid = string.Empty;
+        private PlayerServiceRecord? _serviceRecord;
+        private RewardTrackResultContainer? _careerSnapshot;
+        private string _title = string.Empty;
+        private string _rankImage = string.Empty;
+        private string _adornmentImage = string.Empty;
+        private string _serviceTag = string.Empty;
+        private string _nameplate = string.Empty;
+        private string _emblem = string.Empty;
+        private string _backdrop = string.Empty;
+        private string _idBadgeTextColor = string.Empty;
         private int? _currentRankExperience;
         private int? _requiredRankExperience;
         private int? _maxRank;
-        private string _seasonalBackground;
+        private string _seasonalBackground = string.Empty;
         private int? _experienceEarnedToDate;
         private int? _experienceTotalRequired;
 
@@ -57,7 +57,7 @@ namespace OpenSpartan.Workshop.ViewModels
             }
         }
 
-        public PlayerServiceRecord ServiceRecord
+        public PlayerServiceRecord? ServiceRecord
         {
             get => _serviceRecord;
             set
@@ -70,7 +70,7 @@ namespace OpenSpartan.Workshop.ViewModels
             }
         }
 
-        public RewardTrackResultContainer CareerSnapshot
+        public RewardTrackResultContainer? CareerSnapshot
         {
             get => _careerSnapshot;
             set

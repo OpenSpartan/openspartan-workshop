@@ -1,12 +1,14 @@
-﻿
-using Microsoft.UI.Xaml.Media;
-using Windows.UI;
+﻿using Windows.UI;
 
 namespace OpenSpartan.Workshop.Core
 {
-    internal class ColorConverter
+    internal static class ColorConverter
     {
-        public static SolidColorBrush FromHex(string hex)
+        /// <summary>
+        /// Parses a hex color string and returns a Color.
+        /// Note: Returns Color instead of SolidColorBrush because brushes must be created on the UI thread.
+        /// </summary>
+        public static Color FromHex(string hex)
         {
             // Remove any leading '#' characters
             hex = hex.TrimStart('#');
@@ -23,9 +25,7 @@ namespace OpenSpartan.Workshop.Core
                 a = byte.Parse(hex.Substring(6, 2), System.Globalization.NumberStyles.HexNumber);
             }
 
-            var brush = new SolidColorBrush(Color.FromArgb(a, r, g, b));
-            // Create a SolidColorBrush from the Color
-            return brush;
+            return Color.FromArgb(a, r, g, b);
         }
     }
 }

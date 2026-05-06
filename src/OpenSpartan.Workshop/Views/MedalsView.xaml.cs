@@ -24,7 +24,7 @@ namespace OpenSpartan.Workshop.Views
             ((MedalsViewModel)this.DataContext).NavigationRequested += ViewModel_NavigationRequested;
         }
 
-        private void ViewModel_NavigationRequested(object sender, long e)
+        private void ViewModel_NavigationRequested(object? sender, long e)
         {
             // Once navigation starts, it's safe to assume that the match loading begins, so
             // we want to make sure that the infobar is properly displayed once the view is rendered.

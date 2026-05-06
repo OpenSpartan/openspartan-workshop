@@ -4,7 +4,7 @@ using System;
 
 namespace OpenSpartan.Workshop.Converters
 {
-    internal class CsrToTextRankConverter : IValueConverter
+    internal sealed class CsrToTextRankConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language) =>
             value is Csr csr && !string.IsNullOrEmpty(csr.Tier)
