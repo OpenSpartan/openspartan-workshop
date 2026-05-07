@@ -351,8 +351,8 @@ namespace OpenSpartan.Workshop.Core
                                     currentCareerStage.RankLargeIcon = "career_rank/CelebrationMoment/19_Cadet_Onyx_III.png";
                                 }
 
-                                string qualifiedRankImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankLargeIcon);
-                                string qualifiedAdornmentImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", currentCareerStage.RankAdornmentIcon);
+                                string qualifiedRankImagePath = ImageCachePath.For(currentCareerStage.RankLargeIcon);
+                                string qualifiedAdornmentImagePath = ImageCachePath.For(currentCareerStage.RankAdornmentIcon);
 
                                 EnsureDirectoryExists(qualifiedRankImagePath);
                                 EnsureDirectoryExists(qualifiedAdornmentImagePath);
@@ -535,7 +535,7 @@ namespace OpenSpartan.Workshop.Core
             try
             {
                 string backgroundPath = SettingsViewModel.Instance.Settings.HeaderImagePath;
-                string cachedImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", backgroundPath);
+                string cachedImagePath = ImageCachePath.For(backgroundPath);
 
                 await DownloadAndSetImage(backgroundPath, cachedImagePath);
 
@@ -590,9 +590,9 @@ namespace OpenSpartan.Workshop.Core
                         HomeViewModel.Instance.IDBadgeTextColor = nameplate.TextColor;
                     });
 
-                    string qualifiedNameplateImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", nameplate.NameplateCmsPath);
-                    string qualifiedEmblemImagePath = Path.Combine(Configuration.AppDataDirectory, "imagecache", nameplate.EmblemCmsPath);
-                    string qualifiedBackdropImagePath = backdrop?.Result != null ? Path.Combine(Configuration.AppDataDirectory, "imagecache", backdrop.Result.ImagePath.Media.MediaUrl.Path) : string.Empty;
+                    string qualifiedNameplateImagePath = ImageCachePath.For(nameplate.NameplateCmsPath);
+                    string qualifiedEmblemImagePath = ImageCachePath.For(nameplate.EmblemCmsPath);
+                    string qualifiedBackdropImagePath = backdrop?.Result != null ? ImageCachePath.For(backdrop.Result.ImagePath.Media.MediaUrl.Path) : string.Empty;
 
                     FileInfo file = new(qualifiedNameplateImagePath); file.Directory.Create();
                     file = new(qualifiedEmblemImagePath); file.Directory.Create();
@@ -1689,7 +1689,7 @@ namespace OpenSpartan.Workshop.Core
                         compoundEvent.RewardTrackMetadata.SummaryImagePath += ".png";
                     }
 
-                    await DownloadAndSetImage(compoundEvent.RewardTrackMetadata.SummaryImagePath, Path.Combine(Configuration.AppDataDirectory, "imagecache", compoundEvent.RewardTrackMetadata.SummaryImagePath)).ConfigureAwait(false);
+                    await DownloadAndSetImage(compoundEvent.RewardTrackMetadata.SummaryImagePath, ImageCachePath.For(compoundEvent.RewardTrackMetadata.SummaryImagePath)).ConfigureAwait(false);
                 }
 
                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.Events.Add(compoundEvent));
@@ -1765,15 +1765,15 @@ namespace OpenSpartan.Workshop.Core
                     var r = result.Result;
                     // Queue up parallel image download tasks (all 9 images download in parallel)
                     downloadTasks.Add(Task.WhenAll(
-                        DownloadAndSetImage(r.SummaryBackgroundPath, Path.Combine(Configuration.AppDataDirectory, "imagecache", r.SummaryBackgroundPath)),
-                        DownloadAndSetImage(r.BattlePassSeasonUpsellBackgroundImage, Path.Combine(Configuration.AppDataDirectory, "imagecache", r.BattlePassSeasonUpsellBackgroundImage)),
-                        DownloadAndSetImage(r.ChallengesBackgroundPath, Path.Combine(Configuration.AppDataDirectory, "imagecache", r.ChallengesBackgroundPath)),
-                        DownloadAndSetImage(r.BattlePassLogoImage, Path.Combine(Configuration.AppDataDirectory, "imagecache", r.BattlePassLogoImage)),
-                        DownloadAndSetImage(r.SeasonLogoImage, Path.Combine(Configuration.AppDataDirectory, "imagecache", r.SeasonLogoImage)),
-                        DownloadAndSetImage(r.RitualLogoImage, Path.Combine(Configuration.AppDataDirectory, "imagecache", r.RitualLogoImage)),
-                        DownloadAndSetImage(r.StorefrontBackgroundImage, Path.Combine(Configuration.AppDataDirectory, "imagecache", r.StorefrontBackgroundImage)),
-                        DownloadAndSetImage(r.CardBackgroundImage, Path.Combine(Configuration.AppDataDirectory, "imagecache", r.CardBackgroundImage)),
-                        DownloadAndSetImage(r.ProgressionBackgroundImage, Path.Combine(Configuration.AppDataDirectory, "imagecache", r.ProgressionBackgroundImage))
+                        DownloadAndSetImage(r.SummaryBackgroundPath, ImageCachePath.For(r.SummaryBackgroundPath)),
+                        DownloadAndSetImage(r.BattlePassSeasonUpsellBackgroundImage, ImageCachePath.For(r.BattlePassSeasonUpsellBackgroundImage)),
+                        DownloadAndSetImage(r.ChallengesBackgroundPath, ImageCachePath.For(r.ChallengesBackgroundPath)),
+                        DownloadAndSetImage(r.BattlePassLogoImage, ImageCachePath.For(r.BattlePassLogoImage)),
+                        DownloadAndSetImage(r.SeasonLogoImage, ImageCachePath.For(r.SeasonLogoImage)),
+                        DownloadAndSetImage(r.RitualLogoImage, ImageCachePath.For(r.RitualLogoImage)),
+                        DownloadAndSetImage(r.StorefrontBackgroundImage, ImageCachePath.For(r.StorefrontBackgroundImage)),
+                        DownloadAndSetImage(r.CardBackgroundImage, ImageCachePath.For(r.CardBackgroundImage)),
+                        DownloadAndSetImage(r.ProgressionBackgroundImage, ImageCachePath.For(r.ProgressionBackgroundImage))
                     ));
                 }
             }
@@ -1934,7 +1934,7 @@ namespace OpenSpartan.Workshop.Core
                     {
                         LogEngine.Log($"Trying to get local image for {container.ItemDetails.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
 
-                        await DownloadAndSetImage(container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path, Path.Combine(Configuration.AppDataDirectory, "imagecache", container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path)).ConfigureAwait(false);
+                        await DownloadAndSetImage(container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path, ImageCachePath.For(container.ItemDetails.CommonData.DisplayPath.Media.MediaUrl.Path)).ConfigureAwait(false);
                     }
                     else
                     {
@@ -1949,7 +1949,7 @@ namespace OpenSpartan.Workshop.Core
                     {
                         LogEngine.Log($"Trying to get local image for {item.Result.CommonData.Id} (entity: {inventoryReward.InventoryItemPath})");
 
-                        await DownloadAndSetImage(item.Result.CommonData.DisplayPath.Media.MediaUrl.Path, Path.Combine(Configuration.AppDataDirectory, "imagecache", item.Result.CommonData.DisplayPath.Media.MediaUrl.Path)).ConfigureAwait(false);
+                        await DownloadAndSetImage(item.Result.CommonData.DisplayPath.Media.MediaUrl.Path, ImageCachePath.For(item.Result.CommonData.DisplayPath.Media.MediaUrl.Path)).ConfigureAwait(false);
 
                         DataHandler.UpdateInventoryItems(item.Response.Message, inventoryReward.InventoryItemPath);
                         container.ItemDetails = item.Result;
