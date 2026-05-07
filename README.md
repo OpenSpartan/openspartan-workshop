@@ -21,7 +21,13 @@ The benefit of using OpenSpartan Workshop is that for any more complex analysis 
 
 You can download the application from this repository, in the **Releases** section.
 
-<a href="https://github.com/OpenSpartan/openspartan-workshop/releases/download/1.0.11/OpenSpartan.Workshop.Installer.Bundle.exe"><img alt="Download for Windows button" src="media/windows-download.gif" width="200"></a>
+Pick the installer that matches your PC's CPU architecture. If you're not sure, open Command Prompt and run `echo %PROCESSOR_ARCHITECTURE%` — the result tells you which one to grab.
+
+| Architecture | When to use it | Download |
+|---|---|---|
+| **x64** (`AMD64`) | Most desktops and laptops with Intel/AMD CPUs | [OpenSpartan.Workshop.Installer.Bundle-x64.exe](https://github.com/OpenSpartan/openspartan-workshop/releases/download/1.0.12/OpenSpartan.Workshop.Installer.Bundle-x64.exe) |
+| **ARM64** | Windows on ARM (Surface Pro X / 9 / 10, Snapdragon X Elite/Plus laptops, Copilot+ PCs) | [OpenSpartan.Workshop.Installer.Bundle-ARM64.exe](https://github.com/OpenSpartan/openspartan-workshop/releases/download/1.0.12/OpenSpartan.Workshop.Installer.Bundle-ARM64.exe) |
+| **x86** | Older 32-bit-only Windows installations (rare) | [OpenSpartan.Workshop.Installer.Bundle-x86.exe](https://github.com/OpenSpartan/openspartan-workshop/releases/download/1.0.12/OpenSpartan.Workshop.Installer.Bundle-x86.exe) |
 
 >[!IMPORTANT]
 >Requires Windows 10 (20H1 - `10.0.19041.0`) or later, [.NET Desktop Runtime 10.0+](https://dotnet.microsoft.com/download/dotnet/10.0), and the [latest Windows App SDK](https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads). Both are bundled with the installer and should install automatically as you 

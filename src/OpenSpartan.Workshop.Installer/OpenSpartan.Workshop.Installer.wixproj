@@ -1,12 +1,22 @@
-﻿<Project Sdk="WixToolset.Sdk/4.0.4">
+<Project Sdk="WixToolset.Sdk/4.0.4">
 	<ItemGroup>
 		<ProjectReference Include="..\OpenSpartan.Workshop\OpenSpartan.Workshop.csproj" />
 	</ItemGroup>
 	<PropertyGroup>
 		<TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
-		<DefineConstants>$(DefineConstants);TargetFramework=$(ApplicationFilesPath);</DefineConstants>
-		<ApplicationFilesPath>../OpenSpartan.Workshop/bin/$(Configuration)/$(TargetFramework)</ApplicationFilesPath>
-		<DefineConstants>$(DefineConstants);ApplicationFilesPath=$(ApplicationFilesPath);</DefineConstants>
+
+		<!-- Default to x64 when no platform is supplied (e.g. local `dotnet build`).
+		     Pass -p:Platform=x64|ARM64|x86 to target a specific architecture. -->
+		<HostArchitecture Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU'">x64</HostArchitecture>
+		<HostArchitecture Condition="'$(HostArchitecture)' == ''">$(Platform)</HostArchitecture>
+
+		<!-- Lowercase form for the netfx runtime check Platform attribute. -->
+		<NetFxArchitecture>$(HostArchitecture.ToLower())</NetFxArchitecture>
+
+		<!-- The Workshop project produces per-platform output under bin/<Platform>/<Configuration>/<TargetFramework>. -->
+		<ApplicationFilesPath>../OpenSpartan.Workshop/bin/$(HostArchitecture)/$(Configuration)/$(TargetFramework)</ApplicationFilesPath>
+		<DefineConstants>$(DefineConstants);ApplicationFilesPath=$(ApplicationFilesPath);HostArchitecture=$(HostArchitecture);NetFxArchitecture=$(NetFxArchitecture);</DefineConstants>
+
 		<ResourcesDirectory>Resources</ResourcesDirectory>
 		<DefineConstants>$(DefineConstants);ResourcesDirectory=$(ResourcesDirectory);</DefineConstants>
 		<ImageResourcesDirectory>$(ResourcesDirectory)/Images</ImageResourcesDirectory>

@@ -1,6 +1,19 @@
-﻿<Project Sdk="WixToolset.Sdk/4.0.4">
+<Project Sdk="WixToolset.Sdk/4.0.4">
   <PropertyGroup>
     <OutputType>Bundle</OutputType>
+
+    <!-- Default to x64 when no platform is supplied (e.g. local `dotnet build`).
+         Pass -p:Platform=x64|ARM64|x86 to target a specific architecture. -->
+    <HostArchitecture Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU'">x64</HostArchitecture>
+    <HostArchitecture Condition="'$(HostArchitecture)' == ''">$(Platform)</HostArchitecture>
+
+    <!-- Lowercase form for runtime installer file names and netfx Platform attributes. -->
+    <NetFxArchitecture>$(HostArchitecture.ToLower())</NetFxArchitecture>
+
+    <DefineConstants>$(DefineConstants);HostArchitecture=$(HostArchitecture);NetFxArchitecture=$(NetFxArchitecture);</DefineConstants>
+
+    <!-- Per-arch bundle filename so the GitHub release can publish all three side by side. -->
+    <OutputName>OpenSpartan.Workshop.Installer.Bundle-$(HostArchitecture)</OutputName>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Resources\Images\logo-icon.png" />
@@ -13,7 +26,7 @@
     <ProjectReference Include="..\OpenSpartan.Workshop.Installer\OpenSpartan.Workshop.Installer.wixproj" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Dependencies\WindowsAppRuntimeInstall-x64.exe" />
-    <None Include="Dependencies\windowsdesktop-runtime-10.0.0-win-x64.exe" />
+    <None Include="Dependencies\WindowsAppRuntimeInstall-$(NetFxArchitecture).exe" />
+    <None Include="Dependencies\windowsdesktop-runtime-10.0.0-win-$(NetFxArchitecture).exe" />
   </ItemGroup>
 </Project>
