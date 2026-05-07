@@ -1,7 +1,6 @@
 ﻿using Den.Dev.Grunt.Models.HaloInfinite;
 using OpenSpartan.Workshop.Core;
 using System;
-using System.Globalization;
 using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.ViewModels
@@ -223,7 +222,7 @@ namespace OpenSpartan.Workshop.ViewModels
                 {
                     if (CurrentRankExperience <= RequiredRankExperience)
                     {
-                        return Convert.ToDouble(CurrentRankExperience, CultureInfo.CurrentCulture) / Convert.ToDouble(RequiredRankExperience, CultureInfo.CurrentCulture);
+                        return (double)CurrentRankExperience / (double)RequiredRankExperience;
                     }
                     else
                     {
@@ -302,7 +301,7 @@ namespace OpenSpartan.Workshop.ViewModels
 
         public double? ExperienceProgress
         {
-            get => Convert.ToDouble(ExperienceEarnedToDate, CultureInfo.CurrentCulture) / Convert.ToDouble(ExperienceTotalRequired, CultureInfo.CurrentCulture);
+            get => (double?)ExperienceEarnedToDate / (double?)ExperienceTotalRequired;
         }
 
         public void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
