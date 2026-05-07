@@ -1291,16 +1291,26 @@ namespace OpenSpartan.Workshop.Core
                     }
                 }
 
-                // Single dispatcher call to process all days - create brushes on UI thread
+                // Single dispatcher call to process all days - create brushes on UI thread.
+                // Build a date-keyed lookup once so we don't pay an O(n) FirstOrDefault scan
+                // per day; with Operation Infinite extending a year of days and the calendar
+                // already accumulating hundreds of season-track entries, the previous scan
+                // pattern was O(n*m) and visibly froze the UI thread during PopulateSeasonCalendar.
                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                 {
                     var colorBrush = new SolidColorBrush(color);
+                    var seasonDays = SeasonCalendarViewModel.Instance.SeasonDays;
+
+                    var byDate = new Dictionary<DateTime, SeasonCalendarViewDayItem>(seasonDays.Count);
+                    foreach (var item in seasonDays)
+                    {
+                        byDate[item.DateTime.Date] = item;
+                    }
+
                     foreach (var day in allDays)
                     {
-                        var targetDay = SeasonCalendarViewModel.Instance.SeasonDays
-                            .FirstOrDefault(x => x.DateTime.Date == day.Date);
-
-                        if (targetDay != null)
+                        var dayKey = day.Date;
+                        if (byDate.TryGetValue(dayKey, out var targetDay))
                         {
                             targetDay.RegularSeasonText = name;
                             targetDay.RegularSeasonMarkerColor = colorBrush;
@@ -1317,7 +1327,8 @@ namespace OpenSpartan.Workshop.Core
                                 RegularSeasonMarkerColor = colorBrush,
                             };
                             ApplyBackgroundLayer(newItem, layer, backgroundPath);
-                            SeasonCalendarViewModel.Instance.SeasonDays.Add(newItem);
+                            seasonDays.Add(newItem);
+                            byDate[dayKey] = newItem;
                         }
                     }
                 });
@@ -2315,29 +2326,45 @@ namespace OpenSpartan.Workshop.Core
                     MedalsViewModel.Instance.Medals = MedalsViewModel.Instance.Medals ?? [];
                 });
 
-                // Concurrently populate all data using Task.WhenAll (properly awaits async tasks)
+                // Concurrently populate all data using Task.WhenAll (properly awaits async tasks).
+                // Pull out the populators that drive the visible Home view (header identity,
+                // career card, service-record stats) so we can hide the home loading banner as
+                // soon as their data lands, without waiting for the slower matches / battle
+                // pass / season calendar populators to also wrap up — those views own their
+                // own loading indicators and don't need to keep the Home banner up.
+                var customizationTask = PopulateCustomizationData();
+                var careerTask = PopulateCareerData();
+                var serviceRecordTask = PopulateServiceRecordData();
+
+                _ = Task.WhenAll(customizationTask, careerTask, serviceRecordTask)
+                    .ContinueWith(_ =>
+                    {
+                        DispatcherWindow.DispatcherQueue.TryEnqueue(() =>
+                        {
+                            // Don't override Failed if the catch path below already set it.
+                            if (HomeViewModel.Instance.HomeLoadingState == MetadataLoadingState.Loading)
+                            {
+                                HomeViewModel.Instance.HomeLoadingState = MetadataLoadingState.Completed;
+                            }
+                        });
+                    }, TaskScheduler.Default);
+
                 var initTasks = new List<Task>
                 {
+                    customizationTask,
+                    careerTask,
+                    serviceRecordTask,
                     PopulateMatchRecordsDataWithCompletion(),
                     PopulateBattlePassDataWithCompletion(),
-                    PopulateCareerData(),
-                    PopulateServiceRecordData(),
                     PopulateMedalData(),
                     PopulateExchangeData(),
                     PopulateCsrImages(),
                     PopulateSeasonCalendar(),
                     PopulateUserInventory(),
-                    PopulateCustomizationData(),
                     PopulateDecorationData()
                 };
 
                 await Task.WhenAll(initTasks);
-
-                // Hide the home loading banner now that every populator has wrapped up.
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                {
-                    HomeViewModel.Instance.HomeLoadingState = MetadataLoadingState.Completed;
-                });
 
                 return true;
             }
