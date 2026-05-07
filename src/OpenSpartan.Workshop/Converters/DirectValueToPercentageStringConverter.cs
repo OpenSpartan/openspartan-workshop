@@ -8,16 +8,20 @@ namespace OpenSpartan.Workshop.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value == null)
+            if (value is not IConvertible convertible)
                 return "0.00%";
 
-            if (double.TryParse(value.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out double doubleValue))
+            // Convert directly via IConvertible so numeric inputs bypass culture-sensitive
+            // string parsing — round-tripping a double through ToString() (current culture)
+            // and double.Parse(InvariantCulture) inflates values 100x on cultures whose
+            // decimal separator is `,` (en-ZA, fr-FR, de-DE, ...).
+            try
             {
+                double doubleValue = convertible.ToDouble(CultureInfo.InvariantCulture);
                 return $"{doubleValue / 100.0:P02}";
             }
-            else
+            catch (Exception ex) when (ex is FormatException or InvalidCastException or OverflowException)
             {
-                // Handle cases where value cannot be converted to double
                 return "0.00%";
             }
         }
