@@ -73,7 +73,7 @@ namespace OpenSpartan.Workshop.Core
         // very repetitive `RunOnUI(...)`
         // call shape that appears 40+ times across this file and view code-behinds.
         internal static Task RunOnUI(Action action) =>
-            RunOnUI(action);
+            DispatcherWindow.DispatcherQueue.EnqueueAsync(action);
 
         internal static HaloInfiniteClient HaloClient { get; set; }
 
