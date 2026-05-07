@@ -1614,13 +1614,23 @@ namespace OpenSpartan.Workshop.Core
                     settings.ExcludedOperations.Contains(operation.RewardTrackPath));
             }
 
-            // Let's get the data for each of the operations.
-            foreach (var operation in operations.OperationRewardTracks)
+            // Kick off ProcessOperation for every operation in parallel; await results in
+            // declaration order so viewmodel additions stay ordered. Each ProcessOperation
+            // call does network + DB + image work, so this collapses N sequential
+            // roundtrips into a single max() wall-time. The loading-parameter dispatch
+            // still fires per item so the UX text keeps updating.
+            var operationTracks = operations.OperationRewardTracks;
+            var operationTasks = operationTracks
+                .Select(op => ProcessOperation(op, seasonRewardTracks))
+                .ToList();
+
+            for (int i = 0; i < operationTasks.Count; i++)
             {
                 BattlePassLoadingCancellationTracker.Token.ThrowIfCancellationRequested();
+                var operation = operationTracks[i];
                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.BattlePassLoadingParameter = operation.RewardTrackPath);
 
-                var compoundOperation = await ProcessOperation(operation, seasonRewardTracks);
+                var compoundOperation = await operationTasks[i].ConfigureAwait(false);
                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.BattlePasses.Add(compoundOperation));
             }
 
@@ -1628,74 +1638,86 @@ namespace OpenSpartan.Workshop.Core
             // play the same event over many weeks (e.g., they would enable you to play 10 levels per week).
             // For the purposes of this experience, we can just select the distinct events based on reward
             // paths (they are are the same, regardless of which which it happ
-            foreach (var eventEntry in seasonCalendar.Events.DistinctBy(x => x.RewardTrackPath))
+            // Kick off all event-entry processing in parallel and await results in
+            // declaration order, mirroring the operations loop above. ProcessEventEntry
+            // returns null for entries that should be skipped (load failures).
+            var distinctEvents = seasonCalendar.Events.DistinctBy(x => x.RewardTrackPath).ToList();
+            var eventTasks = distinctEvents.Select(ProcessEventEntry).ToList();
+
+            for (int i = 0; i < eventTasks.Count; i++)
             {
-                // Tell the user that the operations are currently being loaded by changing the
-                // loading parameter to the reward track path.
                 BattlePassLoadingCancellationTracker.Token.ThrowIfCancellationRequested();
+                var eventEntry = distinctEvents[i];
                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.BattlePassLoadingParameter = eventEntry.RewardTrackPath);
 
-                OperationCompoundModel compoundEvent = new()
+                var compoundEvent = await eventTasks[i].ConfigureAwait(false);
+                if (compoundEvent == null)
                 {
-                    RewardTrack = new RewardTrack() { RewardTrackPath = eventEntry.RewardTrackPath }
-                };
-
-                var isRewardTrackAvailable = DataHandler.IsOperationRewardTrackAvailable(eventEntry.RewardTrackPath);
-
-                if (isRewardTrackAvailable)
-                {
-                    var eventDetails = DataHandler.GetOperationResponseBody(eventEntry.RewardTrackPath);
-                    if (eventDetails == null)
-                    {
-                        LogEngine.Log($"Could not load event details for {eventEntry.RewardTrackPath}, skipping.", LogSeverity.Warning);
-                        continue;
-                    }
-
-                    compoundEvent.RewardTrackMetadata = eventDetails;
-
-                    // We want to get the current progress for the event.
-                    var rewardTrack = await GetRewardTrackMetadata("event", compoundEvent.RewardTrackMetadata.TrackId);
-
-                    // For events, there is no "Current Progress" indicator the same way we have it for operations, so
-                    // we're using a dummy value of -1.
-                    compoundEvent.Rewards = new(await GetFlattenedRewards(eventDetails.Ranks, (rewardTrack?.CurrentProgress?.Rank ?? -1)));
-                    LogEngine.Log($"{eventEntry.RewardTrackPath} (Local) - Completed");
-                }
-                else
-                {
-                    var apiResult = await SafeAPICall(async () => await HaloClient.GameCms.GetEvent(eventEntry.RewardTrackPath, HaloClient.ClearanceToken));
-                    if (apiResult?.Result == null)
-                    {
-                        LogEngine.Log($"Could not load event from API for {eventEntry.RewardTrackPath}, skipping.", LogSeverity.Warning);
-                        continue;
-                    }
-
-                    DataHandler.UpdateOperationRewardTracks(apiResult.Response.Message, eventEntry.RewardTrackPath);
-                    compoundEvent.RewardTrackMetadata = apiResult.Result;
-                    compoundEvent.Rewards = new(await GetFlattenedRewards(apiResult.Result.Ranks, -1));
-                    LogEngine.Log($"{eventEntry.RewardTrackPath} - Completed");
-                }
-
-                // Let's make sure that we also download the image for the event, if available.
-                if (!string.IsNullOrWhiteSpace(compoundEvent.RewardTrackMetadata?.SummaryImagePath))
-                {
-                    // Some images, like in the example of Noble Intentions event, do not end with an extension. This is not
-                    // at all a common occurrence, so I am just making sure that I check it ahead of time in this one special
-                    // instance.
-                    if (!compoundEvent.RewardTrackMetadata.SummaryImagePath.EndsWith(".png", StringComparison.InvariantCultureIgnoreCase)
-                        && !compoundEvent.RewardTrackMetadata.SummaryImagePath.EndsWith(".jpg", StringComparison.InvariantCultureIgnoreCase)
-                        && !compoundEvent.RewardTrackMetadata.SummaryImagePath.EndsWith(".jpeg", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        compoundEvent.RewardTrackMetadata.SummaryImagePath += ".png";
-                    }
-
-                    await DownloadAndSetImage(compoundEvent.RewardTrackMetadata.SummaryImagePath, ImageCachePath.For(compoundEvent.RewardTrackMetadata.SummaryImagePath)).ConfigureAwait(false);
+                    continue;
                 }
 
                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.Events.Add(compoundEvent));
             }
 
             return true;
+        }
+
+        // Returns null when the entry should be skipped (load failure). Cached locally
+        // when possible; falls back to a network fetch via SafeAPICall.
+        private static async Task<OperationCompoundModel?> ProcessEventEntry(SeasonCalendarEntry eventEntry)
+        {
+            OperationCompoundModel compoundEvent = new()
+            {
+                RewardTrack = new RewardTrack() { RewardTrackPath = eventEntry.RewardTrackPath }
+            };
+
+            if (DataHandler.IsOperationRewardTrackAvailable(eventEntry.RewardTrackPath))
+            {
+                var eventDetails = DataHandler.GetOperationResponseBody(eventEntry.RewardTrackPath);
+                if (eventDetails == null)
+                {
+                    LogEngine.Log($"Could not load event details for {eventEntry.RewardTrackPath}, skipping.", LogSeverity.Warning);
+                    return null;
+                }
+
+                compoundEvent.RewardTrackMetadata = eventDetails;
+
+                var rewardTrack = await GetRewardTrackMetadata("event", compoundEvent.RewardTrackMetadata.TrackId).ConfigureAwait(false);
+
+                // Events have no "Current Progress" indicator the way operations do, so use -1 as a sentinel.
+                compoundEvent.Rewards = new(await GetFlattenedRewards(eventDetails.Ranks, rewardTrack?.CurrentProgress?.Rank ?? -1).ConfigureAwait(false));
+                LogEngine.Log($"{eventEntry.RewardTrackPath} (Local) - Completed");
+            }
+            else
+            {
+                var apiResult = await SafeAPICall(async () => await HaloClient.GameCms.GetEvent(eventEntry.RewardTrackPath, HaloClient.ClearanceToken)).ConfigureAwait(false);
+                if (apiResult?.Result == null)
+                {
+                    LogEngine.Log($"Could not load event from API for {eventEntry.RewardTrackPath}, skipping.", LogSeverity.Warning);
+                    return null;
+                }
+
+                DataHandler.UpdateOperationRewardTracks(apiResult.Response.Message, eventEntry.RewardTrackPath);
+                compoundEvent.RewardTrackMetadata = apiResult.Result;
+                compoundEvent.Rewards = new(await GetFlattenedRewards(apiResult.Result.Ranks, -1).ConfigureAwait(false));
+                LogEngine.Log($"{eventEntry.RewardTrackPath} - Completed");
+            }
+
+            // Some events (e.g. Noble Intentions) come back without a file extension on
+            // the SummaryImagePath; assume PNG so the cached file is openable.
+            if (!string.IsNullOrWhiteSpace(compoundEvent.RewardTrackMetadata?.SummaryImagePath))
+            {
+                if (!compoundEvent.RewardTrackMetadata.SummaryImagePath.EndsWith(".png", StringComparison.InvariantCultureIgnoreCase)
+                    && !compoundEvent.RewardTrackMetadata.SummaryImagePath.EndsWith(".jpg", StringComparison.InvariantCultureIgnoreCase)
+                    && !compoundEvent.RewardTrackMetadata.SummaryImagePath.EndsWith(".jpeg", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    compoundEvent.RewardTrackMetadata.SummaryImagePath += ".png";
+                }
+
+                await DownloadAndSetImage(compoundEvent.RewardTrackMetadata.SummaryImagePath, ImageCachePath.For(compoundEvent.RewardTrackMetadata.SummaryImagePath)).ConfigureAwait(false);
+            }
+
+            return compoundEvent;
         }
 
         private static async Task<OperationCompoundModel> ProcessOperation(RewardTrack operation, Dictionary<string, SeasonRewardTrack>? seasonRewardTracks)
@@ -1824,9 +1846,35 @@ namespace OpenSpartan.Workshop.Core
 
         internal static async Task<List<ItemMetadataContainer>> ExtractCurrencyRewards(int rank, int playerRank, IEnumerable<CurrencyAmount> currencyItems, bool isFree)
         {
+            var items = currencyItems as IList<CurrencyAmount> ?? currencyItems.ToList();
+
+            // Pre-fetch any currency definitions we don't have cached yet, in parallel,
+            // so the first-time load isn't N sequential awaits (one HTTP roundtrip per
+            // missing path). After this, the per-item loop below only does cache hits.
+            var missingPaths = items
+                .Select(r => r.CurrencyPath)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Where(p => !CurrencyDefinitions.ContainsKey(p))
+                .ToList();
+
+            if (missingPaths.Count > 0)
+            {
+                var fetched = await Task.WhenAll(missingPaths.Select(async path =>
+                    (Path: path, Details: await GetInGameCurrency(path).ConfigureAwait(false))))
+                    .ConfigureAwait(false);
+
+                foreach (var (path, details) in fetched)
+                {
+                    if (details != null)
+                    {
+                        CurrencyDefinitions.TryAdd(path, details);
+                    }
+                }
+            }
+
             List<ItemMetadataContainer> rewardContainers = [];
 
-            foreach (var currencyReward in currencyItems)
+            foreach (var currencyReward in items)
             {
                 ItemMetadataContainer container = new()
                 {
@@ -1835,15 +1883,7 @@ namespace OpenSpartan.Workshop.Core
                     ItemValue = currencyReward.Amount,
                 };
 
-                if (!CurrencyDefinitions.TryGetValue(currencyReward.CurrencyPath, out var currencyDetails))
-                {
-                    currencyDetails = await GetInGameCurrency(currencyReward.CurrencyPath);
-                    if (currencyDetails != null)
-                    {
-                        CurrencyDefinitions.TryAdd(currencyReward.CurrencyPath, currencyDetails);
-                    }
-                }
-
+                CurrencyDefinitions.TryGetValue(currencyReward.CurrencyPath, out var currencyDetails);
                 container.CurrencyDetails = currencyDetails;
 
                 if (container.CurrencyDetails != null)
@@ -1870,7 +1910,7 @@ namespace OpenSpartan.Workshop.Core
                     string currencyImageLocation = GetCurrencyImageLocation(container.Type);
                     container.ImagePath = currencyImageLocation;
 
-                    await DownloadAndSetImage(container.ImagePath, Path.Combine(Configuration.AppDataDirectory, "imagecache", currencyImageLocation));
+                    await DownloadAndSetImage(container.ImagePath, ImageCachePath.For(currencyImageLocation)).ConfigureAwait(false);
                 }
 
                 rewardContainers.Add(container);
@@ -2144,61 +2184,46 @@ namespace OpenSpartan.Workshop.Core
             return true;
         }
 
-        private static async Task PopulateMatchRecordsDataWithCompletion()
+        // Wraps a bootstrap-step loader with the standard try/log/finally + dispatcher
+        // state-reset that every Populate*WithCompletion method previously hand-rolled.
+        // The completion action runs on the dispatcher thread.
+        private static async Task RunBootstrapStep(
+            Func<Task<bool>> loader,
+            string stepDescription,
+            Action onCompletedDispatch)
         {
             try
             {
-                var result = await PopulateMatchRecordsData();
-                if (result)
-                {
-                    LogEngine.Log("Successfully populated the match data from within the app bootstrap sequence.");
-                }
-                else
-                {
-                    LogEngine.Log("Could not populate the match data from within the app bootstrap sequence.");
-                }
+                var result = await loader();
+                LogEngine.Log(result
+                    ? $"Successfully populated the {stepDescription} from within the app bootstrap sequence."
+                    : $"Could not populate the {stepDescription} from within the app bootstrap sequence.");
             }
             catch (Exception ex)
             {
-                LogEngine.Log($"Error populating match records: {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"Error populating {stepDescription}: {ex}", LogSeverity.Error);
             }
             finally
             {
-                // Always reset the completion state
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(onCompletedDispatch);
+            }
+        }
+
+        private static Task PopulateMatchRecordsDataWithCompletion() =>
+            RunBootstrapStep(
+                PopulateMatchRecordsData,
+                "match data",
+                () =>
                 {
                     MatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Completed;
                     MatchesViewModel.Instance.MatchLoadingParameter = string.Empty;
                 });
-            }
-        }
 
-        private static async Task PopulateBattlePassDataWithCompletion()
-        {
-            try
-            {
-                var result = await PopulateBattlePassData();
-                if (result)
-                {
-                    LogEngine.Log("Successfully populated the battle pass data from within the app bootstrap sequence.");
-                }
-                else
-                {
-                    LogEngine.Log("Could not populate the battle pass data from within the app bootstrap sequence.");
-                }
-            }
-            catch (Exception ex)
-            {
-                LogEngine.Log($"Error populating battle pass data: {ex.Message}", LogSeverity.Error);
-            }
-            finally
-            {
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                {
-                    BattlePassViewModel.Instance.BattlePassLoadingState = MetadataLoadingState.Completed;
-                });
-            }
-        }
+        private static Task PopulateBattlePassDataWithCompletion() =>
+            RunBootstrapStep(
+                PopulateBattlePassData,
+                "battle pass data",
+                () => BattlePassViewModel.Instance.BattlePassLoadingState = MetadataLoadingState.Completed);
 
         internal static async Task<bool> InitializeAllDataOnLaunch()
         {
