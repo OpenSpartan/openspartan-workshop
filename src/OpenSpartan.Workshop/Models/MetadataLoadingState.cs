@@ -1,6 +1,6 @@
 ﻿namespace OpenSpartan.Workshop.Models
 {
-    internal enum MetadataLoadingState
+    public enum MetadataLoadingState
     {
         Calculating,
         Loading,

@@ -7,6 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     NavigationCacheMode="Enabled"
+    xmlns:localcontrols="using:OpenSpartan.Workshop.Controls"
     xmlns:viewmodels="using:OpenSpartan.Workshop.ViewModels"
     DataContext="{x:Bind viewmodels:BattlePassViewModel.Instance}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
@@ -32,16 +33,9 @@
             </Grid>
 
             <!--Informational state-->
-            <Grid Visibility="{Binding BattlePassLoadingState, Converter={StaticResource MetadataLoadingStateToVisibilityConverter}}" Margin="20,12,24,12" Background="#404040" BorderThickness="2" CornerRadius="4" Height="36" Grid.Row="1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="36"></ColumnDefinition>
-                    <ColumnDefinition Width="*"></ColumnDefinition>
-                </Grid.ColumnDefinitions>
-
-                <ProgressRing Height="12" Width="12"></ProgressRing>
-
-                <TextBlock Grid.Column="1" Text="{Binding BattlePassLoadingString}" VerticalAlignment="Center"></TextBlock>
-            </Grid>
+            <localcontrols:LoadingBanner Grid.Row="1" Margin="20,12,24,12"
+                                          LoadingState="{Binding BattlePassLoadingState}"
+                                          LoadingText="{Binding BattlePassLoadingString}" />
 
             <TextBlock Margin="24,24,0,0" Grid.Row="2" Text="Seasons" Style="{StaticResource SubtitleTextBlockStyle}"></TextBlock>
 

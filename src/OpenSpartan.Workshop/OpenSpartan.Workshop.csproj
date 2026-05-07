@@ -19,6 +19,7 @@
 		<SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
 	</PropertyGroup>
 	<ItemGroup>
+		<None Remove="Controls\LoadingBanner.xaml" />
 		<None Remove="Controls\MatchesGridControl.xaml" />
 		<None Remove="Controls\SeasonCalendarControl.xaml" />
 		<None Remove="CustomImages\cr.svg" />
@@ -90,6 +91,9 @@
 		<ProjectCapability Include="Msix" />
 	</ItemGroup>
 	<ItemGroup>
+		<Page Update="Controls\LoadingBanner.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</Page>
 		<Page Update="Controls\MatchesGridControl.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</Page>

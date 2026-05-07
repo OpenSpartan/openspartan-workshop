@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="OpenSpartan.Workshop.Controls.LoadingBanner"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <Grid Visibility="{x:Bind LoadingState, Converter={StaticResource MetadataLoadingStateToVisibilityConverter}, Mode=OneWay}"
+          Background="#404040" BorderThickness="2" CornerRadius="4" Height="36">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="36" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <ProgressRing Height="12" Width="12" />
+
+        <TextBlock Grid.Column="1"
+                   Text="{x:Bind LoadingText, Mode=OneWay}"
+                   VerticalAlignment="Center" />
+    </Grid>
+</UserControl>

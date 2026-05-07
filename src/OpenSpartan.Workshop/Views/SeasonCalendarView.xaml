@@ -33,16 +33,9 @@
 
 
             <!--Informational state-->
-            <Grid Visibility="{Binding CalendarLoadingState, Converter={StaticResource MetadataLoadingStateToVisibilityConverter}}" Margin="20,0,24,24" Background="#404040" BorderThickness="2" CornerRadius="4" Height="36" Grid.Row="1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="36"></ColumnDefinition>
-                    <ColumnDefinition Width="*"></ColumnDefinition>
-                </Grid.ColumnDefinitions>
-
-                <ProgressRing Height="12" Width="12"></ProgressRing>
-
-                <TextBlock Grid.Column="1" Text="Loading season calendar data..." VerticalAlignment="Center"></TextBlock>
-            </Grid>
+            <controls:LoadingBanner Grid.Row="1" Margin="20,0,24,24"
+                                     LoadingState="{Binding CalendarLoadingState}"
+                                     LoadingText="Loading season calendar data..." />
 
             <controls:SeasonCalendarControl Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" DayItems="{Binding SeasonDays}"></controls:SeasonCalendarControl>
         </Grid>
