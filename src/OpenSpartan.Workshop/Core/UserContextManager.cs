@@ -1015,47 +1015,6 @@ namespace OpenSpartan.Workshop.Core
             }
         }
 
-        internal static async Task GetPlayerMatches()
-        {
-            try
-            {
-                if (HomeViewModel.Instance.Xuid != null)
-                {
-                    List<MatchTableEntity> matches = null;
-                    string date = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture);
-
-                    var matchList = MatchesViewModel.Instance.MatchList;
-                    if (matchList == null || matchList.Count == 0)
-                    {
-                        matches = await DataHandler.GetMatchesAsync($"xuid({HomeViewModel.Instance.Xuid})", date, 100);
-                    }
-                    else
-                    {
-                        date = matchList.Min(a => a.EndTime)
-                            .ToUniversalTime()
-                            .ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture);
-                        matches = await DataHandler.GetMatchesAsync($"xuid({HomeViewModel.Instance.Xuid})", date, 10);
-                    }
-
-                    if (matches != null && matches.Count > 0)
-                    {
-                        await RunOnUI(() =>
-                        {
-                            MatchesViewModel.Instance.MatchList?.AddRange(matches);
-                        });
-                    }
-                    else if (matches == null)
-                    {
-                        LogEngine.Log("Could not get the list of matches for the specified parameters.", LogSeverity.Error);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogEngine.Log($"Error getting player matches: {ex.Message}", LogSeverity.Error);
-            }
-        }
-
         internal static async Task<bool> PopulateSeasonCalendar()
         {
             await RunOnUI(() =>
