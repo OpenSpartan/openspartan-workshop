@@ -1,3 +1,5 @@
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.ViewModels;
@@ -11,6 +13,19 @@ namespace OpenSpartan.Workshop.Views
         public HomeView()
         {
             InitializeComponent();
+            Loaded += HomeView_Loaded;
+        }
+
+        private void HomeView_Loaded(object sender, RoutedEventArgs e)
+        {
+            // The Overview section is marked x:DeferLoadStrategy="Lazy". Realize it
+            // at low priority after the page is loaded so the visible above-the-fold
+            // content (header + Career cards) can render first. FindName triggers
+            // the realization for deferred elements.
+            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+            {
+                _ = FindName(nameof(OverviewSection));
+            });
         }
 
         private async void btnOpenHaloWaypoint_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)

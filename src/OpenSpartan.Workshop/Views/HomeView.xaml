@@ -162,8 +162,11 @@
                         </VariableSizedWrapGrid>
                     </StackPanel>
 
-                    <!-- Content -->
-                    <StackPanel Orientation="Vertical">
+                    <!-- Content. Deferred so InitializeComponent + the first layout pass
+                         only build the header + Career section; the much larger Overview
+                         section (~500 lines of XAML) realizes from the page Loaded handler
+                         once the above-the-fold content is on screen. -->
+                    <StackPanel x:Name="OverviewSection" x:DeferLoadStrategy="Lazy" Orientation="Vertical">
                         <TextBlock Margin="24,8,0,8" Text="Overview" Style="{StaticResource TitleTextBlockStyle}"></TextBlock>
                         <VariableSizedWrapGrid ItemWidth="250" Orientation="Horizontal" Margin="24,0,24,0">
                             <!-- Matches completed -->

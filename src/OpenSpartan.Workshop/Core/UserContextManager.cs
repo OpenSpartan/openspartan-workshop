@@ -2265,32 +2265,47 @@ namespace OpenSpartan.Workshop.Core
                 if (authResult == null)
                     throw new Exception("Authentication with Halo services failed.");
 
-                var haloClientInitialized = await InitializeHaloClient(authResult);
-                if (!haloClientInitialized)
-                    throw new Exception("Could not initialize Halo client.");
-
-                // Update UI state
+                // Drop the splash overlay as soon as we have a confirmed identity.
+                // The remaining steps (Halo client setup, DB bootstrap, data fetches)
+                // run in the background; views show their own MetadataLoadingState
+                // indicators until each section's data lands. This shaves several
+                // seconds off the perceived startup time on the warm path because
+                // the user no longer waits behind the full Xbox/Halo/Spartan/
+                // clearance token chain before seeing the app shell.
                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                 {
                     SplashScreenViewModel.Instance.IsBlocking = false;
                 });
 
-                // Set HomeViewModel properties
-                HomeViewModel.Instance.Gamertag = XboxUserContext.DisplayClaims.Xui[0].Gamertag;
-                HomeViewModel.Instance.Xuid = XboxUserContext.DisplayClaims.Xui[0].XUID;
+                var haloClientInitialized = await InitializeHaloClient(authResult);
+                if (!haloClientInitialized)
+                    throw new Exception("Could not initialize Halo client.");
 
-                // Bootstrap database and set journaling mode
-                var databaseBootstrapResult = DataHandler.BootstrapDatabase();
-                var journalingMode = DataHandler.SetWALJournalingMode();
+                // Set HomeViewModel properties on the dispatcher so the bound
+                // header text refreshes on the UI thread.
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                {
+                    HomeViewModel.Instance.Gamertag = XboxUserContext.DisplayClaims.Xui[0].Gamertag;
+                    HomeViewModel.Instance.Xuid = XboxUserContext.DisplayClaims.Xui[0].XUID;
+                });
 
-                if (journalingMode.Equals("wal", StringComparison.Ordinal))
+                // Bootstrap the database off the UI thread — both calls open a
+                // SqliteConnection synchronously and would otherwise stall the
+                // dispatcher (briefly but visibly) right after the splash drops.
+                await Task.Run(() =>
                 {
-                    LogEngine.Log("Successfully set WAL journaling mode.");
-                }
-                else
-                {
-                    LogEngine.Log("Could not set WAL journaling mode.", LogSeverity.Warning);
-                }
+                    DataHandler.BootstrapDatabase();
+                    var journalingMode = DataHandler.SetWALJournalingMode();
+
+                    if (journalingMode != null && journalingMode.Equals("wal", StringComparison.Ordinal))
+                    {
+                        LogEngine.Log("Successfully set WAL journaling mode.");
+                    }
+                    else
+                    {
+                        LogEngine.Log("Could not set WAL journaling mode.", LogSeverity.Warning);
+                    }
+                });
 
                 // Reset collections
                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>

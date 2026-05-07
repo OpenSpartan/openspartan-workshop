@@ -5,6 +5,7 @@ using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.ViewModels;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace OpenSpartan.Workshop
 {
@@ -33,11 +34,16 @@ namespace OpenSpartan.Workshop
 
             LogManager.Setup().LoadConfigurationFromFile("NLog.config");
 
-            LoadSettings();
+            // Settings must be loaded before InitializeAllDataOnLaunch — the
+            // latter reads SettingsViewModel.Instance.UseBroker (and other
+            // settings) inside InitializePublicClientApplication. Previously
+            // LoadSettings was async void / fire-and-forget, racing the
+            // initializer for whoever finished first.
+            await LoadSettings();
             _ = await UserContextManager.InitializeAllDataOnLaunch();
         }
 
-        private async static void LoadSettings()
+        private async static Task LoadSettings()
         {
             var settingsPath = Path.Combine(Configuration.AppDataDirectory, Configuration.SettingsFileName);
             if (File.Exists(settingsPath))
