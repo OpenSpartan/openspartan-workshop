@@ -9,10 +9,10 @@
 			 RollForward="major"
 			 RuntimeType="desktop"
 			 Platform="x64"
-			 Version="8.0.0" />
+			 Version="10.0.0" />
 
 		<Launch
-			 Message="Make sure that the .NET Desktop 8 Runtime is installed."
+			 Message="Make sure that the .NET Desktop 10 Runtime is installed."
 			 Condition="(DOTNETRUNTIMECHECK=0)"/>
 
 		<WixVariable Id="WixUILicenseRtf" Value="$(DocumentsResourcesDirectory)/license.rtf" />

@@ -3,3 +3,4 @@ bin/
 obj/
 /.claude
 *.nettrace
+src/OpenSpartan.Workshop.Installer.Bundle/Dependencies/*.exe

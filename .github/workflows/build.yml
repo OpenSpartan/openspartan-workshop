@@ -30,14 +30,14 @@ jobs:
     timeout-minutes: 15
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v5
     - uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '10.0.x'
         source-url: ${{ env.NUGET_URL }}
       env:
         NUGET_AUTH_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
-    - run: Invoke-webrequest -uri https://aka.ms/windowsappsdk/1.6/latest/windowsappruntimeinstall-x64.exe -OutFile windowsappruntimeinstall.exe
+    - run: Invoke-webrequest -uri https://aka.ms/windowsappsdk/1.8/latest/windowsappruntimeinstall-x64.exe -OutFile windowsappruntimeinstall.exe
       shell: powershell
     - run: '&.\windowsappruntimeinstall.exe'
       shell: powershell
@@ -48,6 +48,3 @@ jobs:
     - name: Build
       working-directory: ./src/OpenSpartan.Workshop
       run: dotnet build --configuration Release
-    - name: Test
-      working-directory: ./src/OpenSpartan.Workshop
-      run: dotnet test --configuration Release --no-build

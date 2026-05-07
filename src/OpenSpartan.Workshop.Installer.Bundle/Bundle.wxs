@@ -3,7 +3,7 @@
 	 xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx">
 	
 	<Bundle Name="OpenSpartan Workshop" Manufacturer="Den Delimarsky" Version="1.0.11.0" UpgradeCode="cf3576f5-2f23-4095-94b9-c6c44e6b4891">
-		<netfx:DotNetCoreSearchRef Id="SearchForDotNet8" />
+		<netfx:DotNetCoreSearchRef Id="SearchForDotNet10" />
 
 		<BootstrapperApplication>
 			<bal:WixStandardBootstrapperApplication LicenseUrl="https://raw.githubusercontent.com/OpenSpartan/openspartan-workshop/master/LICENSE" Theme="hyperlinkLicense" LogoFile="Resources\Images\logo-icon.png" />
@@ -16,21 +16,21 @@
 	</Bundle>
 
 	<Fragment>
-		<!-- Apps use .NET Core 8 -->
-		<netfx:DotNetCoreSearch Id="SearchForDotNet8" RuntimeType="desktop" MajorVersion="8" Platform="x64" Variable="DOTNETDESKTOPVERSION"/>
+		<!-- Apps use .NET 10 -->
+		<netfx:DotNetCoreSearch Id="SearchForDotNet10" RuntimeType="desktop" MajorVersion="10" Platform="x64" Variable="DOTNETDESKTOPVERSION"/>
 
 		<PackageGroup Id="Prerequisites">
-			<!-- .NET 8, latest preview as used by this installer and the projects -->
+			<!-- .NET 10 Desktop Runtime as used by this installer and the projects -->
 			<ExePackage
-				DisplayName="Microsoft .NET 8 Desktop Runtime"
-				SourceFile="Dependencies\windowsdesktop-runtime-8.0.8-win-x64.exe"
+				DisplayName="Microsoft .NET 10 Desktop Runtime"
+				SourceFile="Dependencies\windowsdesktop-runtime-10.0.0-win-x64.exe"
 				Permanent="true"
 				Compressed="true"
 				InstallCondition="VersionNT64"
 				Vital="true"
 				UninstallArguments="/uninstall /passive /norestart /quiet"
-				DetectCondition="DOTNETDESKTOPVERSION &gt;= &quot;8.0.0&quot;"
-				InstallArguments="/install /passive /norestart /log openspartan.workshop.net8install.log"
+				DetectCondition="DOTNETDESKTOPVERSION &gt;= &quot;10.0.0&quot;"
+				InstallArguments="/install /passive /norestart /log openspartan.workshop.net10install.log"
                 />
 			<ExePackage
 				DisplayName="Microsoft Windows App Runtime"

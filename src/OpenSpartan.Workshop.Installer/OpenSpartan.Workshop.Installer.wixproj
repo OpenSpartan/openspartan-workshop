@@ -3,9 +3,9 @@
 		<ProjectReference Include="..\OpenSpartan.Workshop\OpenSpartan.Workshop.csproj" />
 	</ItemGroup>
 	<PropertyGroup>
-		<TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
+		<TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
 		<DefineConstants>$(DefineConstants);TargetFramework=$(ApplicationFilesPath);</DefineConstants>
-		<ApplicationFilesPath>../OpenSpartan.Workshop/bin/$(Platform)/$(Configuration)/$(TargetFramework)</ApplicationFilesPath>
+		<ApplicationFilesPath>../OpenSpartan.Workshop/bin/$(Configuration)/$(TargetFramework)</ApplicationFilesPath>
 		<DefineConstants>$(DefineConstants);ApplicationFilesPath=$(ApplicationFilesPath);</DefineConstants>
 		<ResourcesDirectory>Resources</ResourcesDirectory>
 		<DefineConstants>$(DefineConstants);ResourcesDirectory=$(ResourcesDirectory);</DefineConstants>

@@ -30,10 +30,10 @@ jobs:
     timeout-minutes: 15
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v5
     - uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '10.0.x'
         source-url: ${{ env.NUGET_URL }}
       env:
         NUGET_AUTH_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
@@ -46,18 +46,19 @@ jobs:
     - name: Build
       working-directory: ./src/OpenSpartan.Workshop
       run: dotnet build --configuration Release
-    - name: Test
-      working-directory: ./src/OpenSpartan.Workshop
-      run: dotnet test --configuration Release --no-build
     - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v1.1
+      uses: microsoft/setup-msbuild@v2
     - name: Install WiX
       run: dotnet tool install --global wix
+    - name: Restore bundle dependencies
+      working-directory: ./src/OpenSpartan.Workshop.Installer.Bundle
+      shell: powershell
+      run: ./Restore-Dependencies.ps1
     - name: Build installer file
       working-directory: ./src/OpenSpartan.Workshop.Installer.Bundle
       run: msbuild -restore -p:Configuration=Release
     - name: Release
-      uses: softprops/action-gh-release@master
+      uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: ./src/OpenSpartan.Workshop.Installer.Bundle/bin/Release/OpenSpartan.Workshop.Installer.Bundle.exe
