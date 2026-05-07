@@ -70,10 +70,16 @@ namespace OpenSpartan.Workshop.Core
         internal static MainWindow DispatcherWindow = ((Application.Current as App)?.MainWindow) as MainWindow;
 
         // Convenience wrapper for "do this on the UI thread" — collapses the
-        // very repetitive `RunOnUI(...)`
+        // very repetitive DispatcherWindow.DispatcherQueue.EnqueueAsync(...)
         // call shape that appears 40+ times across this file and view code-behinds.
-        internal static Task RunOnUI(Action action) =>
-            DispatcherWindow.DispatcherQueue.EnqueueAsync(action);
+        // Returns Task.CompletedTask when the window or its dispatcher is gone
+        // (e.g. populator continuations that win the race against window close);
+        // dispatching to a torn-down dispatcher used to NRE on this line.
+        internal static Task RunOnUI(Action action)
+        {
+            var queue = DispatcherWindow?.DispatcherQueue;
+            return queue == null ? Task.CompletedTask : queue.EnqueueAsync(action);
+        }
 
         internal static HaloInfiniteClient HaloClient { get; set; }
 
