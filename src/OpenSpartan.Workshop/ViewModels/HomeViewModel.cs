@@ -1,5 +1,6 @@
 ﻿using Den.Dev.Grunt.Models.HaloInfinite;
 using OpenSpartan.Workshop.Core;
+using OpenSpartan.Workshop.Models;
 using System;
 using System.Runtime.CompilerServices;
 
@@ -11,6 +12,9 @@ namespace OpenSpartan.Workshop.ViewModels
 
         private HomeViewModel() { }
 
+        // Default to Loading so the indicator shows on first paint without any
+        // populator having to set it explicitly.
+        private MetadataLoadingState _homeLoadingState = MetadataLoadingState.Loading;
         private string _gamerTag = string.Empty;
         private string _xuid = string.Empty;
         private PlayerServiceRecord? _serviceRecord;
@@ -303,6 +307,27 @@ namespace OpenSpartan.Workshop.ViewModels
         {
             get => (double?)ExperienceEarnedToDate / (double?)ExperienceTotalRequired;
         }
+
+        public MetadataLoadingState HomeLoadingState
+        {
+            get => _homeLoadingState;
+            set
+            {
+                if (_homeLoadingState != value)
+                {
+                    _homeLoadingState = value;
+                    NotifyPropertyChanged();
+                    NotifyPropertyChanged(nameof(HomeLoadingString));
+                }
+            }
+        }
+
+        public string HomeLoadingString => HomeLoadingState switch
+        {
+            MetadataLoadingState.Loading => "Loading your Spartan profile...",
+            MetadataLoadingState.Failed => "Could not load your Spartan profile. Check the logs for details.",
+            _ => string.Empty,
+        };
 
         public void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {

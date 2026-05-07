@@ -2333,6 +2333,12 @@ namespace OpenSpartan.Workshop.Core
 
                 await Task.WhenAll(initTasks);
 
+                // Hide the home loading banner now that every populator has wrapped up.
+                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                {
+                    HomeViewModel.Instance.HomeLoadingState = MetadataLoadingState.Completed;
+                });
+
                 return true;
             }
             catch (Exception ex)
@@ -2343,6 +2349,7 @@ namespace OpenSpartan.Workshop.Core
                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                 {
                     SplashScreenViewModel.Instance.IsErrorMessageDisplayed = true;
+                    HomeViewModel.Instance.HomeLoadingState = MetadataLoadingState.Failed;
                 });
 
                 return false;
