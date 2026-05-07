@@ -1,7 +1,6 @@
-﻿WITH RAW_MATCHES AS (
+WITH RAW_MATCHES AS (
     SELECT
         MS.MatchId,
-        MS.Teams,
         json_extract(MS.MatchInfo, '$.StartTime') AS StartTime,
         json_extract(MS.MatchInfo, '$.EndTime') AS EndTime,
         json_extract(MS.MatchInfo, '$.Duration') AS Duration,
@@ -61,7 +60,6 @@ MATCH_DETAILS AS (
 SELECTIVE_MATCHES AS (
     SELECT
         MatchId,
-        Teams,
         StartTime,
         EndTime,
         Duration,
@@ -83,7 +81,6 @@ SELECTIVE_MATCHES AS (
 )
 SELECT
     SM.MatchId,
-    SM.Teams,
     SM.StartTime,
     SM.EndTime,
     SM.Duration,

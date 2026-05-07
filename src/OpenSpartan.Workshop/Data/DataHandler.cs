@@ -459,7 +459,6 @@ PRAGMA synchronous = NORMAL;";
             int gameVariantOrdinal = reader.GetOrdinal("GameVariant");
             int durationOrdinal = reader.GetOrdinal("Duration");
             int lastTeamIdOrdinal = reader.GetOrdinal("LastTeamId");
-            int teamsOrdinal = reader.GetOrdinal("Teams");
             int participationInfoOrdinal = reader.GetOrdinal("ParticipationInfo");
             int playerTeamStatsOrdinal = reader.GetOrdinal("PlayerTeamStats");
             int teamMmrOrdinal = reader.GetOrdinal("TeamMmr");
@@ -488,11 +487,12 @@ PRAGMA synchronous = NORMAL;";
             int nextTierLevelOrdinal = reader.GetOrdinal("NextTierLevel");
             int nextTierStartOrdinal = reader.GetOrdinal("NextTierStart");
 
-            // Teams / ParticipationInfo / PlayerTeamStats are written together as one group
-            // from the same PlayerMatchStats payload. If the Teams JSON column is null, the
-            // other two are treated as unavailable too — preserving the behavior of the
-            // pre-refactor code that gated all three on teamsOrdinal.
-            bool statsAvailable = !reader.IsDBNull(teamsOrdinal);
+            // ParticipationInfo / PlayerTeamStats are written together as one group from
+            // the same PlayerMatchStats payload. The PlayerTeamStats JSON column is the
+            // sentinel: if it's null, ParticipationInfo is treated as unavailable too.
+            // (Previously the Teams column served as the sentinel, but Teams was dead
+            // weight — never bound by any UI — and is no longer projected by the SQL.)
+            bool statsAvailable = !reader.IsDBNull(playerTeamStatsOrdinal);
 
             return new MatchTableEntity
             {
@@ -507,7 +507,6 @@ PRAGMA synchronous = NORMAL;";
                 GameVariant = reader.GetOrDefault(gameVariantOrdinal, string.Empty),
                 Duration = reader.IsDBNull(durationOrdinal) ? TimeSpan.Zero : XmlConvert.ToTimeSpan(reader.GetFieldValue<string>(durationOrdinal)),
                 LastTeamId = reader.GetNullable<int>(lastTeamIdOrdinal),
-                Teams = statsAvailable ? JsonSerializer.Deserialize<List<Team>>(reader.GetFieldValue<string>(teamsOrdinal), serializerOptions) : null,
                 ParticipationInfo = statsAvailable ? JsonSerializer.Deserialize<ParticipationInfo>(reader.GetFieldValue<string>(participationInfoOrdinal), serializerOptions) : null,
                 PlayerTeamStats = statsAvailable ? JsonSerializer.Deserialize<List<PlayerTeamStat>>(reader.GetFieldValue<string>(playerTeamStatsOrdinal), serializerOptions) : null,
                 TeamMmr = reader.GetNullable<float>(teamMmrOrdinal),
