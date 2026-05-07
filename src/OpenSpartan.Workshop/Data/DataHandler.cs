@@ -459,6 +459,7 @@ PRAGMA synchronous = NORMAL;";
             int gameVariantOrdinal = reader.GetOrdinal("GameVariant");
             int durationOrdinal = reader.GetOrdinal("Duration");
             int lastTeamIdOrdinal = reader.GetOrdinal("LastTeamId");
+            int teamsOrdinal = reader.GetOrdinal("Teams");
             int participationInfoOrdinal = reader.GetOrdinal("ParticipationInfo");
             int playerTeamStatsOrdinal = reader.GetOrdinal("PlayerTeamStats");
             int teamMmrOrdinal = reader.GetOrdinal("TeamMmr");
@@ -487,14 +488,25 @@ PRAGMA synchronous = NORMAL;";
             int nextTierLevelOrdinal = reader.GetOrdinal("NextTierLevel");
             int nextTierStartOrdinal = reader.GetOrdinal("NextTierStart");
 
-            // ParticipationInfo / PlayerTeamStats are written together as one group from
-            // the same PlayerMatchStats payload. The PlayerTeamStats JSON column is the
-            // sentinel: if it's null, ParticipationInfo is treated as unavailable too.
-            // (Previously the Teams column served as the sentinel, but Teams was dead
-            // weight — never bound by any UI — and is no longer projected by the SQL.)
+            // Teams / ParticipationInfo / PlayerTeamStats are written together from the
+            // same PlayerMatchStats payload. The PlayerTeamStats JSON column is the
+            // sentinel: if it's null, the other two are treated as unavailable too.
+            //
+            // PlayerTeamStats is parsed eagerly because the visible row cells bind into
+            // it (Kills, Deaths, etc.). Teams and ParticipationInfo are stashed as raw
+            // JSON via the entity's internal sinks and only deserialize on first access
+            // of the typed property — they're consumed by the RowDetailsTemplate (on row
+            // expand) or future per-team detail UI, so paying for them on every row
+            // load is wasted work.
             bool statsAvailable = !reader.IsDBNull(playerTeamStatsOrdinal);
+            string? teamsJson = statsAvailable && !reader.IsDBNull(teamsOrdinal)
+                ? reader.GetFieldValue<string>(teamsOrdinal)
+                : null;
+            string? participationInfoJson = statsAvailable && !reader.IsDBNull(participationInfoOrdinal)
+                ? reader.GetFieldValue<string>(participationInfoOrdinal)
+                : null;
 
-            return new MatchTableEntity
+            var entity = new MatchTableEntity
             {
                 MatchId = reader.GetOrDefault(matchOrdinal, string.Empty),
                 StartTime = reader.IsDBNull(startTimeOrdinal) ? DateTimeOffset.UnixEpoch : reader.GetFieldValue<DateTimeOffset>(startTimeOrdinal).ToLocalTime(),
@@ -507,7 +519,6 @@ PRAGMA synchronous = NORMAL;";
                 GameVariant = reader.GetOrDefault(gameVariantOrdinal, string.Empty),
                 Duration = reader.IsDBNull(durationOrdinal) ? TimeSpan.Zero : XmlConvert.ToTimeSpan(reader.GetFieldValue<string>(durationOrdinal)),
                 LastTeamId = reader.GetNullable<int>(lastTeamIdOrdinal),
-                ParticipationInfo = statsAvailable ? JsonSerializer.Deserialize<ParticipationInfo>(reader.GetFieldValue<string>(participationInfoOrdinal), serializerOptions) : null,
                 PlayerTeamStats = statsAvailable ? JsonSerializer.Deserialize<List<PlayerTeamStat>>(reader.GetFieldValue<string>(playerTeamStatsOrdinal), serializerOptions) : null,
                 TeamMmr = reader.GetNullable<float>(teamMmrOrdinal),
                 ExpectedDeaths = reader.GetNullable<float>(expectedDeathsOrdinal),
@@ -535,6 +546,10 @@ PRAGMA synchronous = NORMAL;";
                 NextTierLevel = reader.GetNullable<int>(nextTierLevelOrdinal),
                 NextTierStart = reader.GetNullable<int>(nextTierStartOrdinal),
             };
+
+            entity.SetTeamsJson(teamsJson);
+            entity.SetParticipationInfoJson(participationInfoJson);
+            return entity;
         }
 
 

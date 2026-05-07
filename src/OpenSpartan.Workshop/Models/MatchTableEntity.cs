@@ -1,11 +1,38 @@
-﻿using Den.Dev.Grunt.Models.HaloInfinite;
+﻿using Den.Dev.Grunt.Converters;
+using Den.Dev.Grunt.Models.HaloInfinite;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace OpenSpartan.Workshop.Models
 {
     internal sealed class MatchTableEntity
     {
+        // Shared options for the lazy-deserialized JSON columns. Same converter
+        // set DataHandler uses; kept on the entity so Models/ doesn't have to
+        // depend on Data/.
+        private static readonly JsonSerializerOptions LazyJsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters =
+            {
+                new EmptyDateStringToNullJsonConverter(),
+                new XmlDurationToTimeSpanJsonConverter(),
+            },
+        };
+
+        // Raw JSON for Teams / ParticipationInfo, populated by DataHandler when
+        // it reads each row. Both columns are heavy and only consumed by the
+        // RowDetailsTemplate (on row expand) or future per-team detail UI, so we
+        // store the JSON text and parse on first access of the typed property.
+        private string? _teamsJson;
+        private List<Team>? _teams;
+        private bool _teamsMaterialized;
+
+        private string? _participationInfoJson;
+        private ParticipationInfo? _participationInfo;
+        private bool _participationInfoMaterialized;
+
         public string MatchId { get; set; } = string.Empty;
 
         public DateTimeOffset StartTime { get; set; }
@@ -28,7 +55,64 @@ namespace OpenSpartan.Workshop.Models
 
         public int? LastTeamId { get; set; }
 
-        public ParticipationInfo? ParticipationInfo { get; set; }
+        public List<Team>? Teams
+        {
+            get
+            {
+                if (!_teamsMaterialized)
+                {
+                    _teams = string.IsNullOrEmpty(_teamsJson)
+                        ? null
+                        : JsonSerializer.Deserialize<List<Team>>(_teamsJson, LazyJsonOptions);
+                    _teamsMaterialized = true;
+                }
+                return _teams;
+            }
+            set
+            {
+                _teams = value;
+                _teamsJson = null;
+                _teamsMaterialized = true;
+            }
+        }
+
+        public ParticipationInfo? ParticipationInfo
+        {
+            get
+            {
+                if (!_participationInfoMaterialized)
+                {
+                    _participationInfo = string.IsNullOrEmpty(_participationInfoJson)
+                        ? null
+                        : JsonSerializer.Deserialize<ParticipationInfo>(_participationInfoJson, LazyJsonOptions);
+                    _participationInfoMaterialized = true;
+                }
+                return _participationInfo;
+            }
+            set
+            {
+                _participationInfo = value;
+                _participationInfoJson = null;
+                _participationInfoMaterialized = true;
+            }
+        }
+
+        // Internal raw-JSON sinks used by DataHandler.ReadMatchTableEntity to
+        // hand off the column text without parsing. Public consumers go through
+        // the lazy properties above.
+        internal void SetTeamsJson(string? json)
+        {
+            _teamsJson = json;
+            _teams = null;
+            _teamsMaterialized = false;
+        }
+
+        internal void SetParticipationInfoJson(string? json)
+        {
+            _participationInfoJson = json;
+            _participationInfo = null;
+            _participationInfoMaterialized = false;
+        }
 
         public List<PlayerTeamStat> PlayerTeamStats { get; set; } = [];
 
