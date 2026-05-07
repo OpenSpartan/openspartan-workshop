@@ -29,19 +29,23 @@ namespace OpenSpartan.Workshop.Data
             }
         }
 
-        Task<IEnumerable<MatchTableEntity>> IIncrementalSource<MatchTableEntity>.GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken)
+        async Task<IEnumerable<MatchTableEntity>> IIncrementalSource<MatchTableEntity>.GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken)
         {
-            if (MedalMatchesViewModel.Instance.MatchList != null && MedalMatchesViewModel.Instance.MatchList.Count > 0)
-            {
-                var date = MedalMatchesViewModel.Instance.MatchList.Min(a => a.StartTime).ToString("o", CultureInfo.InvariantCulture);
-                var matches = Task.Run(() => (IEnumerable<MatchTableEntity>)DataHandler.GetMatchesWithMedal($"xuid({HomeViewModel.Instance.Xuid})", MedalMatchesViewModel.Instance.Medal.NameId, date, pageSize));
-
-                return matches;
-            }
-            else
+            if (MedalMatchesViewModel.Instance.MatchList == null || MedalMatchesViewModel.Instance.MatchList.Count == 0)
             {
                 return null;
             }
+
+            var date = MedalMatchesViewModel.Instance.MatchList.Min(a => a.StartTime).ToString("o", CultureInfo.InvariantCulture);
+
+            // Use the genuinely-async DataHandler entry point instead of wrapping the
+            // synchronous variant in Task.Run, which burns a thread-pool thread per
+            // page load.
+            return await DataHandler.GetMatchesWithMedalAsync(
+                $"xuid({HomeViewModel.Instance.Xuid})",
+                MedalMatchesViewModel.Instance.Medal.NameId,
+                date,
+                pageSize);
         }
     }
 }

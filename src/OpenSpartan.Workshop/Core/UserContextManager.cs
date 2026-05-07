@@ -33,7 +33,23 @@ namespace OpenSpartan.Workshop.Core
 {
     internal static class UserContextManager
     {
-        private static MedalMetadata MedalMetadata;
+        private static MedalMetadata _medalMetadata;
+        private static Dictionary<long, Medal> _medalLookup;
+
+        private static MedalMetadata MedalMetadata
+        {
+            get => _medalMetadata;
+            set
+            {
+                _medalMetadata = value;
+                // Build the NameId -> Medal lookup once when the metadata is set, instead
+                // of rebuilding it inside EnrichMedalMetadata (which is called once per
+                // match row and was previously rebuilding the whole dictionary each call).
+                _medalLookup = value?.Medals != null && value.Medals.Count > 0
+                    ? value.Medals.ToDictionary(m => m.NameId)
+                    : null;
+            }
+        }
 
         private const int MatchesPerPage = 25;
 
@@ -1413,17 +1429,14 @@ namespace OpenSpartan.Workshop.Core
             {
                 LogEngine.Log($"Enriching medal metadata on behalf of {caller}...");
 
-                if (MedalMetadata == null || MedalMetadata.Medals == null || MedalMetadata.Medals.Count == 0)
+                if (_medalLookup == null || _medalLookup.Count == 0)
                     return null;
 
-                // Build dictionary once for O(1) lookups instead of O(n) Any() + First() per medal
-                var medalLookup = MedalMetadata.Medals.ToDictionary(m => m.NameId);
-
                 var richMedals = medals
-                    .Where(medal => medalLookup.ContainsKey(medal.NameId))
+                    .Where(medal => _medalLookup.ContainsKey(medal.NameId))
                     .Select(medal =>
                     {
-                        var metaMedal = medalLookup[medal.NameId];
+                        var metaMedal = _medalLookup[medal.NameId];
                         medal.Name = metaMedal.Name;
                         medal.Description = metaMedal.Description;
                         medal.DifficultyIndex = metaMedal.DifficultyIndex;

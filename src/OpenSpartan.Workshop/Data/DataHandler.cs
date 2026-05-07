@@ -5,6 +5,7 @@ using OpenSpartan.Workshop.Core;
 using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.ViewModels;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -31,6 +32,13 @@ namespace OpenSpartan.Workshop.Data
                 new XmlDurationToTimeSpanJsonConverter(),
             },
         };
+
+        // SQL files under Queries/**/*.sql are immutable for the lifetime of the
+        // process. The previous per-call File.ReadAllText was a synchronous disk
+        // read on every DB method invocation — across a session that's hundreds
+        // of redundant reads for the same files. Cache the contents on first read.
+        private static readonly ConcurrentDictionary<string, string> _queryCache =
+            new(StringComparer.OrdinalIgnoreCase);
 
         internal static string? SetWALJournalingMode()
         {
@@ -767,10 +775,11 @@ namespace OpenSpartan.Workshop.Data
         }
 
 
-        private static string GetQuery(string category, string target)
-        {
-            return System.IO.File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Queries", category, $"{target}.sql"), Encoding.UTF8);
-        }
+        private static string GetQuery(string category, string target) =>
+            _queryCache.GetOrAdd($"{category}/{target}", _ =>
+                System.IO.File.ReadAllText(
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Queries", category, $"{target}.sql"),
+                    Encoding.UTF8));
 
         internal static List<Medal> GetMedals()
         {

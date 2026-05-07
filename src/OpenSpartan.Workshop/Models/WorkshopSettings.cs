@@ -18,7 +18,9 @@ namespace OpenSpartan.Workshop.Models
         private bool _useObanClearance;
         private bool _enableLooseMatchSearch;
         private List<string> _extraRitualEvents = [];
-        private List<string> _excludedOperations = [];
+        // HashSet so the .Contains() lookups in PopulateBattlePassData /
+        // PopulateSeasonCalendar's RemoveAll are O(1) per check instead of O(n).
+        private HashSet<string> _excludedOperations = [];
 
         public WorkshopSettings()
         {
@@ -179,7 +181,7 @@ namespace OpenSpartan.Workshop.Models
         }
 
         [JsonPropertyName("excludedOperations")]
-        public List<string> ExcludedOperations
+        public HashSet<string> ExcludedOperations
         {
             get => _excludedOperations;
             set
