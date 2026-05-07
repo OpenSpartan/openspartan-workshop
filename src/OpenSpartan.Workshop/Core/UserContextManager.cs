@@ -723,14 +723,21 @@ namespace OpenSpartan.Workshop.Core
                 });
 
                 int matchCounter = 0;
-                int matchesTotal = matchIds.Count();
+                var matchIdList = matchIds as IList<Guid> ?? matchIds.ToList();
+                int matchesTotal = matchIdList.Count;
+
+                // One batch availability lookup up front instead of N per-match
+                // SQLite round-trips inside the parallel loop.
+                var availabilityMap = await Task.Run(() =>
+                    DataHandler.GetMatchStatsAvailabilityBatch(matchIdList.Select(id => id.ToString())))
+                    .ConfigureAwait(false);
 
                 ParallelOptions parallelOptions = new()
                 {
                     MaxDegreeOfParallelism = 4
                 };
 
-                await Parallel.ForEachAsync(matchIds, parallelOptions, async (matchId, token) =>
+                await Parallel.ForEachAsync(matchIdList, parallelOptions, async (matchId, token) =>
                 {
                     int currentCount = Interlocked.Increment(ref matchCounter);
                     try
@@ -745,7 +752,9 @@ namespace OpenSpartan.Workshop.Core
                             MatchesViewModel.Instance.MatchLoadingParameter = $"{matchId} ({currentCount} out of {matchesTotal} - {completionProgress:#.00}%)";
                         });
 
-                        var matchStatsAvailability = DataHandler.GetMatchStatsAvailability(matchId.ToString());
+                        var matchStatsAvailability = availabilityMap.TryGetValue(matchId.ToString(), out var avail)
+                            ? avail
+                            : (MatchAvailable: false, StatsAvailable: false);
 
                         if (!matchStatsAvailability.MatchAvailable)
                         {
@@ -2137,6 +2146,17 @@ namespace OpenSpartan.Workshop.Core
 
         private static async Task<bool> ProcessExchangeItems(StoreItem exchangeStoreItem, CancellationToken token)
         {
+            // The expiration date is the same for every offering in the storefront;
+            // setting it once outside the loop avoids one dispatcher hop per offering.
+            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            {
+                ExchangeViewModel.Instance.ExpirationDate = exchangeStoreItem.StorefrontExpirationDate;
+            });
+
+            // Local set of item IDs we've already added; replaces the O(n) per-iteration
+            // .Any(...) scan over ExchangeItems that previously gated each Add.
+            var seenItemIds = new HashSet<string>(StringComparer.Ordinal);
+
             foreach (var offering in exchangeStoreItem.Offerings)
             {
                 token.ThrowIfCancellationRequested();
@@ -2149,11 +2169,6 @@ namespace OpenSpartan.Workshop.Core
                     // Current Exchange offering can contain more items in one (e.g., logos)
                     // but ultimately maps to just one item.
                     var item = offering.IncludedItems.FirstOrDefault();
-
-                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
-                    {
-                        ExchangeViewModel.Instance.ExpirationDate = exchangeStoreItem.StorefrontExpirationDate;
-                    });
 
                     if (item != null)
                     {
@@ -2211,14 +2226,11 @@ namespace OpenSpartan.Workshop.Core
 
                             await DownloadAndSetImage(metadataContainer.ImagePath, qualifiedItemImagePath);
 
-                            if (!token.IsCancellationRequested)
+                            if (!token.IsCancellationRequested && seenItemIds.Add(metadataContainer.ItemDetails.CommonData.Id))
                             {
                                 await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
                                 {
-                                    if (!ExchangeViewModel.Instance.ExchangeItems.Any(x => x.ItemDetails.CommonData.Id == metadataContainer.ItemDetails.CommonData.Id))
-                                    {
-                                        ExchangeViewModel.Instance.ExchangeItems.Add(metadataContainer);
-                                    }
+                                    ExchangeViewModel.Instance.ExchangeItems.Add(metadataContainer);
                                 });
                             }
 

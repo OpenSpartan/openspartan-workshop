@@ -40,12 +40,54 @@ namespace OpenSpartan.Workshop.Data
         private static readonly ConcurrentDictionary<string, string> _queryCache =
             new(StringComparer.OrdinalIgnoreCase);
 
+        // Per-connection pragmas. Pooling reuses the underlying SqliteConnection
+        // handle, so these settings persist across logical opens. Conservative
+        // values appropriate for a single-user desktop app with a local database:
+        //   - cache_size  -65536  -> 64 MiB page cache
+        //   - mmap_size   268435456 -> 256 MiB memory-mapped I/O window
+        //   - busy_timeout 5000    -> wait up to 5s on writer contention
+        //   - synchronous NORMAL   -> still safe with WAL, fewer fsyncs than FULL
+        private const string TuningPragmas = @"
+PRAGMA cache_size = -65536;
+PRAGMA mmap_size = 268435456;
+PRAGMA busy_timeout = 5000;
+PRAGMA synchronous = NORMAL;";
+
+        private static SqliteConnection OpenConnection()
+        {
+            var connection = new SqliteConnection($"Data Source={DatabasePath}");
+            connection.Open();
+            ApplyTuningPragmas(connection);
+            return connection;
+        }
+
+        private static async Task<SqliteConnection> OpenConnectionAsync()
+        {
+            var connection = new SqliteConnection($"Data Source={DatabasePath}");
+            await connection.OpenAsync();
+            await ApplyTuningPragmasAsync(connection);
+            return connection;
+        }
+
+        private static void ApplyTuningPragmas(SqliteConnection connection)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = TuningPragmas;
+            cmd.ExecuteNonQuery();
+        }
+
+        private static async Task ApplyTuningPragmasAsync(SqliteConnection connection)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = TuningPragmas;
+            await cmd.ExecuteNonQueryAsync();
+        }
+
         internal static string? SetWALJournalingMode()
         {
             try
             {
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                connection.Open();
+                using var connection = OpenConnection();
 
                 using var command = connection.CreateCommand();
                 command.CommandText = GetQuery("Bootstrap", "SetWALJournalingMode");
@@ -72,8 +114,7 @@ namespace OpenSpartan.Workshop.Data
             {
                 EnsureDatabaseDirectoryExists();
 
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                connection.Open();
+                using var connection = OpenConnection();
 
                 BootstrapTableIfNotExists(connection, "ServiceRecordSnapshots");
                 BootstrapTableIfNotExists(connection, "PlayerMatchStats");
@@ -134,8 +175,7 @@ namespace OpenSpartan.Workshop.Data
         {
             try
             {
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                connection.Open();
+                using var connection = OpenConnection();
 
                 using var command = connection.CreateCommand();
                 command.CommandText = GetQuery("Insert", "ServiceRecord");
@@ -156,8 +196,7 @@ namespace OpenSpartan.Workshop.Data
         {
             try
             {
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                connection.Open();
+                using var connection = OpenConnection();
 
                 using var command = connection.CreateCommand();
                 command.CommandText = GetQuery("Insert", "PlaylistCSR");
@@ -180,8 +219,7 @@ namespace OpenSpartan.Workshop.Data
         {
             try
             {
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                connection.Open();
+                using var connection = OpenConnection();
 
                 using var command = connection.CreateCommand();
                 command.CommandText = GetQuery("Select", "DistinctMatchIds");
@@ -211,8 +249,7 @@ namespace OpenSpartan.Workshop.Data
         {
             try
             {
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                connection.Open();
+                using var connection = OpenConnection();
 
                 using var command = connection.CreateCommand();
                 command.CommandText = GetQuery("Select", "OperationResponseBody");
@@ -239,8 +276,7 @@ namespace OpenSpartan.Workshop.Data
         {
             try
             {
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                connection.Open();
+                using var connection = OpenConnection();
 
                 using var command = connection.CreateCommand();
 
@@ -298,8 +334,7 @@ namespace OpenSpartan.Workshop.Data
         {
             try
             {
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                connection.Open();
+                using var connection = OpenConnection();
 
                 using var command = connection.CreateCommand();
                 if (medalNameId.HasValue)
@@ -362,8 +397,7 @@ namespace OpenSpartan.Workshop.Data
         {
             try
             {
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                await connection.OpenAsync();
+                using var connection = await OpenConnectionAsync();
 
                 using var command = connection.CreateCommand();
                 if (medalNameId.HasValue)
@@ -505,12 +539,79 @@ namespace OpenSpartan.Workshop.Data
         }
 
 
+        // Returns a per-match-ID dictionary of (MatchAvailable, StatsAvailable). Two
+        // small queries instead of N round-trips when populating the match-data
+        // bootstrap loop, which previously called GetMatchStatsAvailability inside a
+        // per-match Parallel.ForEachAsync (4 concurrent connections, each opening +
+        // running its own EXISTS query for every match ID).
+        internal static Dictionary<string, (bool MatchAvailable, bool StatsAvailable)> GetMatchStatsAvailabilityBatch(IEnumerable<string> matchIds)
+        {
+            var idList = matchIds as IList<string> ?? matchIds.ToList();
+            var result = new Dictionary<string, (bool, bool)>(idList.Count, StringComparer.OrdinalIgnoreCase);
+            if (idList.Count == 0)
+            {
+                return result;
+            }
+
+            try
+            {
+                using var connection = OpenConnection();
+
+                var paramNames = new List<string>(idList.Count);
+                for (int i = 0; i < idList.Count; i++)
+                {
+                    paramNames.Add($"@id{i}");
+                }
+                var inClause = string.Join(", ", paramNames);
+
+                var matchAvailable = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                using (var matchCmd = connection.CreateCommand())
+                {
+                    matchCmd.CommandText = $"SELECT MatchId FROM MatchStats WHERE MatchId IN ({inClause})";
+                    for (int i = 0; i < idList.Count; i++)
+                    {
+                        matchCmd.Parameters.AddWithValue(paramNames[i], idList[i]);
+                    }
+                    using var reader = matchCmd.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        matchAvailable.Add(reader.GetString(0));
+                    }
+                }
+
+                var statsAvailable = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                using (var statsCmd = connection.CreateCommand())
+                {
+                    statsCmd.CommandText = $"SELECT MatchId FROM PlayerMatchStats WHERE MatchId IN ({inClause})";
+                    for (int i = 0; i < idList.Count; i++)
+                    {
+                        statsCmd.Parameters.AddWithValue(paramNames[i], idList[i]);
+                    }
+                    using var reader = statsCmd.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        statsAvailable.Add(reader.GetString(0));
+                    }
+                }
+
+                foreach (var id in idList)
+                {
+                    result[id] = (matchAvailable.Contains(id), statsAvailable.Contains(id));
+                }
+            }
+            catch (Exception ex) when (ex is SqliteException or IOException or InvalidOperationException)
+            {
+                LogEngine.Log($"Error obtaining batch match availability. {ex}", LogSeverity.Error);
+            }
+
+            return result;
+        }
+
         internal static (bool MatchAvailable, bool StatsAvailable) GetMatchStatsAvailability(string matchId)
         {
             try
             {
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                connection.Open();
+                using var connection = OpenConnection();
 
                 using var command = connection.CreateCommand();
                 command.CommandText = GetQuery("Select", "MatchStatsAvailability");
@@ -534,8 +635,7 @@ namespace OpenSpartan.Workshop.Data
         {
             try
             {
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                connection.Open();
+                using var connection = OpenConnection();
 
                 using var command = connection.CreateCommand();
                 command.CommandText = GetQuery("Insert", "PlayerMatchStats");
@@ -557,8 +657,7 @@ namespace OpenSpartan.Workshop.Data
         {
             try
             {
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                connection.Open();
+                using var connection = OpenConnection();
 
                 using var command = connection.CreateCommand();
                 command.CommandText = GetQuery("Insert", "MatchStats");
@@ -586,8 +685,7 @@ namespace OpenSpartan.Workshop.Data
                 bool playlistMapModePairAvailable = true;
                 UGCGameVariant targetGameVariant = null;
 
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                await connection.OpenAsync();
+                using var connection = await OpenConnectionAsync();
 
                 // Construct the initial query
                 var queryBuilder = new StringBuilder();
@@ -785,8 +883,7 @@ namespace OpenSpartan.Workshop.Data
         {
             try
             {
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                connection.Open();
+                using var connection = OpenConnection();
 
                 using var command = connection.CreateCommand();
                 command.CommandText = GetQuery("Select", "LatestMedalsSnapshot");
@@ -817,8 +914,7 @@ namespace OpenSpartan.Workshop.Data
         {
             try
             {
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                connection.Open();
+                using var connection = OpenConnection();
 
                 using var command = connection.CreateCommand();
                 command.CommandText = GetQuery("Insert", "OperationRewardTracks");
@@ -850,8 +946,7 @@ namespace OpenSpartan.Workshop.Data
         {
             try
             {
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                connection.Open();
+                using var connection = OpenConnection();
 
                 using var command = connection.CreateCommand();
                 command.CommandText = GetQuery("Insert", "InventoryItems");
@@ -883,8 +978,7 @@ namespace OpenSpartan.Workshop.Data
         {
             try
             {
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                connection.Open();
+                using var connection = OpenConnection();
 
                 using var command = connection.CreateCommand();
                 command.CommandText = "SELECT EXISTS(SELECT 1 FROM OperationRewardTracks WHERE Path = @Path) AS OPERATION_AVAILABLE";
@@ -909,8 +1003,7 @@ namespace OpenSpartan.Workshop.Data
         {
             try
             {
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                connection.Open();
+                using var connection = OpenConnection();
 
                 using var command = connection.CreateCommand();
                 command.CommandText = "SELECT EXISTS(SELECT 1 FROM InventoryItems WHERE Path = @Path) AS INVENTORY_ITEM_AVAILABLE";
@@ -935,8 +1028,7 @@ namespace OpenSpartan.Workshop.Data
         {
             try
             {
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                connection.Open();
+                using var connection = OpenConnection();
 
                 using var command = connection.CreateCommand();
                 command.CommandText = GetQuery("Select", "InventoryItem");
@@ -964,8 +1056,7 @@ namespace OpenSpartan.Workshop.Data
         {
             try
             {
-                using var connection = new SqliteConnection($"Data Source={DatabasePath}");
-                await connection.OpenAsync();
+                using var connection = await OpenConnectionAsync();
 
                 var commandText = GetQuery("Insert", "OwnedInventoryItems");
 
