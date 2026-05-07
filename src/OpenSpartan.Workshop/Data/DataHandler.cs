@@ -1,4 +1,4 @@
-﻿using Den.Dev.Grunt.Converters;
+using Den.Dev.Grunt.Converters;
 using Den.Dev.Grunt.Models.HaloInfinite;
 using Microsoft.Data.Sqlite;
 using OpenSpartan.Workshop.Core;
@@ -50,9 +50,9 @@ namespace OpenSpartan.Workshop.Data
 
                 LogEngine.Log($"WAL journaling mode not set.", LogSeverity.Error);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SqliteException or IOException or InvalidOperationException)
             {
-                LogEngine.Log($"Journaling mode modification exception: {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"Journaling mode modification exception: {ex}", LogSeverity.Error);
             }
 
             return null;
@@ -84,9 +84,9 @@ namespace OpenSpartan.Workshop.Data
 
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SqliteException or IOException or InvalidOperationException)
             {
-                LogEngine.Log($"Database bootstrapping failure: {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"Database bootstrapping failure: {ex}", LogSeverity.Error);
                 return false;
             }
         }
@@ -137,9 +137,9 @@ namespace OpenSpartan.Workshop.Data
                 int recordsAffected = command.ExecuteNonQuery();
                 return recordsAffected > 1;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SqliteException or IOException or InvalidOperationException)
             {
-                LogEngine.Log($"Error inserting service record entry. {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"Error inserting service record entry. {ex}", LogSeverity.Error);
                 return false;
             }
         }
@@ -161,9 +161,9 @@ namespace OpenSpartan.Workshop.Data
                 int recordsAffected = command.ExecuteNonQuery();
                 return recordsAffected > 1;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SqliteException or IOException or InvalidOperationException)
             {
-                LogEngine.Log($"Error inserting playlist CSR entry. {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"Error inserting playlist CSR entry. {ex}", LogSeverity.Error);
                 return false;
             }
         }
@@ -192,9 +192,9 @@ namespace OpenSpartan.Workshop.Data
 
                 return matchIds;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SqliteException or IOException or InvalidOperationException)
             {
-                LogEngine.Log($"An error occurred obtaining unique match IDs. {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"An error occurred obtaining unique match IDs. {ex}", LogSeverity.Error);
                 return [];
             }
         }
@@ -219,9 +219,9 @@ namespace OpenSpartan.Workshop.Data
 
                 LogEngine.Log("No rows returned for operations.", LogSeverity.Warning);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SqliteException or IOException or JsonException or InvalidOperationException)
             {
-                LogEngine.Log($"An error occurred obtaining operations from database. {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"An error occurred obtaining operations from database. {ex}", LogSeverity.Error);
             }
 
             return null;
@@ -234,27 +234,43 @@ namespace OpenSpartan.Workshop.Data
                 using var connection = new SqliteConnection($"Data Source={DatabasePath}");
                 connection.Open();
 
-                // Build the command text with the matchIds directly embedded (literal query)
-                string matchIdsString = string.Join(", ", matchIds.Select(g => $"'{g}'"));
-                string query = GetQuery("Select", "ExistingMatchCount").Replace("$MatchGUIDList", matchIdsString, StringComparison.InvariantCultureIgnoreCase);
-
                 using var command = connection.CreateCommand();
-                command.CommandText = query;
+
+                // Build a parameterized IN list (@matchId0, @matchId1, ...). Previously
+                // the GUIDs were string-interpolated into the SQL, which worked because
+                // System.Guid.ToString() is hex+dashes only, but the pattern was the
+                // wrong shape and would have broken the moment the input type changed.
+                var paramNames = new List<string>();
+                int index = 0;
+                foreach (var id in matchIds)
+                {
+                    var name = $"@matchId{index++}";
+                    paramNames.Add(name);
+                    command.Parameters.AddWithValue(name, id.ToString());
+                }
+
+                if (paramNames.Count == 0)
+                {
+                    return 0;
+                }
+
+                command.CommandText = GetQuery("Select", "ExistingMatchCount")
+                    .Replace("$MatchGUIDList", string.Join(", ", paramNames), StringComparison.InvariantCultureIgnoreCase);
 
                 using var reader = command.ExecuteReader();
                 if (reader.Read())
                 {
                     var resultOrdinal = reader.GetOrdinal("ExistingMatchCount");
-                    return reader.IsDBNull(resultOrdinal) ? -1 : reader.GetFieldValue<int>(resultOrdinal);
+                    return reader.GetOrDefault(resultOrdinal, -1);
                 }
                 else
                 {
                     LogEngine.Log("No rows returned for existing match metadata.", LogSeverity.Warning);
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SqliteException or IOException or InvalidOperationException)
             {
-                LogEngine.Log($"An error occurred obtaining match records from database. {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"An error occurred obtaining match records from database. {ex}", LogSeverity.Error);
             }
 
             return -1;
@@ -317,9 +333,9 @@ namespace OpenSpartan.Workshop.Data
 
                 return matches;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SqliteException or IOException or JsonException or InvalidOperationException)
             {
-                LogEngine.Log($"An error occurred obtaining matches. {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"An error occurred obtaining matches. {ex}", LogSeverity.Error);
                 return new List<MatchTableEntity>();
             }
         }
@@ -381,96 +397,102 @@ namespace OpenSpartan.Workshop.Data
 
                 return matches;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SqliteException or IOException or JsonException or InvalidOperationException)
             {
-                LogEngine.Log($"An error occurred obtaining matches. {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"An error occurred obtaining matches. {ex}", LogSeverity.Error);
                 return new List<MatchTableEntity>();
             }
         }
 
         private static MatchTableEntity ReadMatchTableEntity(SqliteDataReader reader)
         {
-            var matchOrdinal = reader.GetOrdinal("MatchId");
-            var startTimeOrdinal = reader.GetOrdinal("StartTime");
-            var endTimeOrdinal = reader.GetOrdinal("EndTime");
-            var rankOrdinal = reader.GetOrdinal("Rank");
-            var outcomeOrdinal = reader.GetOrdinal("Outcome");
-            var gameVariantCategoryOrdinal = reader.GetOrdinal("GameVariantCategory");
-            var mapOrdinal = reader.GetOrdinal("Map");
-            var playlistOrdinal = reader.GetOrdinal("Playlist");
-            var gameVariantOrdinal = reader.GetOrdinal("GameVariant");
-            var durationOrdinal = reader.GetOrdinal("Duration");
-            var lastTeamIdOrdinal = reader.GetOrdinal("LastTeamId");
-            var teamsOrdinal = reader.GetOrdinal("Teams");
-            var participationInfoOrdinal = reader.GetOrdinal("ParticipationInfo");
-            var playerTeamStatsOrdinal = reader.GetOrdinal("PlayerTeamStats");
-            var teamMmrOrdinal = reader.GetOrdinal("TeamMmr");
-            var expectedDeathsOrdinal = reader.GetOrdinal("ExpectedDeaths");
-            var expectedKillsOrdinal = reader.GetOrdinal("ExpectedKills");
-            var expectedBronzeDeathsOrdinal = reader.GetOrdinal("ExpectedBronzeDeaths");
-            var expectedBronzeKillsOrdinal = reader.GetOrdinal("ExpectedBronzeKills");
-            var expectedSilverDeathsOrdinal = reader.GetOrdinal("ExpectedSilverDeaths");
-            var expectedSilverKillsOrdinal = reader.GetOrdinal("ExpectedSilverKills");
-            var expectedGoldDeathsOrdinal = reader.GetOrdinal("ExpectedGoldDeaths");
-            var expectedGoldKillsOrdinal = reader.GetOrdinal("ExpectedGoldKills");
-            var expectedPlatinumDeathsOrdinal = reader.GetOrdinal("ExpectedPlatinumDeaths");
-            var expectedPlatinumKillsOrdinal = reader.GetOrdinal("ExpectedPlatinumKills");
-            var expectedDiamondDeathsOrdinal = reader.GetOrdinal("ExpectedDiamondDeaths");
-            var expectedDiamondKillsOrdinal = reader.GetOrdinal("ExpectedDiamondKills");
-            var expectedOnyxDeathsOrdinal = reader.GetOrdinal("ExpectedOnyxDeaths");
-            var expectedOnyxKillsOrdinal = reader.GetOrdinal("ExpectedOnyxKills");
-            var postMatchOrdinal = reader.GetOrdinal("PostMatchCsr");
-            var preMatchCsrOrdinal = reader.GetOrdinal("PreMatchCsr");
-            var tierOrdinal = reader.GetOrdinal("Tier");
-            var tierStartOrdinal = reader.GetOrdinal("TierStart");
-            var tierLevelOrdinal = reader.GetOrdinal("TierLevel");
-            var initialMeasurementMatchesOrdinal = reader.GetOrdinal("InitialMeasurementMatches");
-            var measurementMatchesRemainingOrdinal = reader.GetOrdinal("MeasurementMatchesRemaining");
-            var nextTierOrdinal = reader.GetOrdinal("NextTier");
-            var nextTierLevelOrdinal = reader.GetOrdinal("NextTierLevel");
-            var nextTierStartOrdinal = reader.GetOrdinal("NextTierStart");
+            int matchOrdinal = reader.GetOrdinal("MatchId");
+            int startTimeOrdinal = reader.GetOrdinal("StartTime");
+            int endTimeOrdinal = reader.GetOrdinal("EndTime");
+            int rankOrdinal = reader.GetOrdinal("Rank");
+            int outcomeOrdinal = reader.GetOrdinal("Outcome");
+            int gameVariantCategoryOrdinal = reader.GetOrdinal("GameVariantCategory");
+            int mapOrdinal = reader.GetOrdinal("Map");
+            int playlistOrdinal = reader.GetOrdinal("Playlist");
+            int gameVariantOrdinal = reader.GetOrdinal("GameVariant");
+            int durationOrdinal = reader.GetOrdinal("Duration");
+            int lastTeamIdOrdinal = reader.GetOrdinal("LastTeamId");
+            int teamsOrdinal = reader.GetOrdinal("Teams");
+            int participationInfoOrdinal = reader.GetOrdinal("ParticipationInfo");
+            int playerTeamStatsOrdinal = reader.GetOrdinal("PlayerTeamStats");
+            int teamMmrOrdinal = reader.GetOrdinal("TeamMmr");
+            int expectedDeathsOrdinal = reader.GetOrdinal("ExpectedDeaths");
+            int expectedKillsOrdinal = reader.GetOrdinal("ExpectedKills");
+            int expectedBronzeDeathsOrdinal = reader.GetOrdinal("ExpectedBronzeDeaths");
+            int expectedBronzeKillsOrdinal = reader.GetOrdinal("ExpectedBronzeKills");
+            int expectedSilverDeathsOrdinal = reader.GetOrdinal("ExpectedSilverDeaths");
+            int expectedSilverKillsOrdinal = reader.GetOrdinal("ExpectedSilverKills");
+            int expectedGoldDeathsOrdinal = reader.GetOrdinal("ExpectedGoldDeaths");
+            int expectedGoldKillsOrdinal = reader.GetOrdinal("ExpectedGoldKills");
+            int expectedPlatinumDeathsOrdinal = reader.GetOrdinal("ExpectedPlatinumDeaths");
+            int expectedPlatinumKillsOrdinal = reader.GetOrdinal("ExpectedPlatinumKills");
+            int expectedDiamondDeathsOrdinal = reader.GetOrdinal("ExpectedDiamondDeaths");
+            int expectedDiamondKillsOrdinal = reader.GetOrdinal("ExpectedDiamondKills");
+            int expectedOnyxDeathsOrdinal = reader.GetOrdinal("ExpectedOnyxDeaths");
+            int expectedOnyxKillsOrdinal = reader.GetOrdinal("ExpectedOnyxKills");
+            int postMatchOrdinal = reader.GetOrdinal("PostMatchCsr");
+            int preMatchCsrOrdinal = reader.GetOrdinal("PreMatchCsr");
+            int tierOrdinal = reader.GetOrdinal("Tier");
+            int tierStartOrdinal = reader.GetOrdinal("TierStart");
+            int tierLevelOrdinal = reader.GetOrdinal("TierLevel");
+            int initialMeasurementMatchesOrdinal = reader.GetOrdinal("InitialMeasurementMatches");
+            int measurementMatchesRemainingOrdinal = reader.GetOrdinal("MeasurementMatchesRemaining");
+            int nextTierOrdinal = reader.GetOrdinal("NextTier");
+            int nextTierLevelOrdinal = reader.GetOrdinal("NextTierLevel");
+            int nextTierStartOrdinal = reader.GetOrdinal("NextTierStart");
+
+            // Teams / ParticipationInfo / PlayerTeamStats are written together as one group
+            // from the same PlayerMatchStats payload. If the Teams JSON column is null, the
+            // other two are treated as unavailable too — preserving the behavior of the
+            // pre-refactor code that gated all three on teamsOrdinal.
+            bool statsAvailable = !reader.IsDBNull(teamsOrdinal);
 
             return new MatchTableEntity
             {
-                MatchId = reader.IsDBNull(matchOrdinal) ? string.Empty : reader.GetFieldValue<string>(matchOrdinal),
+                MatchId = reader.GetOrDefault(matchOrdinal, string.Empty),
                 StartTime = reader.IsDBNull(startTimeOrdinal) ? DateTimeOffset.UnixEpoch : reader.GetFieldValue<DateTimeOffset>(startTimeOrdinal).ToLocalTime(),
-                EndTime = reader.IsDBNull(startTimeOrdinal) ? DateTimeOffset.UnixEpoch : reader.GetFieldValue<DateTimeOffset>(endTimeOrdinal).ToLocalTime(),
-                Rank = reader.IsDBNull(rankOrdinal) ? 0 : reader.GetFieldValue<int>(rankOrdinal),
-                Outcome = reader.IsDBNull(outcomeOrdinal) ? Outcome.DidNotFinish : reader.GetFieldValue<Outcome>(outcomeOrdinal),
-                Category = reader.IsDBNull(gameVariantCategoryOrdinal) ? GameVariantCategory.None : reader.GetFieldValue<GameVariantCategory>(gameVariantCategoryOrdinal),
-                Map = reader.IsDBNull(mapOrdinal) ? string.Empty : reader.GetFieldValue<string>(mapOrdinal),
-                Playlist = reader.IsDBNull(playlistOrdinal) ? string.Empty : reader.GetFieldValue<string>(playlistOrdinal),
-                GameVariant = reader.IsDBNull(gameVariantOrdinal) ? string.Empty : reader.GetFieldValue<string>(gameVariantOrdinal),
+                EndTime = reader.IsDBNull(endTimeOrdinal) ? DateTimeOffset.UnixEpoch : reader.GetFieldValue<DateTimeOffset>(endTimeOrdinal).ToLocalTime(),
+                Rank = reader.GetOrDefault(rankOrdinal, 0),
+                Outcome = reader.GetOrDefault(outcomeOrdinal, Outcome.DidNotFinish),
+                Category = reader.GetOrDefault(gameVariantCategoryOrdinal, GameVariantCategory.None),
+                Map = reader.GetOrDefault(mapOrdinal, string.Empty),
+                Playlist = reader.GetOrDefault(playlistOrdinal, string.Empty),
+                GameVariant = reader.GetOrDefault(gameVariantOrdinal, string.Empty),
                 Duration = reader.IsDBNull(durationOrdinal) ? TimeSpan.Zero : XmlConvert.ToTimeSpan(reader.GetFieldValue<string>(durationOrdinal)),
-                LastTeamId = reader.IsDBNull(durationOrdinal) ? null : reader.GetFieldValue<int>(lastTeamIdOrdinal),
-                Teams = reader.IsDBNull(teamsOrdinal) ? null : JsonSerializer.Deserialize<List<Team>>(reader.GetFieldValue<string>(teamsOrdinal), serializerOptions),
-                ParticipationInfo = reader.IsDBNull(teamsOrdinal) ? null : JsonSerializer.Deserialize<ParticipationInfo>(reader.GetFieldValue<string>(participationInfoOrdinal), serializerOptions),
-                PlayerTeamStats = reader.IsDBNull(teamsOrdinal) ? null : JsonSerializer.Deserialize<List<PlayerTeamStat>>(reader.GetFieldValue<string>(playerTeamStatsOrdinal), serializerOptions),
-                TeamMmr = reader.IsDBNull(teamMmrOrdinal) ? null : reader.GetFieldValue<float>(teamMmrOrdinal),
-                ExpectedDeaths = reader.IsDBNull(expectedDeathsOrdinal) ? null : reader.GetFieldValue<float>(expectedDeathsOrdinal),
-                ExpectedKills = reader.IsDBNull(expectedKillsOrdinal) ? null : reader.GetFieldValue<float>(expectedKillsOrdinal),
-                ExpectedBronzeDeaths = reader.IsDBNull(expectedBronzeDeathsOrdinal) ? null : reader.GetFieldValue<float>(expectedBronzeDeathsOrdinal),
-                ExpectedBronzeKills = reader.IsDBNull(expectedBronzeKillsOrdinal) ? null : reader.GetFieldValue<float>(expectedBronzeKillsOrdinal),
-                ExpectedSilverDeaths = reader.IsDBNull(expectedSilverDeathsOrdinal) ? null : reader.GetFieldValue<float>(expectedSilverDeathsOrdinal),
-                ExpectedSilverKills = reader.IsDBNull(expectedSilverKillsOrdinal) ? null : reader.GetFieldValue<float>(expectedSilverKillsOrdinal),
-                ExpectedGoldDeaths = reader.IsDBNull(expectedGoldDeathsOrdinal) ? null : reader.GetFieldValue<float>(expectedGoldDeathsOrdinal),
-                ExpectedGoldKills = reader.IsDBNull(expectedGoldKillsOrdinal) ? null : reader.GetFieldValue<float>(expectedGoldKillsOrdinal),
-                ExpectedPlatinumDeaths = reader.IsDBNull(expectedPlatinumDeathsOrdinal) ? null : reader.GetFieldValue<float>(expectedPlatinumDeathsOrdinal),
-                ExpectedPlatinumKills = reader.IsDBNull(expectedPlatinumKillsOrdinal) ? null : reader.GetFieldValue<float>(expectedPlatinumKillsOrdinal),
-                ExpectedDiamondDeaths = reader.IsDBNull(expectedDiamondDeathsOrdinal) ? null : reader.GetFieldValue<float>(expectedDiamondDeathsOrdinal),
-                ExpectedDiamondKills = reader.IsDBNull(expectedDiamondKillsOrdinal) ? null : reader.GetFieldValue<float>(expectedDiamondKillsOrdinal),
-                ExpectedOnyxDeaths = reader.IsDBNull(expectedOnyxDeathsOrdinal) ? null : reader.GetFieldValue<float>(expectedOnyxDeathsOrdinal),
-                ExpectedOnyxKills = reader.IsDBNull(expectedOnyxKillsOrdinal) ? null : reader.GetFieldValue<float>(expectedOnyxKillsOrdinal),
-                PostMatchCsr = reader.IsDBNull(postMatchOrdinal) ? null : reader.GetFieldValue<int>(postMatchOrdinal),
-                PreMatchCsr = reader.IsDBNull(preMatchCsrOrdinal) ? null : reader.GetFieldValue<int>(preMatchCsrOrdinal),
-                Tier = reader.IsDBNull(tierOrdinal) ? null : reader.GetFieldValue<string>(tierOrdinal),
-                TierStart = reader.IsDBNull(tierStartOrdinal) ? null : reader.GetFieldValue<int>(tierStartOrdinal),
-                TierLevel = reader.IsDBNull(tierLevelOrdinal) ? null : reader.GetFieldValue<int>(tierLevelOrdinal),
-                InitialMeasurementMatches = reader.IsDBNull(initialMeasurementMatchesOrdinal) ? null : reader.GetFieldValue<int>(initialMeasurementMatchesOrdinal),
-                MeasurementMatchesRemaining = reader.IsDBNull(measurementMatchesRemainingOrdinal) ? null : reader.GetFieldValue<int>(measurementMatchesRemainingOrdinal),
-                NextTier = reader.IsDBNull(nextTierOrdinal) ? null : reader.GetFieldValue<string>(nextTierOrdinal),
-                NextTierLevel = reader.IsDBNull(nextTierLevelOrdinal) ? null : reader.GetFieldValue<int>(nextTierLevelOrdinal),
-                NextTierStart = reader.IsDBNull(nextTierStartOrdinal) ? null : reader.GetFieldValue<int>(nextTierStartOrdinal),
+                LastTeamId = reader.GetNullable<int>(lastTeamIdOrdinal),
+                Teams = statsAvailable ? JsonSerializer.Deserialize<List<Team>>(reader.GetFieldValue<string>(teamsOrdinal), serializerOptions) : null,
+                ParticipationInfo = statsAvailable ? JsonSerializer.Deserialize<ParticipationInfo>(reader.GetFieldValue<string>(participationInfoOrdinal), serializerOptions) : null,
+                PlayerTeamStats = statsAvailable ? JsonSerializer.Deserialize<List<PlayerTeamStat>>(reader.GetFieldValue<string>(playerTeamStatsOrdinal), serializerOptions) : null,
+                TeamMmr = reader.GetNullable<float>(teamMmrOrdinal),
+                ExpectedDeaths = reader.GetNullable<float>(expectedDeathsOrdinal),
+                ExpectedKills = reader.GetNullable<float>(expectedKillsOrdinal),
+                ExpectedBronzeDeaths = reader.GetNullable<float>(expectedBronzeDeathsOrdinal),
+                ExpectedBronzeKills = reader.GetNullable<float>(expectedBronzeKillsOrdinal),
+                ExpectedSilverDeaths = reader.GetNullable<float>(expectedSilverDeathsOrdinal),
+                ExpectedSilverKills = reader.GetNullable<float>(expectedSilverKillsOrdinal),
+                ExpectedGoldDeaths = reader.GetNullable<float>(expectedGoldDeathsOrdinal),
+                ExpectedGoldKills = reader.GetNullable<float>(expectedGoldKillsOrdinal),
+                ExpectedPlatinumDeaths = reader.GetNullable<float>(expectedPlatinumDeathsOrdinal),
+                ExpectedPlatinumKills = reader.GetNullable<float>(expectedPlatinumKillsOrdinal),
+                ExpectedDiamondDeaths = reader.GetNullable<float>(expectedDiamondDeathsOrdinal),
+                ExpectedDiamondKills = reader.GetNullable<float>(expectedDiamondKillsOrdinal),
+                ExpectedOnyxDeaths = reader.GetNullable<float>(expectedOnyxDeathsOrdinal),
+                ExpectedOnyxKills = reader.GetNullable<float>(expectedOnyxKillsOrdinal),
+                PostMatchCsr = reader.GetNullable<int>(postMatchOrdinal),
+                PreMatchCsr = reader.GetNullable<int>(preMatchCsrOrdinal),
+                Tier = reader.GetStringOrNull(tierOrdinal),
+                TierStart = reader.GetNullable<int>(tierStartOrdinal),
+                TierLevel = reader.GetNullable<int>(tierLevelOrdinal),
+                InitialMeasurementMatches = reader.GetNullable<int>(initialMeasurementMatchesOrdinal),
+                MeasurementMatchesRemaining = reader.GetNullable<int>(measurementMatchesRemainingOrdinal),
+                NextTier = reader.GetStringOrNull(nextTierOrdinal),
+                NextTierLevel = reader.GetNullable<int>(nextTierLevelOrdinal),
+                NextTierStart = reader.GetNullable<int>(nextTierStartOrdinal),
             };
         }
 
@@ -492,9 +514,9 @@ namespace OpenSpartan.Workshop.Data
                     return (reader.GetBoolean(0), reader.GetBoolean(1));
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SqliteException or IOException or InvalidOperationException)
             {
-                LogEngine.Log($"An error occurred obtaining match and stats availability. {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"An error occurred obtaining match and stats availability. {ex}", LogSeverity.Error);
             }
 
             return (false, false); // Default values if the data retrieval fails
@@ -516,9 +538,9 @@ namespace OpenSpartan.Workshop.Data
 
                 return rowsAffected > 0;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SqliteException or IOException or InvalidOperationException)
             {
-                LogEngine.Log($"An error occurred inserting player match and stats. {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"An error occurred inserting player match and stats. {ex}", LogSeverity.Error);
                 return false;
             }
         }
@@ -538,9 +560,9 @@ namespace OpenSpartan.Workshop.Data
 
                 return rowsAffected > 0;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SqliteException or IOException or InvalidOperationException)
             {
-                LogEngine.Log($"An error occurred inserting match and stats. {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"An error occurred inserting match and stats. {ex}", LogSeverity.Error);
                 return false;
             }
         }
@@ -606,120 +628,140 @@ namespace OpenSpartan.Workshop.Data
                     }
                 }
 
-                // Update assets if they are not available
-                if (!mapAvailable)
+                // Wrap the conditional asset upserts in a single transaction so a single
+                // match's asset writes are atomic and we pay one fsync instead of up to four.
+                using var transaction = connection.BeginTransaction();
+                try
                 {
-                    var map = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.UgcDiscovery.GetMap(result.MatchInfo.MapVariant.AssetId.ToString(), result.MatchInfo.MapVariant.VersionId.ToString()));
-                    if (map != null && map.Result != null && map.Response.Code == 200)
+                    if (!mapAvailable)
                     {
-                        using var insertionCommand = connection.CreateCommand();
-                        insertionCommand.CommandText = GetQuery("Insert", "Maps");
-                        insertionCommand.Parameters.AddWithValue("$ResponseBody", map.Response.Message);
-
-                        var insertionResult = await insertionCommand.ExecuteNonQueryAsync();
-
-                        if (insertionResult > 0)
-                        {
-                            LogEngine.Log($"Stored map: {result.MatchInfo.MapVariant.AssetId}/{result.MatchInfo.MapVariant.VersionId}");
-                        }
-                    }
-                }
-
-                if (!playlistAvailable)
-                {
-                    if (result.MatchInfo.Playlist != null)
-                    {
-                        var playlist = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.UgcDiscovery.GetPlaylist(result.MatchInfo.Playlist.AssetId.ToString(), result.MatchInfo.Playlist.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken));
-                        if (playlist != null && playlist.Result != null && playlist.Response.Code == 200)
+                        var map = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.UgcDiscovery.GetMap(result.MatchInfo.MapVariant.AssetId.ToString(), result.MatchInfo.MapVariant.VersionId.ToString()));
+                        if (map != null && map.Result != null && map.Response.Code == 200)
                         {
                             using var insertionCommand = connection.CreateCommand();
-                            insertionCommand.CommandText = GetQuery("Insert", "Playlists");
-                            insertionCommand.Parameters.AddWithValue("$ResponseBody", playlist.Response.Message);
+                            insertionCommand.Transaction = transaction;
+                            insertionCommand.CommandText = GetQuery("Insert", "Maps");
+                            insertionCommand.Parameters.AddWithValue("$ResponseBody", map.Response.Message);
 
                             var insertionResult = await insertionCommand.ExecuteNonQueryAsync();
 
                             if (insertionResult > 0)
                             {
-                                LogEngine.Log($"Stored playlist: {result.MatchInfo.Playlist.AssetId}/{result.MatchInfo.Playlist.VersionId}");
+                                LogEngine.Log($"Stored map: {result.MatchInfo.MapVariant.AssetId}/{result.MatchInfo.MapVariant.VersionId}");
                             }
                         }
                     }
-                }
 
-                if (!playlistMapModePairAvailable)
-                {
-                    if (result.MatchInfo.PlaylistMapModePair != null)
+                    if (!playlistAvailable)
                     {
-                        var playlistMmp = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.UgcDiscovery.GetMapModePair(result.MatchInfo.PlaylistMapModePair.AssetId.ToString(), result.MatchInfo.PlaylistMapModePair.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken));
-                        if (playlistMmp != null && playlistMmp.Result != null && playlistMmp.Response.Code == 200)
+                        if (result.MatchInfo.Playlist != null)
                         {
+                            var playlist = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.UgcDiscovery.GetPlaylist(result.MatchInfo.Playlist.AssetId.ToString(), result.MatchInfo.Playlist.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken));
+                            if (playlist != null && playlist.Result != null && playlist.Response.Code == 200)
+                            {
+                                using var insertionCommand = connection.CreateCommand();
+                                insertionCommand.Transaction = transaction;
+                                insertionCommand.CommandText = GetQuery("Insert", "Playlists");
+                                insertionCommand.Parameters.AddWithValue("$ResponseBody", playlist.Response.Message);
+
+                                var insertionResult = await insertionCommand.ExecuteNonQueryAsync();
+
+                                if (insertionResult > 0)
+                                {
+                                    LogEngine.Log($"Stored playlist: {result.MatchInfo.Playlist.AssetId}/{result.MatchInfo.Playlist.VersionId}");
+                                }
+                            }
+                        }
+                    }
+
+                    if (!playlistMapModePairAvailable)
+                    {
+                        if (result.MatchInfo.PlaylistMapModePair != null)
+                        {
+                            var playlistMmp = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.UgcDiscovery.GetMapModePair(result.MatchInfo.PlaylistMapModePair.AssetId.ToString(), result.MatchInfo.PlaylistMapModePair.VersionId.ToString(), UserContextManager.HaloClient.ClearanceToken));
+                            if (playlistMmp != null && playlistMmp.Result != null && playlistMmp.Response.Code == 200)
+                            {
+                                using var insertionCommand = connection.CreateCommand();
+                                insertionCommand.Transaction = transaction;
+                                insertionCommand.CommandText = GetQuery("Insert", "PlaylistMapModePairs");
+                                insertionCommand.Parameters.AddWithValue("$ResponseBody", playlistMmp.Response.Message);
+
+                                var insertionResult = await insertionCommand.ExecuteNonQueryAsync();
+
+                                if (insertionResult > 0)
+                                {
+                                    LogEngine.Log($"Stored playlist + map mode pair: {result.MatchInfo.PlaylistMapModePair.AssetId}/{result.MatchInfo.PlaylistMapModePair.VersionId}");
+                                }
+                            }
+                        }
+                    }
+
+                    if (!gameVariantAvailable)
+                    {
+                        var gameVariant = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.UgcDiscovery.GetUgcGameVariant(result.MatchInfo.UgcGameVariant.AssetId.ToString(), result.MatchInfo.UgcGameVariant.VersionId.ToString()));
+                        if (gameVariant != null && gameVariant.Result != null && gameVariant.Response.Code == 200)
+                        {
+                            targetGameVariant = gameVariant.Result;
+
                             using var insertionCommand = connection.CreateCommand();
-                            insertionCommand.CommandText = GetQuery("Insert", "PlaylistMapModePairs");
-                            insertionCommand.Parameters.AddWithValue("$ResponseBody", playlistMmp.Response.Message);
+                            insertionCommand.Transaction = transaction;
+                            insertionCommand.CommandText = GetQuery("Insert", "GameVariants");
+                            insertionCommand.Parameters.AddWithValue("$ResponseBody", gameVariant.Response.Message);
 
                             var insertionResult = await insertionCommand.ExecuteNonQueryAsync();
 
                             if (insertionResult > 0)
                             {
-                                LogEngine.Log($"Stored playlist + map mode pair: {result.MatchInfo.PlaylistMapModePair.AssetId}/{result.MatchInfo.PlaylistMapModePair.VersionId}");
+                                LogEngine.Log($"Stored game variant: {result.MatchInfo.UgcGameVariant.AssetId}/{result.MatchInfo.UgcGameVariant.VersionId}");
+                            }
+
+                            using var egvQueryCommand = connection.CreateCommand();
+                            egvQueryCommand.Transaction = transaction;
+                            egvQueryCommand.CommandText = "SELECT EXISTS(SELECT 1 FROM EngineGameVariants WHERE AssetId = @AssetId AND VersionId = @VersionId) AS ENGINEGAMEVARIANT_AVAILABLE";
+                            egvQueryCommand.Parameters.AddWithValue("@AssetId", gameVariant.Result.EngineGameVariantLink.AssetId.ToString());
+                            egvQueryCommand.Parameters.AddWithValue("@VersionId", gameVariant.Result.EngineGameVariantLink.VersionId.ToString());
+
+                            using var egvReader = await egvQueryCommand.ExecuteReaderAsync();
+                            if (await egvReader.ReadAsync())
+                            {
+                                engineGameVariantAvailable = egvReader.GetFieldValue<int>("ENGINEGAMEVARIANT_AVAILABLE") == 1;
                             }
                         }
                     }
-                }
 
-                if (!gameVariantAvailable)
-                {
-                    var gameVariant = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.UgcDiscovery.GetUgcGameVariant(result.MatchInfo.UgcGameVariant.AssetId.ToString(), result.MatchInfo.UgcGameVariant.VersionId.ToString()));
-                    if (gameVariant != null && gameVariant.Result != null && gameVariant.Response.Code == 200)
+                    if (!engineGameVariantAvailable && targetGameVariant != null)
                     {
-                        targetGameVariant = gameVariant.Result;
+                        var engineGameVariant = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.UgcDiscovery.GetEngineGameVariant(targetGameVariant.EngineGameVariantLink.AssetId.ToString(), targetGameVariant.EngineGameVariantLink.VersionId.ToString()));
 
-                        using var insertionCommand = connection.CreateCommand();
-                        insertionCommand.CommandText = GetQuery("Insert", "GameVariants");
-                        insertionCommand.Parameters.AddWithValue("$ResponseBody", gameVariant.Response.Message);
-
-                        var insertionResult = await insertionCommand.ExecuteNonQueryAsync();
-
-                        if (insertionResult > 0)
+                        if (engineGameVariant != null && engineGameVariant.Result != null && engineGameVariant.Response.Code == 200)
                         {
-                            LogEngine.Log($"Stored game variant: {result.MatchInfo.UgcGameVariant.AssetId}/{result.MatchInfo.UgcGameVariant.VersionId}");
-                        }
+                            using var egvInsertionCommand = connection.CreateCommand();
+                            egvInsertionCommand.Transaction = transaction;
+                            egvInsertionCommand.CommandText = GetQuery("Insert", "EngineGameVariants");
+                            egvInsertionCommand.Parameters.AddWithValue("$ResponseBody", engineGameVariant.Response.Message);
 
-                        using var egvQueryCommand = connection.CreateCommand();
-                        egvQueryCommand.CommandText = $"SELECT EXISTS(SELECT 1 FROM EngineGameVariants WHERE AssetId='{gameVariant.Result.EngineGameVariantLink.AssetId}' AND VersionId='{gameVariant.Result.EngineGameVariantLink.VersionId}') AS ENGINEGAMEVARIANT_AVAILABLE";
+                            var insertionResult = await egvInsertionCommand.ExecuteNonQueryAsync();
 
-                        using var egvReader = await egvQueryCommand.ExecuteReaderAsync();
-                        if (await egvReader.ReadAsync())
-                        {
-                            engineGameVariantAvailable = egvReader.GetFieldValue<int>("ENGINEGAMEVARIANT_AVAILABLE") == 1;
+                            if (insertionResult > 0)
+                            {
+                                LogEngine.Log($"Stored engine game variant: {engineGameVariant.Result.AssetId}/{engineGameVariant.Result.VersionId}");
+                            }
                         }
                     }
+
+                    transaction.Commit();
                 }
-
-                if (!engineGameVariantAvailable && targetGameVariant != null)
+                catch
                 {
-                    var engineGameVariant = await UserContextManager.SafeAPICall(async () => await UserContextManager.HaloClient.UgcDiscovery.GetEngineGameVariant(targetGameVariant.EngineGameVariantLink.AssetId.ToString(), targetGameVariant.EngineGameVariantLink.VersionId.ToString()));
-
-                    if (engineGameVariant != null && engineGameVariant.Result != null && engineGameVariant.Response.Code == 200)
-                    {
-                        using var egvInsertionCommand = connection.CreateCommand();
-                        egvInsertionCommand.CommandText = GetQuery("Insert", "EngineGameVariants");
-                        egvInsertionCommand.Parameters.AddWithValue("$ResponseBody", engineGameVariant.Response.Message);
-
-                        var insertionResult = await egvInsertionCommand.ExecuteNonQueryAsync();
-
-                        if (insertionResult > 0)
-                        {
-                            LogEngine.Log($"Stored engine game variant: {engineGameVariant.Result.AssetId}/{engineGameVariant.Result.VersionId}");
-                        }
-                    }
+                    transaction.Rollback();
+                    throw;
                 }
 
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SqliteException or IOException or InvalidOperationException)
             {
-                LogEngine.Log($"Error updating match asset records. {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"Error updating match asset records. {ex}", LogSeverity.Error);
                 return false;
             }
         }
@@ -755,9 +797,9 @@ namespace OpenSpartan.Workshop.Data
 
                 return medals;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SqliteException or IOException or JsonException or InvalidOperationException)
             {
-                LogEngine.Log($"An error occurred obtaining medals from the database. {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"An error occurred obtaining medals from the database. {ex}", LogSeverity.Error);
                 return null;
             }
         }
@@ -787,9 +829,9 @@ namespace OpenSpartan.Workshop.Data
                     LogEngine.Log($"Could not store reward track {path}.", LogSeverity.Error);
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SqliteException or IOException or InvalidOperationException)
             {
-                LogEngine.Log($"An error occurred updating operation reward tracks. {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"An error occurred updating operation reward tracks. {ex}", LogSeverity.Error);
             }
 
             return false;
@@ -820,9 +862,9 @@ namespace OpenSpartan.Workshop.Data
                     LogEngine.Log($"Could not store inventory item {path}.", LogSeverity.Error);
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SqliteException or IOException or InvalidOperationException)
             {
-                LogEngine.Log($"An error occurred updating inventory items. {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"An error occurred updating inventory items. {ex}", LogSeverity.Error);
             }
 
             return false;
@@ -846,9 +888,9 @@ namespace OpenSpartan.Workshop.Data
                     return Convert.ToInt32(result) > 0;
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SqliteException or IOException or InvalidOperationException)
             {
-                LogEngine.Log($"An error occurred checking operation reward track availability. {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"An error occurred checking operation reward track availability. {ex}", LogSeverity.Error);
             }
 
             return false;
@@ -872,9 +914,9 @@ namespace OpenSpartan.Workshop.Data
                     return Convert.ToInt32(result) > 0;
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SqliteException or IOException or InvalidOperationException)
             {
-                LogEngine.Log($"An error occurred checking inventory item availability. {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"An error occurred checking inventory item availability. {ex}", LogSeverity.Error);
             }
 
             return false;
@@ -901,9 +943,9 @@ namespace OpenSpartan.Workshop.Data
                     LogEngine.Log($"No rows returned for inventory items query.");
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SqliteException or IOException or JsonException or InvalidOperationException)
             {
-                LogEngine.Log($"An error occurred obtaining inventory items. {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"An error occurred obtaining inventory items. {ex}", LogSeverity.Error);
             }
 
             return null;
@@ -954,9 +996,9 @@ namespace OpenSpartan.Workshop.Data
                     throw;
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is SqliteException or IOException or InvalidOperationException)
             {
-                LogEngine.Log($"Error inserting owned inventory items. {ex.Message}", LogSeverity.Error);
+                LogEngine.Log($"Error inserting owned inventory items. {ex}", LogSeverity.Error);
                 return false;
             }
         }
