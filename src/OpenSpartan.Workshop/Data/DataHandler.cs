@@ -64,8 +64,8 @@ PRAGMA synchronous = NORMAL;";
         private static async Task<SqliteConnection> OpenConnectionAsync()
         {
             var connection = new SqliteConnection($"Data Source={DatabasePath}");
-            await connection.OpenAsync();
-            await ApplyTuningPragmasAsync(connection);
+            await connection.OpenAsync().ConfigureAwait(false);
+            await ApplyTuningPragmasAsync(connection).ConfigureAwait(false);
             return connection;
         }
 
@@ -80,7 +80,7 @@ PRAGMA synchronous = NORMAL;";
         {
             using var cmd = connection.CreateCommand();
             cmd.CommandText = TuningPragmas;
-            await cmd.ExecuteNonQueryAsync();
+            await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
         }
 
         internal static string? SetWALJournalingMode()
@@ -385,19 +385,25 @@ PRAGMA synchronous = NORMAL;";
 
         internal static async Task<List<MatchTableEntity>> GetMatchesAsync(string playerXuid, string boundaryTime, int boundaryLimit)
         {
-            return await GetMatchesInternalAsync(playerXuid, null, boundaryTime, boundaryLimit);
+            return await GetMatchesInternalAsync(playerXuid, null, boundaryTime, boundaryLimit).ConfigureAwait(false);
         }
 
         internal static async Task<List<MatchTableEntity>> GetMatchesWithMedalAsync(string playerXuid, long medalNameId, string boundaryTime, int boundaryLimit)
         {
-            return await GetMatchesInternalAsync(playerXuid, medalNameId, boundaryTime, boundaryLimit);
+            return await GetMatchesInternalAsync(playerXuid, medalNameId, boundaryTime, boundaryLimit).ConfigureAwait(false);
         }
 
+        // ConfigureAwait(false) on every async hop so the read loop body
+        // (JSON deserialize per row + medal enrichment) stays on the threadpool
+        // instead of marshalling back to the UI thread between the connection
+        // open, query execute, and each reader.ReadAsync. Callers that need to
+        // mutate UI state with the returned data dispatch through RunOnUI
+        // explicitly.
         private static async Task<List<MatchTableEntity>> GetMatchesInternalAsync(string playerXuid, long? medalNameId, string boundaryTime, int boundaryLimit)
         {
             try
             {
-                using var connection = await OpenConnectionAsync();
+                using var connection = await OpenConnectionAsync().ConfigureAwait(false);
 
                 using var command = connection.CreateCommand();
                 if (medalNameId.HasValue)
@@ -414,9 +420,9 @@ PRAGMA synchronous = NORMAL;";
                 command.Parameters.AddWithValue("$BoundaryTime", boundaryTime);
                 command.Parameters.AddWithValue("$BoundaryLimit", boundaryLimit);
 
-                using var reader = await command.ExecuteReaderAsync();
+                using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
                 List<MatchTableEntity> matches = [];
-                while (await reader.ReadAsync())
+                while (await reader.ReadAsync().ConfigureAwait(false))
                 {
                     var matchEntry = ReadMatchTableEntity(reader);
 

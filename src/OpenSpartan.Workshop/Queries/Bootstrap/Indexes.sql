@@ -24,3 +24,12 @@ ON PlaylistMapModePairs (AssetId, VersionId);
 
 CREATE INDEX IF NOT EXISTS IDX_PLAYER_MATCH_STATS_MATCH_ID
 ON PlayerMatchStats(MatchId);
+
+-- Expression index on the JSON-extracted MatchInfo.StartTime so the
+-- `WHERE StartTime <= $BoundaryTime` filter and the inner ORDER BY in
+-- PlayerMatches.sql don't full-scan MatchStats and recompute json_extract
+-- per row. The expression matches the form used by the query
+-- (`json_extract(MS.MatchInfo, '$.StartTime')`) so SQLite's planner can
+-- use the index for both the ORDER BY and the StartTime <= ? filter.
+CREATE INDEX IF NOT EXISTS IDX_MATCH_STATS_START_TIME
+ON MatchStats (json_extract(MatchInfo, '$.StartTime') DESC);
