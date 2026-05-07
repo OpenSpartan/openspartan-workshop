@@ -1126,7 +1126,7 @@ namespace OpenSpartan.Workshop.Core
                     await DownloadAndSetImage(targetBackgroundPath, qualifiedBackgroundImagePath);
                 }
 
-                await ProcessRegularSeasonRanges(rewardTrack.Value.DateRange.Value, rewardTrack.Value.Name.Value, seasonRewardTrackIndex, targetBackgroundPath);
+                await ProcessRegularSeasonRanges(rewardTrack.Value.DateRange.Value, rewardTrack.Value.Name.Value, seasonRewardTrackIndex, targetBackgroundPath ?? string.Empty, CalendarBackgroundLayer.Season);
                 seasonRewardTrackIndex++;
             }
 
@@ -1181,7 +1181,8 @@ namespace OpenSpartan.Workshop.Core
                     await ProcessRegularSeasonRanges(compoundOperation.RewardTrackMetadata.DateRange.Value,
                                                      compoundOperation.RewardTrackMetadata.Name.Value,
                                                      operationIndex,
-                                                     targetBackgroundPath);
+                                                     targetBackgroundPath ?? string.Empty,
+                                                     CalendarBackgroundLayer.Operation);
                 }
             }
 
@@ -1250,7 +1251,8 @@ namespace OpenSpartan.Workshop.Core
                 await ProcessRegularSeasonRanges(compoundEvent.RewardTrackMetadata.DateRange.Value,
                                                  compoundEvent.RewardTrackMetadata.Name.Value,
                                                  eventIndex,
-                                                 targetBackgroundPath);
+                                                 targetBackgroundPath ?? string.Empty,
+                                                 CalendarBackgroundLayer.Event);
             }
 
             await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
@@ -1261,7 +1263,17 @@ namespace OpenSpartan.Workshop.Core
             return true;
         }
 
-        private async static Task ProcessRegularSeasonRanges(string rangeText, string name, int index, string backgroundPath = "")
+        // Which calendar layer a ProcessRegularSeasonRanges call is populating.
+        // Used so overlapping season / operation / event ranges don't overwrite
+        // each other's BackgroundImagePath on shared days.
+        internal enum CalendarBackgroundLayer
+        {
+            Season,
+            Operation,
+            Event,
+        }
+
+        private async static Task ProcessRegularSeasonRanges(string rangeText, string name, int index, string backgroundPath, CalendarBackgroundLayer layer)
         {
             try
             {
@@ -1292,19 +1304,20 @@ namespace OpenSpartan.Workshop.Core
                         {
                             targetDay.RegularSeasonText = name;
                             targetDay.RegularSeasonMarkerColor = colorBrush;
-                            targetDay.BackgroundImagePath = backgroundPath;
+                            ApplyBackgroundLayer(targetDay, layer, backgroundPath);
                         }
                         else
                         {
-                            SeasonCalendarViewModel.Instance.SeasonDays.Add(new SeasonCalendarViewDayItem
+                            var newItem = new SeasonCalendarViewDayItem
                             {
                                 DateTime = day,
                                 CSRSeasonText = string.Empty,
                                 CSRSeasonMarkerColor = new SolidColorBrush(Colors.White),
                                 RegularSeasonText = name,
                                 RegularSeasonMarkerColor = colorBrush,
-                                BackgroundImagePath = backgroundPath
-                            });
+                            };
+                            ApplyBackgroundLayer(newItem, layer, backgroundPath);
+                            SeasonCalendarViewModel.Instance.SeasonDays.Add(newItem);
                         }
                     }
                 });
@@ -1312,6 +1325,25 @@ namespace OpenSpartan.Workshop.Core
             catch (Exception ex)
             {
                 LogEngine.Log($"Could not process regular season ranges. {ex.Message}", LogSeverity.Error);
+            }
+        }
+
+        private static void ApplyBackgroundLayer(SeasonCalendarViewDayItem item, CalendarBackgroundLayer layer, string backgroundPath)
+        {
+            // Pass the path through verbatim (including empty) so re-loads can clear a
+            // layer that's no longer applicable.
+            backgroundPath ??= string.Empty;
+            switch (layer)
+            {
+                case CalendarBackgroundLayer.Season:
+                    item.SeasonBackgroundPath = backgroundPath;
+                    break;
+                case CalendarBackgroundLayer.Operation:
+                    item.OperationBackgroundPath = backgroundPath;
+                    break;
+                case CalendarBackgroundLayer.Event:
+                    item.EventBackgroundPath = backgroundPath;
+                    break;
             }
         }
 

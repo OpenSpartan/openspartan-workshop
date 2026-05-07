@@ -1,4 +1,4 @@
-﻿using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media;
 using OpenSpartan.Workshop.Core;
 using System;
 using System.Runtime.CompilerServices;
@@ -16,7 +16,9 @@ namespace OpenSpartan.Workshop.Models
         private SolidColorBrush? _csrSeasonMarkerColor;
         private string _regularSeasonText = string.Empty;
         private SolidColorBrush? _regularSeasonMarkerColor;
-        private string _backgroundImagePath = string.Empty;
+        private string _seasonBackgroundPath = string.Empty;
+        private string _operationBackgroundPath = string.Empty;
+        private string _eventBackgroundPath = string.Empty;
 
         public DateTime DateTime
         {
@@ -83,18 +85,61 @@ namespace OpenSpartan.Workshop.Models
             }
         }
 
-        public string BackgroundImagePath
+        // Three layered image slots so that overlapping calendar entries (a season
+        // contains operations, which can be running at the same time as weekly
+        // events) don't clobber each other's images. Each layer is set independently
+        // by the corresponding loop in PopulateSeasonCalendar; the binding-facing
+        // BackgroundImagePath picks the most specific layer that has an image.
+        public string SeasonBackgroundPath
         {
-            get => _backgroundImagePath;
+            get => _seasonBackgroundPath;
             set
             {
-                if (_backgroundImagePath != value)
+                if (_seasonBackgroundPath != value)
                 {
-                    _backgroundImagePath = value;
+                    _seasonBackgroundPath = value;
                     NotifyPropertyChanged();
+                    NotifyPropertyChanged(nameof(BackgroundImagePath));
                 }
             }
         }
+
+        public string OperationBackgroundPath
+        {
+            get => _operationBackgroundPath;
+            set
+            {
+                if (_operationBackgroundPath != value)
+                {
+                    _operationBackgroundPath = value;
+                    NotifyPropertyChanged();
+                    NotifyPropertyChanged(nameof(BackgroundImagePath));
+                }
+            }
+        }
+
+        public string EventBackgroundPath
+        {
+            get => _eventBackgroundPath;
+            set
+            {
+                if (_eventBackgroundPath != value)
+                {
+                    _eventBackgroundPath = value;
+                    NotifyPropertyChanged();
+                    NotifyPropertyChanged(nameof(BackgroundImagePath));
+                }
+            }
+        }
+
+        // Priority: operation > event > season. Operation imagery is the most
+        // distinctive marker for a calendar day; events and seasons fall back
+        // when a more specific layer isn't populated.
+        public string BackgroundImagePath =>
+            !string.IsNullOrEmpty(_operationBackgroundPath) ? _operationBackgroundPath
+            : !string.IsNullOrEmpty(_eventBackgroundPath) ? _eventBackgroundPath
+            : !string.IsNullOrEmpty(_seasonBackgroundPath) ? _seasonBackgroundPath
+            : string.Empty;
 
         public void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
