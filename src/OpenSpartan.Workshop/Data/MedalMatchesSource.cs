@@ -21,7 +21,7 @@ namespace OpenSpartan.Workshop.Data
                 {
                     UserContextManager.PopulateMedalMatchData(MedalMatchesViewModel.Instance.Medal.NameId);
 
-                    UserContextManager.DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    UserContextManager.RunOnUI(() =>
                     {
                         MedalMatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Completed;
                     });

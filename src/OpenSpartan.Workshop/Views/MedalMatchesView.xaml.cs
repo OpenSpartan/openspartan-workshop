@@ -43,7 +43,7 @@ namespace OpenSpartan.Workshop.Views
                 if (e.Parameter != null && e.Parameter is long parameter)
                 {
                     await Task.Run(async () => {
-                        await UserContextManager.DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        await UserContextManager.RunOnUI(() =>
                         {
                             MedalMatchesViewModel.Instance.Medal = MedalsViewModel.Instance.Medals
                             .SelectMany(group => group)

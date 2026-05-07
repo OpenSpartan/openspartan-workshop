@@ -69,6 +69,12 @@ namespace OpenSpartan.Workshop.Core
 
         internal static MainWindow DispatcherWindow = ((Application.Current as App)?.MainWindow) as MainWindow;
 
+        // Convenience wrapper for "do this on the UI thread" — collapses the
+        // very repetitive `RunOnUI(...)`
+        // call shape that appears 40+ times across this file and view code-behinds.
+        internal static Task RunOnUI(Action action) =>
+            RunOnUI(action);
+
         internal static HaloInfiniteClient HaloClient { get; set; }
 
         internal static XboxTicket XboxUserContext { get; set; }
@@ -315,13 +321,13 @@ namespace OpenSpartan.Workshop.Core
                 // Process career track result
                 if (careerTrackResult != null && careerTrackResult.Response.Code == 200)
                 {
-                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => HomeViewModel.Instance.CareerSnapshot = careerTrackResult.Result);
+                    await RunOnUI(() => HomeViewModel.Instance.CareerSnapshot = careerTrackResult.Result);
                 }
 
                 // Process career track container result
                 if (careerTrackContainerResult != null && (careerTrackContainerResult.Response.Code == 200 || careerTrackContainerResult.Response.Code == 304))
                 {
-                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(async () =>
+                    await RunOnUI(async () =>
                     {
                         HomeViewModel.Instance.MaxRank = careerTrackContainerResult.Result.Ranks.Count;
 
@@ -408,7 +414,7 @@ namespace OpenSpartan.Workshop.Core
                 {
                     if (setImageAction != null)
                     {
-                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(setImageAction);
+                        await RunOnUI(setImageAction);
                     }
                     return;
                 }
@@ -432,7 +438,7 @@ namespace OpenSpartan.Workshop.Core
 
                     if (setImageAction != null)
                     {
-                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(setImageAction);
+                        await RunOnUI(setImageAction);
                     }
                 }
             }
@@ -456,7 +462,7 @@ namespace OpenSpartan.Workshop.Core
                 if (serviceRecordResult != null && serviceRecordResult.Response.Code == 200)
                 {
                     // Update UI with service record details
-                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    await RunOnUI(() =>
                     {
                         HomeViewModel.Instance.ServiceRecord = serviceRecordResult.Result;
                         RankedViewModel.Instance.RankedLoadingState = MetadataLoadingState.Loading;
@@ -533,7 +539,7 @@ namespace OpenSpartan.Workshop.Core
             }
 
             // Single dispatcher call to add all items and update loading state
-            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            await RunOnUI(() =>
             {
                 foreach (var snapshot in playlistSnapshots)
                 {
@@ -555,7 +561,7 @@ namespace OpenSpartan.Workshop.Core
 
                 await DownloadAndSetImage(backgroundPath, cachedImagePath);
 
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                await RunOnUI(() =>
                 {
                     HomeViewModel.Instance.SeasonalBackground = cachedImagePath;
                 });
@@ -578,7 +584,7 @@ namespace OpenSpartan.Workshop.Core
                 if (customizationResult?.Result == null || customizationResult.Response?.Code != 200)
                     return false;
 
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                await RunOnUI(() =>
                 {
                     HomeViewModel.Instance.ServiceTag = customizationResult.Result.Appearance.ServiceTag;
                 });
@@ -601,7 +607,7 @@ namespace OpenSpartan.Workshop.Core
 
                 if (nameplate != null && emblem?.Result != null)
                 {
-                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    await RunOnUI(() =>
                     {
                         HomeViewModel.Instance.IDBadgeTextColor = nameplate.TextColor;
                     });
@@ -642,7 +648,7 @@ namespace OpenSpartan.Workshop.Core
 
         internal static async Task<bool> PopulateMatchRecordsData()
         {
-            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            await RunOnUI(() =>
             {
                 MatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Calculating;
             });
@@ -665,14 +671,14 @@ namespace OpenSpartan.Workshop.Core
                         var matchesToProcess = distinctMatchIds.Except(existingMatches);
                         if (matchesToProcess != null && matchesToProcess.Any())
                         {
-                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                            await RunOnUI(() =>
                             {
                                 MatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Loading;
                             });
 
                             var result = await UpdateMatchRecords(matchesToProcess, MatchLoadingCancellationTracker.Token);
 
-                            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                            await RunOnUI(() =>
                             {
                                 MatchesViewModel.Instance.MatchList = [];
                             });
@@ -690,7 +696,7 @@ namespace OpenSpartan.Workshop.Core
 
                         var result = await UpdateMatchRecords(distinctMatchIds, MatchLoadingCancellationTracker.Token);
 
-                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        await RunOnUI(() =>
                         {
                             MatchesViewModel.Instance.MatchList = [];
                         });
@@ -703,7 +709,7 @@ namespace OpenSpartan.Workshop.Core
             }
             catch (Exception ex)
             {
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                await RunOnUI(() =>
                 {
                     MatchesViewModel.Instance.MatchLoadingParameter = "0";
                 });
@@ -717,7 +723,7 @@ namespace OpenSpartan.Workshop.Core
         {
             try
             {
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                await RunOnUI(() =>
                 {
                     MatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Loading;
                 });
@@ -747,7 +753,7 @@ namespace OpenSpartan.Workshop.Core
 
                         double completionProgress = currentCount / (double)matchesTotal * 100.0;
 
-                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        await RunOnUI(() =>
                         {
                             MatchesViewModel.Instance.MatchLoadingParameter = $"{matchId} ({currentCount} out of {matchesTotal} - {completionProgress:#.00}%)";
                         });
@@ -900,7 +906,7 @@ namespace OpenSpartan.Workshop.Core
                         }
                     }
 
-                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    await RunOnUI(() =>
                     {
                         MatchesViewModel.Instance.MatchLoadingParameter = matchIds.Count.ToString(CultureInfo.InvariantCulture);
                     });
@@ -1027,7 +1033,7 @@ namespace OpenSpartan.Workshop.Core
 
                     if (matches != null && matches.Count > 0)
                     {
-                        await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                        await RunOnUI(() =>
                         {
                             MatchesViewModel.Instance.MatchList?.AddRange(matches);
                         });
@@ -1046,7 +1052,7 @@ namespace OpenSpartan.Workshop.Core
 
         internal static async Task<bool> PopulateSeasonCalendar()
         {
-            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            await RunOnUI(() =>
             {
                 SeasonCalendarViewModel.Instance.CalendarLoadingState = MetadataLoadingState.Loading;
                 SeasonCalendarViewModel.Instance.SeasonDays = [];
@@ -1108,7 +1114,7 @@ namespace OpenSpartan.Workshop.Core
             }
 
             // Single dispatcher call to create brushes and add all items on UI thread
-            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            await RunOnUI(() =>
             {
                 foreach (var (day, seasonText, color) in calendarDayData)
                 {
@@ -1123,7 +1129,7 @@ namespace OpenSpartan.Workshop.Core
 
             async Task HandleCalendarLoadingStateCompleted()
             {
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                await RunOnUI(() =>
                 {
                     SeasonCalendarViewModel.Instance.CalendarLoadingState = MetadataLoadingState.Completed;
                 });
@@ -1280,7 +1286,7 @@ namespace OpenSpartan.Workshop.Core
                                                  CalendarBackgroundLayer.Event);
             }
 
-            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            await RunOnUI(() =>
             {
                 SeasonCalendarViewModel.Instance.CalendarLoadingState = MetadataLoadingState.Completed;
             });
@@ -1321,7 +1327,7 @@ namespace OpenSpartan.Workshop.Core
                 // per day; with Operation Infinite extending a year of days and the calendar
                 // already accumulating hundreds of season-track entries, the previous scan
                 // pattern was O(n*m) and visibly froze the UI thread during PopulateSeasonCalendar.
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                await RunOnUI(() =>
                 {
                     var colorBrush = new SolidColorBrush(color);
                     var seasonDays = SeasonCalendarViewModel.Instance.SeasonDays;
@@ -1420,7 +1426,7 @@ namespace OpenSpartan.Workshop.Core
 
                 if (matches != null)
                 {
-                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    await RunOnUI(() =>
                     {
                         MedalMatchesViewModel.Instance.MatchList.AddRange(matches);
                     });
@@ -1546,7 +1552,7 @@ namespace OpenSpartan.Workshop.Core
                     .ToList();
 
                 // Update MedalsViewModel on UI thread
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                await RunOnUI(() =>
                 {
                     MedalsViewModel.Instance.Medals = new ObservableCollection<IGrouping<int, Medal>>(groupedMedals);
                 });
@@ -1646,7 +1652,7 @@ namespace OpenSpartan.Workshop.Core
 
         public static async Task<bool> PopulateBattlePassData()
         {
-            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.BattlePassLoadingState = MetadataLoadingState.Loading);
+            await RunOnUI(() => BattlePassViewModel.Instance.BattlePassLoadingState = MetadataLoadingState.Loading);
 
             await BattlePassLoadingCancellationTracker.CancelAsync();
             BattlePassLoadingCancellationTracker = new CancellationTokenSource();
@@ -1693,10 +1699,10 @@ namespace OpenSpartan.Workshop.Core
             {
                 BattlePassLoadingCancellationTracker.Token.ThrowIfCancellationRequested();
                 var operation = operationTracks[i];
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.BattlePassLoadingParameter = operation.RewardTrackPath);
+                await RunOnUI(() => BattlePassViewModel.Instance.BattlePassLoadingParameter = operation.RewardTrackPath);
 
                 var compoundOperation = await operationTasks[i].ConfigureAwait(false);
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.BattlePasses.Add(compoundOperation));
+                await RunOnUI(() => BattlePassViewModel.Instance.BattlePasses.Add(compoundOperation));
             }
 
             // Remember that in earlier versions of events they were chunked up - you had to
@@ -1713,7 +1719,7 @@ namespace OpenSpartan.Workshop.Core
             {
                 BattlePassLoadingCancellationTracker.Token.ThrowIfCancellationRequested();
                 var eventEntry = distinctEvents[i];
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.BattlePassLoadingParameter = eventEntry.RewardTrackPath);
+                await RunOnUI(() => BattlePassViewModel.Instance.BattlePassLoadingParameter = eventEntry.RewardTrackPath);
 
                 var compoundEvent = await eventTasks[i].ConfigureAwait(false);
                 if (compoundEvent == null)
@@ -1721,7 +1727,7 @@ namespace OpenSpartan.Workshop.Core
                     continue;
                 }
 
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() => BattlePassViewModel.Instance.Events.Add(compoundEvent));
+                await RunOnUI(() => BattlePassViewModel.Instance.Events.Add(compoundEvent));
             }
 
             return true;
@@ -2104,7 +2110,7 @@ namespace OpenSpartan.Workshop.Core
                 await ExchangeCancellationTracker.CancelAsync();
                 ExchangeCancellationTracker = new CancellationTokenSource();
 
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                await RunOnUI(() =>
                 {
                     ExchangeViewModel.Instance.ExchangeLoadingState = MetadataLoadingState.Loading;
                 });
@@ -2117,7 +2123,7 @@ namespace OpenSpartan.Workshop.Core
                 if (exchangeOfferings != null && exchangeOfferings.Result != null)
                 {
                     // Only clear out exchange items if the previous call to get them from the store succeeded.
-                    await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    await RunOnUI(() =>
                     {
                         ExchangeViewModel.Instance.ExchangeItems = [];
                     });
@@ -2135,7 +2141,7 @@ namespace OpenSpartan.Workshop.Core
             {
                 LogEngine.Log($"Failed to finish updating The Exchange content. Reason: {ex.Message}");
 
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                await RunOnUI(() =>
                 {
                     ExchangeViewModel.Instance.ExchangeLoadingState = MetadataLoadingState.Completed;
                 });
@@ -2148,7 +2154,7 @@ namespace OpenSpartan.Workshop.Core
         {
             // The expiration date is the same for every offering in the storefront;
             // setting it once outside the loop avoids one dispatcher hop per offering.
-            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            await RunOnUI(() =>
             {
                 ExchangeViewModel.Instance.ExpirationDate = exchangeStoreItem.StorefrontExpirationDate;
             });
@@ -2228,7 +2234,7 @@ namespace OpenSpartan.Workshop.Core
 
                             if (!token.IsCancellationRequested && seenItemIds.Add(metadataContainer.ItemDetails.CommonData.Id))
                             {
-                                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                                await RunOnUI(() =>
                                 {
                                     ExchangeViewModel.Instance.ExchangeItems.Add(metadataContainer);
                                 });
@@ -2244,7 +2250,7 @@ namespace OpenSpartan.Workshop.Core
                 }
             }
 
-            await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            await RunOnUI(() =>
             {
                 ExchangeViewModel.Instance.ExchangeLoadingState = MetadataLoadingState.Completed;
             });
@@ -2273,7 +2279,7 @@ namespace OpenSpartan.Workshop.Core
             }
             finally
             {
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(onCompletedDispatch);
+                await RunOnUI(onCompletedDispatch);
             }
         }
 
@@ -2308,7 +2314,7 @@ namespace OpenSpartan.Workshop.Core
                 // seconds off the perceived startup time on the warm path because
                 // the user no longer waits behind the full Xbox/Halo/Spartan/
                 // clearance token chain before seeing the app shell.
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                await RunOnUI(() =>
                 {
                     SplashScreenViewModel.Instance.IsBlocking = false;
                 });
@@ -2319,7 +2325,7 @@ namespace OpenSpartan.Workshop.Core
 
                 // Set HomeViewModel properties on the dispatcher so the bound
                 // header text refreshes on the UI thread.
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                await RunOnUI(() =>
                 {
                     HomeViewModel.Instance.Gamertag = XboxUserContext.DisplayClaims.Xui[0].Gamertag;
                     HomeViewModel.Instance.Xuid = XboxUserContext.DisplayClaims.Xui[0].XUID;
@@ -2344,7 +2350,7 @@ namespace OpenSpartan.Workshop.Core
                 });
 
                 // Reset collections
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                await RunOnUI(() =>
                 {
                     BattlePassViewModel.Instance.BattlePasses = BattlePassViewModel.Instance.BattlePasses ?? [];
                     MatchesViewModel.Instance.MatchList = MatchesViewModel.Instance.MatchList ?? [];
@@ -2398,7 +2404,7 @@ namespace OpenSpartan.Workshop.Core
                 // Handle exceptions
                 LogEngine.Log($"Initialization failed: {ex.Message}", LogSeverity.Error);
 
-                await DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                await RunOnUI(() =>
                 {
                     SplashScreenViewModel.Instance.IsErrorMessageDisplayed = true;
                     HomeViewModel.Instance.HomeLoadingState = MetadataLoadingState.Failed;

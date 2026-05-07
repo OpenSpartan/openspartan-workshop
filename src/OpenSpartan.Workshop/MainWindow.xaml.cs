@@ -56,7 +56,7 @@ namespace OpenSpartan.Workshop
 
         private async Task CleanupFramesAsync()
         {
-            await UserContextManager.DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            await UserContextManager.RunOnUI(() =>
             {
                 CleanupFrames();
             });

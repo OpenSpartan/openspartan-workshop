@@ -28,7 +28,7 @@ namespace OpenSpartan.Workshop.Views
         {
             var matchRecordsOutcome = await UserContextManager.PopulateExchangeData();
 
-            await UserContextManager.DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+            await UserContextManager.RunOnUI(() =>
             {
                 ExchangeViewModel.Instance.ExchangeLoadingState = MetadataLoadingState.Completed;
             });

@@ -40,7 +40,7 @@ namespace OpenSpartan.Workshop.Views
             
             if (matchRecordsOutcome)
             {
-                await UserContextManager.DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                await UserContextManager.RunOnUI(() =>
                 {
                     MatchesViewModel.Instance.MatchLoadingState = MetadataLoadingState.Completed;
                 });

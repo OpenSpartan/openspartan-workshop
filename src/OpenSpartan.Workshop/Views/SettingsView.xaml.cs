@@ -40,7 +40,7 @@ namespace OpenSpartan.Workshop.Views
                     // Make sure that we stop loading matches, if any are currently in progress.
                     UserContextManager.MatchLoadingCancellationTracker.Cancel();
 
-                    await UserContextManager.DispatcherWindow.DispatcherQueue.EnqueueAsync(() =>
+                    await UserContextManager.RunOnUI(() =>
                     {
                         SplashScreenViewModel.Instance.IsBlocking = true;
 
