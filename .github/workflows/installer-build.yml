@@ -17,7 +17,7 @@ on:
       - '**/*.gitattributes'
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
@@ -63,4 +63,3 @@ jobs:
       with:
         files: ./src/OpenSpartan.Workshop.Installer.Bundle/bin/Release/OpenSpartan.Workshop.Installer.Bundle.exe
         body_path: ./CURRENTRELEASE.md
-        token: ${{ secrets.RELEASE_TOKEN }}
