@@ -8,7 +8,7 @@ using System.Linq;
 namespace OpenSpartan.Workshop.Controls
 {
 
-    public sealed partial class SeasonCalendarControl : UserControl
+    internal sealed partial class SeasonCalendarControl : UserControl
     {
         public static readonly DependencyProperty DayItemsProperty = DependencyProperty.Register(
             nameof(DayItems),

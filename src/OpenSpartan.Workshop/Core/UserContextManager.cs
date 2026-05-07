@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.WinUI;
+using CommunityToolkit.WinUI.Collections;
 using Den.Dev.Conch.Authentication;
 using Den.Dev.Conch.Models.Security;
 using Den.Dev.Grunt.Authentication;
@@ -321,8 +322,8 @@ namespace OpenSpartan.Workshop.Core
                 await Task.WhenAll(careerRankTask, rankCollectionTask);
 
                 // Extract results from tasks
-                var careerTrackResult = careerRankTask.Result;
-                var careerTrackContainerResult = rankCollectionTask.Result;
+                var careerTrackResult = await careerRankTask;
+                var careerTrackContainerResult = await rankCollectionTask;
 
                 // Process career track result
                 if (careerTrackResult != null && careerTrackResult.Response.Code == 200)
@@ -686,7 +687,7 @@ namespace OpenSpartan.Workshop.Core
 
                             await RunOnUI(() =>
                             {
-                                MatchesViewModel.Instance.MatchList = [];
+                                MatchesViewModel.Instance.MatchList = new IncrementalLoadingCollection<MatchesSource, MatchTableEntity>(new MatchesSource());
                             });
 
                             return result;
@@ -704,7 +705,7 @@ namespace OpenSpartan.Workshop.Core
 
                         await RunOnUI(() =>
                         {
-                            MatchesViewModel.Instance.MatchList = [];
+                            MatchesViewModel.Instance.MatchList = new IncrementalLoadingCollection<MatchesSource, MatchTableEntity>(new MatchesSource());
                         });
 
                         return result;
@@ -1069,7 +1070,7 @@ namespace OpenSpartan.Workshop.Core
             {
                 var season = csrCalendar.Result.Seasons[seasonIndex];
                 var color = ColorConverter.FromHex(Configuration.SeasonColors[seasonIndex]);
-                var seasonText = season.CsrSeasonFilePath.Replace(".json", string.Empty);
+                var seasonText = season.CsrSeasonFilePath.Replace(".json", string.Empty, StringComparison.OrdinalIgnoreCase);
                 var days = GenerateDateList(season.StartDate.ISO8601Date, season.EndDate.ISO8601Date);
 
                 foreach (var day in days)
@@ -1924,7 +1925,9 @@ namespace OpenSpartan.Workshop.Core
 
                 if (container.CurrencyDetails != null)
                 {
+#pragma warning disable CA1308 // Path tokens are produced lowercase; matching with ToLower is intentional, not a security comparison.
                     switch (container.CurrencyDetails.Id.ToLower(CultureInfo.InvariantCulture))
+#pragma warning restore CA1308
                     {
                         case "rerollcurrency":
                             container.Type = ItemClass.ChallengeReroll;
@@ -2135,7 +2138,7 @@ namespace OpenSpartan.Workshop.Core
                 // We're only interested in offerings that have items attached to them.
                 // Other items are not relevant, and we can skip them (there are no currency
                 // or seasonal offers attached to Exchange items.
-                if (offering != null && offering.IncludedItems.Any())
+                if (offering != null && offering.IncludedItems.Count > 0)
                 {
                     // Current Exchange offering can contain more items in one (e.g., logos)
                     // but ultimately maps to just one item.
@@ -2160,8 +2163,8 @@ namespace OpenSpartan.Workshop.Core
                                 // several included items (e.g., shoulder pads) but the price should still be the
                                 // same regardless, at least from the current Exchange implementation.
                                 // If for some reason there is no price assigned, we will default to -1.
-                                ItemValue = (offering.Prices != null && offering.Prices.Any()) ? offering.Prices[0].Cost : -1,
-                                ImagePath = (!string.IsNullOrWhiteSpace(folderPath) && !string.IsNullOrWhiteSpace(fileName)) ? Path.Combine(folderPath, fileName).Replace("\\", "/") : itemMetadata.Result.CommonData.DisplayPath.Media.MediaUrl.Path,
+                                ItemValue = (offering.Prices != null && offering.Prices.Count > 0) ? offering.Prices[0].Cost : -1,
+                                ImagePath = (!string.IsNullOrWhiteSpace(folderPath) && !string.IsNullOrWhiteSpace(fileName)) ? Path.Combine(folderPath, fileName).Replace("\\", "/", StringComparison.Ordinal) : itemMetadata.Result.CommonData.DisplayPath.Media.MediaUrl.Path,
                                 ItemDetails = new InGameItem()
                                 {
                                     CommonData = itemMetadata.Result.CommonData,
@@ -2179,7 +2182,7 @@ namespace OpenSpartan.Workshop.Core
                                     {
                                         if (!string.IsNullOrWhiteSpace(offeringData.Result.ObjectImagePath))
                                         {
-                                            metadataContainer.ImagePath = offeringData.Result.ObjectImagePath.Replace("\\", "/");
+                                            metadataContainer.ImagePath = offeringData.Result.ObjectImagePath.Replace("\\", "/", StringComparison.Ordinal);
                                         }
                                     }
                                 }
@@ -2270,7 +2273,7 @@ namespace OpenSpartan.Workshop.Core
             {
                 var authResult = await InitializePublicClientApplication();
                 if (authResult == null)
-                    throw new Exception("Authentication with Halo services failed.");
+                    throw new InvalidOperationException("Authentication with Halo services failed.");
 
                 // Drop the splash overlay as soon as we have a confirmed identity.
                 // The remaining steps (Halo client setup, DB bootstrap, data fetches)
@@ -2286,7 +2289,7 @@ namespace OpenSpartan.Workshop.Core
 
                 var haloClientInitialized = await InitializeHaloClient(authResult);
                 if (!haloClientInitialized)
-                    throw new Exception("Could not initialize Halo client.");
+                    throw new InvalidOperationException("Could not initialize Halo client.");
 
                 // Set HomeViewModel properties on the dispatcher so the bound
                 // header text refreshes on the UI thread.
@@ -2318,7 +2321,7 @@ namespace OpenSpartan.Workshop.Core
                 await RunOnUI(() =>
                 {
                     BattlePassViewModel.Instance.BattlePasses = BattlePassViewModel.Instance.BattlePasses ?? [];
-                    MatchesViewModel.Instance.MatchList = MatchesViewModel.Instance.MatchList ?? [];
+                    MatchesViewModel.Instance.MatchList ??= new IncrementalLoadingCollection<MatchesSource, MatchTableEntity>(new MatchesSource());
                     MedalsViewModel.Instance.Medals = MedalsViewModel.Instance.Medals ?? [];
                 });
 

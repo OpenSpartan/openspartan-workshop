@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.Models
 {
-    public sealed class SeasonCalendarViewDayItem: Observable
+    internal sealed class SeasonCalendarViewDayItem: Observable
     {
         public SeasonCalendarViewDayItem()
         {

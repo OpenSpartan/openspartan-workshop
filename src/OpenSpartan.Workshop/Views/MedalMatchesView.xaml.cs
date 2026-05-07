@@ -1,9 +1,13 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.WinUI;
+using CommunityToolkit.WinUI.Collections;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using OpenSpartan.Workshop.Core;
+using OpenSpartan.Workshop.Data;
+using OpenSpartan.Workshop.Models;
 using OpenSpartan.Workshop.ViewModels;
 
 namespace OpenSpartan.Workshop.Views
@@ -35,6 +39,8 @@ namespace OpenSpartan.Workshop.Views
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
+            ArgumentNullException.ThrowIfNull(e);
+
             this.DataContext = MedalMatchesViewModel.Instance;
 
             if (e.NavigationMode != NavigationMode.Back)
@@ -49,7 +55,7 @@ namespace OpenSpartan.Workshop.Views
                             .SelectMany(group => group)
                             .FirstOrDefault(i => i.NameId == parameter);
 
-                            MedalMatchesViewModel.Instance.MatchList = [];
+                            MedalMatchesViewModel.Instance.MatchList = new IncrementalLoadingCollection<MedalMatchesSource, MatchTableEntity>(new MedalMatchesSource());
                         });
                     });
                 }

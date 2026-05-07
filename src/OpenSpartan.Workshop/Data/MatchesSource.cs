@@ -11,7 +11,9 @@ using System.Threading.Tasks;
 
 namespace OpenSpartan.Workshop.Data
 {
-    public sealed class MatchesSource : IIncrementalSource<MatchTableEntity>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes",
+        Justification = "Instantiated by CommunityToolkit.WinUI.Collections.IncrementalLoadingCollection<TSource, TItem> via reflection on TSource.")]
+    internal sealed class MatchesSource : IIncrementalSource<MatchTableEntity>
     {
         async Task<IEnumerable<MatchTableEntity>> IIncrementalSource<MatchTableEntity>.GetPagedItemsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken)
         {

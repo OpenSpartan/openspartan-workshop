@@ -756,7 +756,10 @@ PRAGMA synchronous = NORMAL;";
 
                 // Wrap the conditional asset upserts in a single transaction so a single
                 // match's asset writes are atomic and we pay one fsync instead of up to four.
-                using var transaction = connection.BeginTransaction();
+                // BeginTransactionAsync() returns DbTransaction; cast to SqliteTransaction so
+                // it can be assigned to SqliteCommand.Transaction (which is `new`-hidden as
+                // the more-derived type).
+                using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync().ConfigureAwait(false);
                 try
                 {
                     if (!mapAvailable)
@@ -850,7 +853,7 @@ PRAGMA synchronous = NORMAL;";
                             using var egvReader = await egvQueryCommand.ExecuteReaderAsync();
                             if (await egvReader.ReadAsync())
                             {
-                                engineGameVariantAvailable = egvReader.GetFieldValue<int>("ENGINEGAMEVARIANT_AVAILABLE") == 1;
+                                engineGameVariantAvailable = await egvReader.GetFieldValueAsync<int>("ENGINEGAMEVARIANT_AVAILABLE") == 1;
                             }
                         }
                     }
@@ -875,11 +878,11 @@ PRAGMA synchronous = NORMAL;";
                         }
                     }
 
-                    transaction.Commit();
+                    await transaction.CommitAsync().ConfigureAwait(false);
                 }
                 catch
                 {
-                    transaction.Rollback();
+                    await transaction.RollbackAsync().ConfigureAwait(false);
                     throw;
                 }
 
@@ -1008,7 +1011,7 @@ PRAGMA synchronous = NORMAL;";
 
                 if (result != null && result != DBNull.Value)
                 {
-                    return Convert.ToInt32(result) > 0;
+                    return Convert.ToInt32(result, CultureInfo.InvariantCulture) > 0;
                 }
             }
             catch (Exception ex) when (ex is SqliteException or IOException or InvalidOperationException)
@@ -1033,7 +1036,7 @@ PRAGMA synchronous = NORMAL;";
 
                 if (result != null && result != DBNull.Value)
                 {
-                    return Convert.ToInt32(result) > 0;
+                    return Convert.ToInt32(result, CultureInfo.InvariantCulture) > 0;
                 }
             }
             catch (Exception ex) when (ex is SqliteException or IOException or InvalidOperationException)
@@ -1081,7 +1084,7 @@ PRAGMA synchronous = NORMAL;";
                 var commandText = GetQuery("Insert", "OwnedInventoryItems");
 
                 // Use transaction for batched inserts (100 items = 100x fewer transactions)
-                using var transaction = connection.BeginTransaction();
+                using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync().ConfigureAwait(false);
                 try
                 {
                     foreach (var item in result.Items)
@@ -1107,12 +1110,12 @@ PRAGMA synchronous = NORMAL;";
                         }
                     }
 
-                    transaction.Commit();
+                    await transaction.CommitAsync().ConfigureAwait(false);
                     return true;
                 }
                 catch
                 {
-                    transaction.Rollback();
+                    await transaction.RollbackAsync().ConfigureAwait(false);
                     throw;
                 }
             }

@@ -8,7 +8,7 @@ namespace OpenSpartan.Workshop.Controls
     // populator (Home / Matches / BattlePass / Exchange / SeasonCalendar / Ranked /
     // MedalMatches). Replaces seven near-identical Grid+ProgressRing+TextBlock
     // blocks of XAML that only differed in their two binding paths.
-    public sealed partial class LoadingBanner : UserControl
+    internal sealed partial class LoadingBanner : UserControl
     {
         public LoadingBanner()
         {

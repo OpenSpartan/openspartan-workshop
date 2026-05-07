@@ -11,7 +11,7 @@ namespace OpenSpartan.Workshop.ViewModels
     {
         private MetadataLoadingState _matchLoadingState;
         private string _matchLoadingParameter = "0";
-        private IncrementalLoadingCollection<MatchesSource, MatchTableEntity> _matchList = [];
+        private IncrementalLoadingCollection<MatchesSource, MatchTableEntity> _matchList = new(new MatchesSource());
 
         public static MatchesViewModel Instance { get; } = new MatchesViewModel();
 

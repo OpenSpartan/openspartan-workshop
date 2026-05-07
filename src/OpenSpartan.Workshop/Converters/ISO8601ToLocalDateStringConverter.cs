@@ -4,7 +4,7 @@ using System.Globalization;
 
 namespace OpenSpartan.Workshop.Converters
 {
-    public sealed class ISO8601ToLocalDateStringConverter : IValueConverter
+    internal sealed class ISO8601ToLocalDateStringConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

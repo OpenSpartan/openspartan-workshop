@@ -5,7 +5,7 @@ using Windows.UI;
 
 namespace OpenSpartan.Workshop.Converters
 {
-    public sealed class BoolToDisabledBrushConverter : IValueConverter
+    internal sealed class BoolToDisabledBrushConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

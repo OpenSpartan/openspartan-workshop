@@ -1,0 +1,29 @@
+root = true
+
+[*.cs]
+# CA1031: this project's populator/init methods (PopulateXxx, SafeAPICall,
+# LoadSettings, async-void UI handlers, etc.) are deliberately structured as
+# "log and continue" defensive handlers so a single failure inside one
+# bootstrap step doesn't cascade through the rest of the parallel startup
+# pipeline. Catching the broad Exception type is the intentional contract for
+# this category of method, so the warning is suppressed project-wide rather
+# than decorating ~25 sites with [SuppressMessage] each.
+dotnet_diagnostic.CA1031.severity = none
+
+# CA1515: types can be made internal — XAML-generated partial classes
+# (Pages, App, Window, UserControls) are matched by the XAML compiler against
+# their x:Class declaration; making them internal is technically allowed in
+# same-assembly XAML but adds churn for no behavior change. Suppress for the
+# .xaml.cs partials specifically.
+[*.xaml.cs]
+dotnet_diagnostic.CA1515.severity = none
+
+[**/*.xaml.cs]
+dotnet_diagnostic.CA1515.severity = none
+
+# Converters and IIncrementalSource implementations are instantiated by the
+# XAML resource system and the CommunityToolkit IncrementalLoadingCollection
+# respectively, neither of which CA1812's reachability scan can see.
+[**/Converters/*.cs]
+dotnet_diagnostic.CA1812.severity = none
+

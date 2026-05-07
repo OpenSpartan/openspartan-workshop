@@ -3,7 +3,7 @@ using System;
 
 namespace OpenSpartan.Workshop.Controls
 {
-    public sealed class AutoClosingTeachingTip : Microsoft.UI.Xaml.Controls.TeachingTip
+    internal sealed class AutoClosingTeachingTip : Microsoft.UI.Xaml.Controls.TeachingTip
     {
         private DispatcherTimer? _timer;
         private long _token;

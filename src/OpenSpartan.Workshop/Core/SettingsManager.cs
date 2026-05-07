@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace OpenSpartan.Workshop.Core
 {
-    internal sealed class SettingsManager
+    internal static class SettingsManager
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 

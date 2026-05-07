@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace OpenSpartan.Workshop.Core
 {
-    public class Observable : INotifyPropertyChanged
+    internal class Observable : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
 

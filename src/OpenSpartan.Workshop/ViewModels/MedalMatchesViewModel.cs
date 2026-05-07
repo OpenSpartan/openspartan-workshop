@@ -22,7 +22,7 @@ namespace OpenSpartan.Workshop.ViewModels
 
         private MedalMatchesViewModel()
         {
-            MatchList = [];
+            MatchList = new IncrementalLoadingCollection<MedalMatchesSource, MatchTableEntity>(new MedalMatchesSource());
             NavigateCommand = new RelayCommand<long>(NavigateToAnotherView);
         }
 

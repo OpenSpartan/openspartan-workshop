@@ -16,7 +16,9 @@ namespace OpenSpartan.Workshop.Converters
             string fileName;
             if (!string.IsNullOrEmpty(csr.Tier) && csr.SubTier.HasValue)
             {
+#pragma warning disable CA1308 // CSR rank tiers are stored as lowercase file names ("bronze_1.png"); ToLowerInvariant matches the on-disk convention.
                 fileName = $"{csr.Tier.ToLowerInvariant()}_{csr.SubTier + 1}.png";
+#pragma warning restore CA1308
             }
             else if (csr.InitialMeasurementMatches.HasValue && csr.MeasurementMatchesRemaining.HasValue)
             {

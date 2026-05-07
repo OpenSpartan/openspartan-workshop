@@ -3,7 +3,7 @@ using System.Windows.Input;
 
 namespace OpenSpartan.Workshop.Core
 {
-    public class RelayCommand<T> : ICommand
+    internal sealed class RelayCommand<T> : ICommand
     {
         private readonly Action<T>? _execute;
         private readonly Func<T, bool>? _canExecute;

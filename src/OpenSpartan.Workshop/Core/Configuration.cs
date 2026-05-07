@@ -3,7 +3,7 @@ using System.IO;
 
 namespace OpenSpartan.Workshop.Core
 {
-    internal sealed class Configuration
+    internal static class Configuration
     {
         // Endpoint metadata.
         internal const string SettingsEndpoint = "https://wokrshop.api.openspartan.com/clientsettings";

@@ -6,7 +6,7 @@ using CommunityToolkit.WinUI.UI.Controls;
 
 namespace OpenSpartan.Workshop.Controls
 {
-    public sealed partial class MatchesGridControl : UserControl
+    internal sealed partial class MatchesGridControl : UserControl
     {
         public static readonly DependencyProperty MatchSourceProperty =
         DependencyProperty.Register(
