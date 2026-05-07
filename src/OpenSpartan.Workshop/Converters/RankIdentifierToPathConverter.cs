@@ -1,4 +1,5 @@
-﻿using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Data;
+using OpenSpartan.Workshop.Core;
 using System;
 using System.IO;
 
@@ -10,14 +11,9 @@ namespace OpenSpartan.Workshop.Converters
         {
             if (value is string rankIdentifier && !string.IsNullOrEmpty(rankIdentifier))
             {
-                var imagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", "csr", $"{rankIdentifier}.png");
-                if (File.Exists(imagePath))
-                {
-                    return imagePath;
-                }
+                return ImageCachePath.ResolveIfExists(Path.Combine("csr", $"{rankIdentifier}.png")) ?? string.Empty;
             }
 
-            // Return empty string instead of null - Image controls handle this better
             return string.Empty;
         }
 

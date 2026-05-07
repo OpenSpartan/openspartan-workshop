@@ -1,5 +1,6 @@
-﻿using Den.Dev.Grunt.Models.HaloInfinite;
+using Den.Dev.Grunt.Models.HaloInfinite;
 using Microsoft.UI.Xaml.Data;
+using OpenSpartan.Workshop.Core;
 using System;
 using System.IO;
 
@@ -26,13 +27,7 @@ namespace OpenSpartan.Workshop.Converters
                 return string.Empty;
             }
 
-            var imagePath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", "csr", fileName);
-            if (System.IO.File.Exists(imagePath))
-            {
-                return imagePath;
-            }
-
-            return string.Empty;
+            return ImageCachePath.ResolveIfExists(Path.Combine("csr", fileName)) ?? string.Empty;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language) =>

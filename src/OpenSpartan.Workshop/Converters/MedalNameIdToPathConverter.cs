@@ -1,4 +1,5 @@
-﻿using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Data;
+using OpenSpartan.Workshop.Core;
 using System;
 using System.IO;
 
@@ -8,17 +9,12 @@ namespace OpenSpartan.Workshop.Converters
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value != null)
+            if (value == null)
             {
-                var medalPath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", "medals", $"{value}.png");
-                if (File.Exists(medalPath))
-                {
-                    return medalPath;
-                }
+                return string.Empty;
             }
 
-            // Return empty string instead of null - Image controls handle this better
-            return string.Empty;
+            return ImageCachePath.ResolveIfExists(Path.Combine("medals", $"{value}.png")) ?? string.Empty;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

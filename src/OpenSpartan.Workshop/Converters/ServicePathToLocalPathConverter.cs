@@ -1,8 +1,8 @@
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media.Imaging;
+using OpenSpartan.Workshop.Core;
 using System;
 using System.Collections.Concurrent;
-using System.IO;
 
 namespace OpenSpartan.Workshop.Converters
 {
@@ -22,20 +22,21 @@ namespace OpenSpartan.Workshop.Converters
 
         public object? Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value is string targetPath && !string.IsNullOrEmpty(targetPath))
+            if (value is not string targetPath || string.IsNullOrEmpty(targetPath))
             {
-                // Normalize the targetPath by removing leading directory separators
-                targetPath = targetPath.TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-
-                // Construct the local path
-                var localPath = Path.Combine(Core.Configuration.AppDataDirectory, "imagecache", targetPath);
-                if (File.Exists(localPath))
-                {
-                    return _bitmapCache.GetOrAdd(localPath, p => new BitmapImage(new Uri(p)));
-                }
+                return null;
             }
 
-            return null;
+            // ResolveIfExists handles the leading-separator normalization, the
+            // disk-existence check, and caches the positive disk stat so repeated
+            // binding evaluations don't keep hitting the filesystem.
+            var localPath = ImageCachePath.ResolveIfExists(targetPath);
+            if (localPath == null)
+            {
+                return null;
+            }
+
+            return _bitmapCache.GetOrAdd(localPath, p => new BitmapImage(new Uri(p)));
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
