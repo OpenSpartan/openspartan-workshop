@@ -38,6 +38,19 @@ namespace OpenSpartan.Workshop.Core
 
                     if (startDateParsed && endDateParsed)
                     {
+                        // Open-ended ranges (e.g. "November 18, 2026" with no `- endDate`
+                        // portion, like the Infinite operation that is the last season
+                        // and has no scheduled end) collapse to a single day under the
+                        // regex fallback. Detect that and extend so the calendar marker
+                        // covers any reasonable view window — a year past today, or a
+                        // year past the start when the start is itself in the future.
+                        if (!match.Groups["endMonth"].Success)
+                        {
+                            var openEndedEnd = startDate > DateTime.UtcNow.Date
+                                ? startDate.AddYears(1)
+                                : DateTime.UtcNow.Date.AddYears(1);
+                            endDate = openEndedEnd;
+                        }
                         return new Tuple<DateTime, DateTime>(startDate, endDate);
                     }
                     else
