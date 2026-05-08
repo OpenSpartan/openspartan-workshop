@@ -12,7 +12,7 @@ namespace OpenSpartan.Workshop.Core
 
         // Build-related metadata.
         internal const string Version = "1.0.12";
-        internal const string BuildId = "INFINITY-05062026";
+        internal const string BuildId = "INFINITY-05082026";
         internal const string PackageName = "OpenSpartan.Workshop";
 
         // Authentication and setting-related metadata.
