@@ -1,13 +1,10 @@
-<div align="center">
-	<img src="src/OpenSpartan.Workshop/CustomImages/logo-icon.png" width="200" height="200">
-	<h1>OpenSpartan Workshop</h1>
-	<p>
-		<b>Analyze all your Halo Infinite stats in any way you want</b>
-	</p>
-	<br>
-	<br>
-	<br>
-</div>
+<p align="center">
+  <img src="src/OpenSpartan.Workshop/CustomImages/logo-icon.png" alt="" width="200">
+</p>
+
+<h1 align="center">OpenSpartan Workshop</h1>
+
+<p align="center">Your one-stop shop for local in-depth analysis of your Halo service record.</p>
 
 [![Build](https://github.com/OpenSpartan/openspartan-workshop/actions/workflows/build.yml/badge.svg)](https://github.com/OpenSpartan/openspartan-workshop/actions/workflows/build.yml) [![Build installer](https://github.com/OpenSpartan/openspartan-workshop/actions/workflows/installer-build.yml/badge.svg)](https://github.com/OpenSpartan/openspartan-workshop/actions/workflows/installer-build.yml)
 
